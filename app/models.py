@@ -9,7 +9,9 @@ from pydantic import BaseModel, Field
 class Coordinates(BaseModel):
     longitude: float = Field(..., description="WGS84 Longitude in decimal degrees")
     latitude: float = Field(..., description="WGS84 Latitude in decimal degrees")
-    elevation_m: float = Field(..., description="Surface elevation in meters above sea level")
+    elevation_m: float = Field(
+        ..., description="Surface elevation in meters above sea level"
+    )
 
 
 class UTMCoordinates(BaseModel):
@@ -20,16 +22,28 @@ class UTMCoordinates(BaseModel):
 
 
 class CriteriaBreakdown(BaseModel):
-    catchment_score: float = Field(..., description="Contributing upstream area score (0-100)")
-    depression_score: float = Field(..., description="Natural topographic depression score (0-100)")
-    slope_stability_score: float = Field(..., description="Bed slope stability score (0-100)")
-    wetness_index_score: float = Field(..., description="Topographic wetness index score (0-100)")
+    catchment_score: float = Field(
+        ..., description="Contributing upstream area score (0-100)"
+    )
+    depression_score: float = Field(
+        ..., description="Natural topographic depression score (0-100)"
+    )
+    slope_stability_score: float = Field(
+        ..., description="Bed slope stability score (0-100)"
+    )
+    wetness_index_score: float = Field(
+        ..., description="Topographic wetness index score (0-100)"
+    )
 
 
 class LocalTerrain(BaseModel):
     slope_percent: float = Field(..., description="Local slope gradient in percent")
-    depression_depth_m: float = Field(..., description="Depth of natural hollow/depression in meters")
-    topographic_wetness_index: float = Field(..., description="Topographic Wetness Index (TWI)")
+    depression_depth_m: float = Field(
+        ..., description="Depth of natural hollow/depression in meters"
+    )
+    topographic_wetness_index: float = Field(
+        ..., description="Topographic Wetness Index (TWI)"
+    )
     elevation_m: float = Field(..., description="Elevation at pond bottom in meters")
 
 
@@ -38,7 +52,9 @@ class CandidateSite(BaseModel):
     rank: int
     coordinates: Coordinates
     utm_coordinates: UTMCoordinates
-    suitability_score: float = Field(..., description="Composite suitability score (0-100)")
+    suitability_score: float = Field(
+        ..., description="Composite suitability score (0-100)"
+    )
     criteria_breakdown: CriteriaBreakdown
     local_terrain: LocalTerrain
     catchment_area_ha: float

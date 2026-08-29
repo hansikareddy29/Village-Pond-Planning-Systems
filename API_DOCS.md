@@ -266,3 +266,4 @@ console.log(data);
 | `400 Bad Request` | Missing file, empty file, or corrupted KML syntax. | `{"detail": "KML/KMZ Parsing Error: No valid contour lines found"}` |
 | `422 Unprocessable Entity`| Missing required parameters or invalid parameter types. | `{"detail": [{"loc": ["body", "file"], "msg": "Field required"}]}` |
 | `500 Internal Server Error`| Siting failure on flat or degenerate grid. | `{"detail": "No viable pond candidate locations identified."}` |
+

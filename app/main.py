@@ -3,12 +3,14 @@ FastAPI Backend Application for Village Pond Planning & Catchment Analysis
 Provides endpoints:
 - POST /analyzeContour
 - POST /findCatchment
+- POST /analyzeSample
 - GET /health
 - GET / (Interactive Web Visualizer Dashboard)
 """
 
 import time
 import os
+import traceback
 from typing import Optional
 from fastapi import FastAPI, UploadFile, File, Form, Query, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -79,17 +81,35 @@ def _process_contour_map(
         )
 
     # 2. Generate DEM Grid
-    dem = dem_generator.generate_dem(parsed_data, resolution_m=grid_resolution_m)
+    try:
+        dem = dem_generator.generate_dem(parsed_data, resolution_m=grid_resolution_m)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"DEM Surface Generation Error: {str(e)}"
+        )
 
     # 3. Hydrological Analysis
-    hydro_results = hydrology_engine.analyze(dem)
+    try:
+        hydro_results = hydrology_engine.analyze(dem)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Hydrological Analysis Error: {str(e)}"
+        )
 
     # 4. Pond Candidate Siting & MCDA Ranking
-    candidate_sites = pond_siting_engine.find_optimal_sites(
-        dem=dem,
-        hydro_results=hydro_results,
-        num_candidates=num_candidate_sites
-    )
+    try:
+        candidate_sites = pond_siting_engine.find_optimal_sites(
+            dem=dem,
+            hydro_results=hydro_results,
+            num_candidates=num_candidate_sites
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Pond Siting Optimization Error: {str(e)}"
+        )
 
     if not candidate_sites:
         raise HTTPException(
@@ -259,20 +279,31 @@ def _process_contour_map(
     description="Upload a KML/KMZ contour map to generate continuous DEM, delineate watershed catchment, identify optimal pond sites, and compute water storage recommendations."
 )
 async def analyze_contour(
-    file: UploadFile = File(..., description="KML or KMZ contour map file"),
+    file: Optional[UploadFile] = File(None, description="KML or KMZ contour map file (optional, defaults to sample contours_1m.kml)"),
     grid_resolution_m: float = Form(10.0, description="Spatial DEM grid cell resolution in meters (e.g. 5.0 to 20.0)"),
     rainfall_annual_mm: float = Form(1000.0, description="Average annual precipitation in mm for water yield calculation"),
     runoff_coefficient: float = Form(0.35, description="Catchment runoff coefficient C (0.1 to 0.8)"),
     pond_depth_m: float = Form(3.0, description="Target pond excavation depth in meters"),
     num_candidate_sites: int = Form(5, description="Number of top candidate pond locations to return")
 ):
-    contents = await file.read()
+    if file is not None and file.filename:
+        contents = await file.read()
+        filename = file.filename
+    else:
+        # Fallback to local contours_1m.kml
+        sample_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "contours_1m.kml")
+        if not os.path.exists(sample_path):
+            raise HTTPException(status_code=400, detail="No file uploaded and sample contours_1m.kml not found.")
+        with open(sample_path, "rb") as f:
+            contents = f.read()
+        filename = "contours_1m.kml"
+
     if len(contents) == 0:
         raise HTTPException(status_code=400, detail="Uploaded file is empty.")
     
     return _process_contour_map(
         file_bytes=contents,
-        filename=file.filename,
+        filename=filename,
         grid_resolution_m=grid_resolution_m,
         rainfall_annual_mm=rainfall_annual_mm,
         runoff_coefficient=runoff_coefficient,
@@ -288,20 +319,38 @@ async def analyze_contour(
     description="Alias endpoint for POST /analyzeContour."
 )
 async def find_catchment(
-    file: UploadFile = File(..., description="KML or KMZ contour map file"),
+    file: Optional[UploadFile] = File(None, description="KML or KMZ contour map file"),
     grid_resolution_m: float = Form(10.0, description="Spatial DEM grid cell resolution in meters"),
     rainfall_annual_mm: float = Form(1000.0, description="Average annual precipitation in mm"),
     runoff_coefficient: float = Form(0.35, description="Catchment runoff coefficient C"),
     pond_depth_m: float = Form(3.0, description="Target pond excavation depth in meters"),
     num_candidate_sites: int = Form(5, description="Number of top candidate pond locations to return")
 ):
-    contents = await file.read()
-    if len(contents) == 0:
-        raise HTTPException(status_code=400, detail="Uploaded file is empty.")
-    
-    return _process_contour_map(
-        file_bytes=contents,
-        filename=file.filename,
+    return await analyze_contour(
+        file=file,
+        grid_resolution_m=grid_resolution_m,
+        rainfall_annual_mm=rainfall_annual_mm,
+        runoff_coefficient=runoff_coefficient,
+        pond_depth_m=pond_depth_m,
+        num_candidate_sites=num_candidate_sites
+    )
+
+
+@app.post(
+    "/analyzeSample",
+    response_model=AnalysisResponse,
+    summary="Analyze Provided Sample Map (1-Click Demo)",
+    description="Analyzes the provided contours_1m.kml sample contour map."
+)
+async def analyze_sample(
+    grid_resolution_m: float = Form(10.0),
+    rainfall_annual_mm: float = Form(1000.0),
+    runoff_coefficient: float = Form(0.35),
+    pond_depth_m: float = Form(3.0),
+    num_candidate_sites: int = Form(5)
+):
+    return await analyze_contour(
+        file=None,
         grid_resolution_m=grid_resolution_m,
         rainfall_annual_mm=rainfall_annual_mm,
         runoff_coefficient=runoff_coefficient,

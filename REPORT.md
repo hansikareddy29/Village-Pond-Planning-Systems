@@ -202,3 +202,4 @@ The architecture was intentionally designed for modularity and future expansion:
 3. **Pluggable Hydrological Models**: The `HydrologyEngine` is isolated from the API and DEM layers, allowing future integration of multi-flow direction models (D-Infinity, MFD) or Soil Conservation Service (SCS-CN) runoff models.
 4. **Interactive GIS Integration**: Full GeoJSON compliance enables direct integration with QGIS, ArcGIS, Mapbox, Leaflet, and Google Earth.
 5. **Configurable Engineering Criteria**: Parameters for rainfall, soil permeability, runoff coefficient, and pond excavation depth are dynamically passed via API parameters without code modification.
+

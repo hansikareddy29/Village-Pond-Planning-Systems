@@ -17,17 +17,21 @@ class DEMGrid:
     metric projection transformers, and derived terrain gradients.
     """
 
-    def __init__(self,
-                 elevation: np.ndarray,
-                 x_coords: np.ndarray,
-                 y_coords: np.ndarray,
-                 resolution_m: float,
-                 utm_epsg: int,
-                 utm_zone: int,
-                 is_northern: bool):
+    def __init__(
+        self,
+        elevation: np.ndarray,
+        x_coords: np.ndarray,
+        y_coords: np.ndarray,
+        resolution_m: float,
+        utm_epsg: int,
+        utm_zone: int,
+        is_northern: bool,
+    ):
         self.elevation = elevation
         self.x_coords = x_coords  # 1D array of UTM Easting
-        self.y_coords = y_coords  # 1D array of UTM Northing (increasing from south to north)
+        self.y_coords = (
+            y_coords  # 1D array of UTM Northing (increasing from south to north)
+        )
         self.resolution_m = float(resolution_m)
         self.utm_epsg = int(utm_epsg)
         self.utm_zone = int(utm_zone)
@@ -36,11 +40,17 @@ class DEMGrid:
         self.rows, self.cols = elevation.shape
 
         # Coordinate transformers
-        self.transformer_to_utm = Transformer.from_crs("EPSG:4326", f"EPSG:{self.utm_epsg}", always_xy=True)
-        self.transformer_to_wgs84 = Transformer.from_crs(f"EPSG:{self.utm_epsg}", "EPSG:4326", always_xy=True)
+        self.transformer_to_utm = Transformer.from_crs(
+            "EPSG:4326", f"EPSG:{self.utm_epsg}", always_xy=True
+        )
+        self.transformer_to_wgs84 = Transformer.from_crs(
+            f"EPSG:{self.utm_epsg}", "EPSG:4326", always_xy=True
+        )
 
         # Compute slope, aspect and terrain metrics
-        self.slope_percent, self.slope_degrees, self.aspect_degrees = self._compute_gradients()
+        self.slope_percent, self.slope_degrees, self.aspect_degrees = (
+            self._compute_gradients()
+        )
 
     def _compute_gradients(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Compute terrain slope (percent & degrees) and aspect using central differences."""
@@ -65,8 +75,20 @@ class DEMGrid:
 
     def utm_to_grid(self, easting: float, northing: float) -> Tuple[int, int]:
         """Convert UTM (Easting, Northing) to closest grid index (row, col)."""
-        col = int(np.clip(np.round((easting - self.x_coords[0]) / self.resolution_m), 0, self.cols - 1))
-        row = int(np.clip(np.round((northing - self.y_coords[0]) / self.resolution_m), 0, self.rows - 1))
+        col = int(
+            np.clip(
+                np.round((easting - self.x_coords[0]) / self.resolution_m),
+                0,
+                self.cols - 1,
+            )
+        )
+        row = int(
+            np.clip(
+                np.round((northing - self.y_coords[0]) / self.resolution_m),
+                0,
+                self.rows - 1,
+            )
+        )
         return row, col
 
     def grid_to_wgs84(self, row: int, col: int) -> Tuple[float, float]:
@@ -85,17 +107,17 @@ class DEMGrid:
         """Summary statistics of the elevation grid."""
         valid_elev = self.elevation[~np.isnan(self.elevation)]
         return {
-            'min_elevation': float(np.min(valid_elev)),
-            'max_elevation': float(np.max(valid_elev)),
-            'mean_elevation': float(np.mean(valid_elev)),
-            'std_elevation': float(np.std(valid_elev)),
-            'relief': float(np.max(valid_elev) - np.min(valid_elev)),
-            'mean_slope_percent': float(np.nanmean(self.slope_percent)),
-            'mean_slope_degrees': float(np.nanmean(self.slope_degrees)),
-            'resolution_m': self.resolution_m,
-            'grid_rows': int(self.rows),
-            'grid_cols': int(self.cols),
-            'total_grid_cells': int(self.rows * self.cols)
+            "min_elevation": float(np.min(valid_elev)),
+            "max_elevation": float(np.max(valid_elev)),
+            "mean_elevation": float(np.mean(valid_elev)),
+            "std_elevation": float(np.std(valid_elev)),
+            "relief": float(np.max(valid_elev) - np.min(valid_elev)),
+            "mean_slope_percent": float(np.nanmean(self.slope_percent)),
+            "mean_slope_degrees": float(np.nanmean(self.slope_degrees)),
+            "resolution_m": self.resolution_m,
+            "grid_rows": int(self.rows),
+            "grid_cols": int(self.cols),
+            "total_grid_cells": int(self.rows * self.cols),
         }
 
 
@@ -107,19 +129,28 @@ class DEMGenerator:
     def __init__(self, default_resolution_m: float = 10.0):
         self.default_resolution_m = default_resolution_m
 
-    def generate_dem(self, parsed_data: Dict[str, Any], resolution_m: Optional[float] = None, smooth_sigma: float = 0.5) -> DEMGrid:
+    def generate_dem(
+        self,
+        parsed_data: Dict[str, Any],
+        resolution_m: Optional[float] = None,
+        smooth_sigma: float = 0.5,
+    ) -> DEMGrid:
         """
         Builds a georeferenced DEMGrid from parsed contour points.
         """
-        pts = parsed_data.get('point_cloud')
+        pts = parsed_data.get("point_cloud")
         if pts is None or len(pts) == 0:
             raise ValueError("No 3D points available for DEM generation.")
 
-        res_m = float(resolution_m if resolution_m and resolution_m > 0 else self.default_resolution_m)
+        res_m = float(
+            resolution_m
+            if resolution_m and resolution_m > 0
+            else self.default_resolution_m
+        )
 
         # 1. Determine optimal UTM Zone
-        center_lon = parsed_data['bounds']['center_lon']
-        center_lat = parsed_data['bounds']['center_lat']
+        center_lon = parsed_data["bounds"]["center_lon"]
+        center_lat = parsed_data["bounds"]["center_lat"]
         utm_zone = int(np.floor((center_lon + 180.0) / 6.0)) + 1
         is_northern = center_lat >= 0
         epsg = (32600 + utm_zone) if is_northern else (32700 + utm_zone)
@@ -152,12 +183,14 @@ class DEMGenerator:
 
         # 5. Interpolate continuous elevation surface
         # Use linear interpolation (TIN barycentric) with nearest neighbor fallback for outer hull
-        dem_linear = griddata(pts_utm, vals, (grid_x, grid_y), method='linear')
+        dem_linear = griddata(pts_utm, vals, (grid_x, grid_y), method="linear")
 
         # Fill any outer NaN regions with nearest neighbor
         nan_mask = np.isnan(dem_linear)
         if np.any(nan_mask):
-            dem_nearest = griddata(pts_utm, vals, (grid_x[nan_mask], grid_y[nan_mask]), method='nearest')
+            dem_nearest = griddata(
+                pts_utm, vals, (grid_x[nan_mask], grid_y[nan_mask]), method="nearest"
+            )
             dem_linear[nan_mask] = dem_nearest
 
         # 6. Apply gentle spatial smoothing filter to eliminate digital stepping artifacts
@@ -173,5 +206,5 @@ class DEMGenerator:
             resolution_m=res_m,
             utm_epsg=epsg,
             utm_zone=utm_zone,
-            is_northern=is_northern
+            is_northern=is_northern,
         )

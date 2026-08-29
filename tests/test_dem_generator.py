@@ -11,7 +11,9 @@ from app.dem_generator import DEMGenerator, DEMGrid
 
 @pytest.fixture(scope="module")
 def sample_kml_data():
-    kml_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "contours_1m.kml")
+    kml_path = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)), "contours_1m.kml"
+    )
     parser = KMLParser()
     return parser.parse(kml_path)
 
@@ -51,8 +53,8 @@ def test_dem_terrain_stats(sample_kml_data):
     dem = dem_gen.generate_dem(sample_kml_data)
 
     stats = dem.stats
-    assert stats['min_elevation'] >= 265.0
-    assert stats['max_elevation'] <= 300.0
-    assert stats['relief'] > 10.0
-    assert stats['mean_slope_percent'] >= 0.0
-    assert stats['total_grid_cells'] == dem.rows * dem.cols
+    assert stats["min_elevation"] >= 265.0
+    assert stats["max_elevation"] <= 300.0
+    assert stats["relief"] > 10.0
+    assert stats["mean_slope_percent"] >= 0.0
+    assert stats["total_grid_cells"] == dem.rows * dem.cols

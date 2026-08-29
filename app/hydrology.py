@@ -5,17 +5,12 @@ stream network extraction, topographic sink detection, and upstream watershed de
 """
 
 import os
-os.environ['MPLCONFIGDIR'] = '/tmp/matplotlib'
-
 import heapq
 from typing import Dict, Any, Tuple, List, Optional
 import numpy as np
-from scipy.ndimage import label, find_objects
-from shapely.geometry import Polygon, MultiPolygon, LineString, MultiLineString, mapping
-from shapely.ops import unary_union
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
+from scipy.ndimage import label
+from shapely.geometry import Polygon, MultiPolygon, LineString, MultiLineString, box, mapping
+from shapely.ops import unary_union, transform
 
 from app.dem_generator import DEMGrid
 
@@ -154,7 +149,6 @@ class HydrologyEngine:
         Returns GeoJSON MultiLineString of stream paths.
         """
         threshold = np.percentile(flow_acc, threshold_percentile)
-        # Ensure threshold is reasonable (at least 100 cells)
         threshold = max(threshold, 50.0)
 
         rows, cols = flow_acc.shape
@@ -245,7 +239,6 @@ class HydrologyEngine:
                 'cell_count': int(cell_count)
             })
 
-        # Sort depressions by storage volume descending
         depressions.sort(key=lambda d: d['estimated_volume_m3'], reverse=True)
         return depressions
 
@@ -299,13 +292,13 @@ class HydrologyEngine:
         mean_slope_pct = float(np.mean(catchment_slopes))
         mean_slope_deg = float(np.mean(dem.slope_degrees[catchment_mask]))
 
-        # 4. Extract Vector Polygon boundary
+        # 4. Extract Vector Polygon boundary using fast thread-safe row-span merging
         polygon_geojson, perimeter_m, bounds_wgs84 = self._polygonize_mask(catchment_mask, dem)
 
         # Catchment centroid
         mask_r, mask_c = np.where(catchment_mask)
-        mean_r = float(np.mean(mask_r))
-        mean_c = float(np.mean(mask_c))
+        mean_r = float(np.mean(mask_r)) if len(mask_r) > 0 else float(pr)
+        mean_c = float(np.mean(mask_c)) if len(mask_c) > 0 else float(pc)
         centroid_lon, centroid_lat = dem.grid_to_wgs84(int(round(mean_r)), int(round(mean_c)))
 
         return {
@@ -331,76 +324,46 @@ class HydrologyEngine:
 
     def _polygonize_mask(self, mask: np.ndarray, dem: DEMGrid) -> Tuple[Dict[str, Any], float, Dict[str, float]]:
         """
-        Converts 2D binary raster mask to a vector GeoJSON Polygon in WGS84 coordinates.
-        Calculates exact metric perimeter in meters.
+        Converts 2D binary raster mask to a vector GeoJSON Polygon in WGS84 coordinates
+        using thread-safe, fast horizontal row-span polygon union.
         """
-        # Matplotlib contour extraction at level 0.5
-        fig, ax = plt.subplots(figsize=(4, 4))
-        cs = ax.contour(mask.astype(float), levels=[0.5])
-        paths = cs.collections[0].get_paths() if cs.collections else []
-        plt.close(fig)
+        boxes = []
+        rows, cols = mask.shape
 
-        polygons_utm = []
-        polygons_wgs = []
-
-        for path in paths:
-            v = path.vertices
-            if len(v) < 4:
+        for r in range(rows):
+            row = mask[r]
+            if not np.any(row):
                 continue
+            # Extract contiguous true spans
+            diff = np.diff(np.pad(row.astype(np.int8), (1, 1), 'constant'))
+            starts = np.where(diff == 1)[0]
+            ends = np.where(diff == -1)[0]
+            for s, e in zip(starts, ends):
+                x0 = dem.x_coords[0] + s * dem.resolution_m
+                x1 = dem.x_coords[0] + e * dem.resolution_m
+                y0 = dem.y_coords[0] + r * dem.resolution_m
+                y1 = dem.y_coords[0] + (r + 1) * dem.resolution_m
+                boxes.append(box(x0, y0, x1, y1))
 
-            grid_cols = v[:, 0]
-            grid_rows = v[:, 1]
+        if not boxes:
+            return {"type": "Polygon", "coordinates": []}, 0.0, {}
 
-            eastings = dem.x_coords[0] + grid_cols * dem.resolution_m
-            northings = dem.y_coords[0] + grid_rows * dem.resolution_m
+        # Merge contiguous boxes into unified polygon
+        poly_utm = unary_union(boxes)
+        # Simplify slightly to smooth staircase edges
+        poly_utm = poly_utm.simplify(dem.resolution_m * 0.4, preserve_topology=True)
+        perimeter_m = float(poly_utm.length)
 
-            lons, lats = dem.transformer_to_wgs84.transform(eastings, northings)
+        # Transform directly from UTM to WGS84 (Lon, Lat)
+        poly_wgs = transform(lambda x, y, z=None: dem.transformer_to_wgs84.transform(x, y), poly_utm)
 
-            pts_utm = list(zip(eastings, northings))
-            pts_wgs = list(zip(lons, lats))
-
-            # Ensure ring is closed
-            if pts_utm[0] != pts_utm[-1]:
-                pts_utm.append(pts_utm[0])
-                pts_wgs.append(pts_wgs[0])
-
-            poly_u = Polygon(pts_utm)
-            poly_w = Polygon(pts_wgs)
-
-            if poly_u.is_valid and poly_u.area > 0:
-                polygons_utm.append(poly_u)
-                polygons_wgs.append(poly_w)
-
-        if not polygons_utm:
-            # Fallback: create bounding box polygon from mask cells
-            r_idx, c_idx = np.where(mask)
-            if len(r_idx) == 0:
-                return {"type": "Polygon", "coordinates": []}, 0.0, {}
-            r_min, r_max = int(np.min(r_idx)), int(np.max(r_idx))
-            c_min, c_max = int(np.min(c_idx)), int(np.max(c_idx))
-            p1 = dem.grid_to_wgs84(r_min, c_min)
-            p2 = dem.grid_to_wgs84(r_max, c_min)
-            p3 = dem.grid_to_wgs84(r_max, c_max)
-            p4 = dem.grid_to_wgs84(r_min, c_max)
-            coords = [[p1, p2, p3, p4, p1]]
-            return {"type": "Polygon", "coordinates": coords}, 0.0, {}
-
-        # Merge multiple polygon parts into single or multi-polygon
-        union_utm = unary_union(polygons_utm)
-        union_wgs = unary_union(polygons_wgs)
-
-        # Simplify slightly to remove micro pixel steps while preserving area
-        union_utm = union_utm.simplify(dem.resolution_m * 0.5, preserve_topology=True)
-        perimeter_m = float(union_utm.length)
-
-        geojson_geom = mapping(union_wgs)
-
-        bounds = union_wgs.bounds
+        geojson_geom = mapping(poly_wgs)
+        bounds = poly_wgs.bounds
         bounds_dict = {
-            'min_lon': float(bounds[0]),
-            'min_lat': float(bounds[1]),
-            'max_lon': float(bounds[2]),
-            'max_lat': float(bounds[3])
+            'min_lon': round(float(bounds[0]), 6),
+            'min_lat': round(float(bounds[1]), 6),
+            'max_lon': round(float(bounds[2]), 6),
+            'max_lat': round(float(bounds[3]), 6)
         }
 
         geojson_feature = {
@@ -418,10 +381,6 @@ class HydrologyEngine:
         """
         Estimates total annual water yield / runoff volume using the Rational Method.
         V = C * P * A
-        where:
-          C = runoff coefficient (dimensionless, 0.2-0.5 for rural/agricultural soil)
-          P = precipitation in meters (annual_rainfall_mm / 1000)
-          A = catchment area in m^2
         """
         precip_m = annual_rainfall_mm / 1000.0
         runoff_vol_m3 = catchment_area_sq_m * precip_m * runoff_coefficient
@@ -429,7 +388,6 @@ class HydrologyEngine:
 
         # Peak discharge rate estimation for 50mm/hr design storm (Q = C * I * A / 360 in m^3/s)
         design_intensity_mm_hr = 50.0
-        # Q (m3/s) = (C * I * A_ha) / 360
         area_ha = catchment_area_sq_m / 10000.0
         peak_discharge_m3_s = (runoff_coefficient * design_intensity_mm_hr * area_ha) / 360.0
 
