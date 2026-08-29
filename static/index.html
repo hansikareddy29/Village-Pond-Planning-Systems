@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Village Pond Planning & Catchment Analysis System</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  
+  <style>
+    #map { height: calc(100vh - 80px); }
+    .custom-scroll::-webkit-scrollbar { width: 6px; }
+    .custom-scroll::-webkit-scrollbar-track { background: #1f2937; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
+    .pulse-pin {
+      animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+    }
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 1; }
+      50% { transform: scale(1.15); opacity: 0.8; }
+      100% { transform: scale(0.95); opacity: 1; }
+    }
+  </style>
+</head>
+<body class="bg-gray-950 text-gray-100 font-sans antialiased flex flex-col h-screen overflow-hidden">
+
+  <!-- Header -->
+  <header class="bg-gray-900 border-b border-gray-800 px-6 py-3 flex items-center justify-between shadow-lg z-20">
+    <div class="flex items-center space-x-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-600 to-blue-500 flex items-center justify-center text-white shadow-md shadow-cyan-500/20">
+        <i class="fa-solid fa-water text-lg"></i>
+      </div>
+      <div>
+        <h1 class="text-lg font-bold text-white flex items-center gap-2">
+          Village Pond Planning & Catchment Engine
+          <span class="text-xs bg-cyan-900/80 text-cyan-300 border border-cyan-700 px-2 py-0.5 rounded-full font-mono font-medium">v1.0 API</span>
+        </h1>
+        <p class="text-xs text-gray-400">Automated KML/KMZ Terrain Modeling, Optimal Siting & D8 Catchment Delineation</p>
+      </div>
+    </div>
+    <div class="flex items-center space-x-3">
+      <a href="/docs" target="_blank" class="px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-xs font-semibold text-gray-200 transition flex items-center gap-1.5">
+        <i class="fa-solid fa-book text-cyan-400"></i> OpenAPI Docs
+      </a>
+      <div id="statusBadge" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-950/80 border border-emerald-700 text-xs text-emerald-300 font-mono">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        API Online
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Grid -->
+  <div class="flex flex-1 overflow-hidden relative">
+    
+    <!-- Sidebar Control Panel -->
+    <aside class="w-96 bg-gray-900 border-r border-gray-800 flex flex-col z-10 shadow-2xl custom-scroll overflow-y-auto">
+      <div class="p-5 space-y-5">
+        
+        <!-- File Upload Form -->
+        <div class="space-y-3">
+          <label class="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
+            <i class="fa-solid fa-file-arrow-up text-cyan-400"></i> Contour Map (KML/KMZ)
+          </label>
+          
+          <div id="dropZone" class="border-2 border-dashed border-gray-700 hover:border-cyan-500 rounded-xl p-4 text-center cursor-pointer bg-gray-800/50 hover:bg-gray-800/80 transition duration-200">
+            <input type="file" id="fileInput" accept=".kml,.kmz,.xml" class="hidden" />
+            <i class="fa-solid fa-cloud-arrow-up text-2xl text-cyan-400 mb-2"></i>
+            <p id="fileNameDisplay" class="text-xs text-gray-300 font-medium truncate">Click or drag & drop .KML / .KMZ file</p>
+            <p class="text-[10px] text-gray-500 mt-1">Supports contours_1m.kml or any contour file</p>
+          </div>
+        </div>
+
+        <!-- Parameters Accordion -->
+        <div class="bg-gray-800/60 rounded-xl p-3.5 border border-gray-700/60 space-y-3">
+          <div class="text-xs font-semibold text-gray-300 flex items-center justify-between">
+            <span class="flex items-center gap-1.5"><i class="fa-solid fa-sliders text-cyan-400"></i> Simulation Parameters</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2.5 text-xs">
+            <div>
+              <label class="text-[11px] text-gray-400 block mb-1">DEM Grid (m)</label>
+              <input type="number" id="paramGridRes" value="10.0" step="1.0" min="2" max="50" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-2.5 py-1.5 text-gray-200 focus:border-cyan-500 focus:outline-none" />
+            </div>
+            <div>
+              <label class="text-[11px] text-gray-400 block mb-1">Annual Rain (mm)</label>
+              <input type="number" id="paramRainfall" value="1000" step="50" min="100" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-2.5 py-1.5 text-gray-200 focus:border-cyan-500 focus:outline-none" />
+            </div>
+            <div>
+              <label class="text-[11px] text-gray-400 block mb-1">Runoff Coeff (C)</label>
+              <input type="number" id="paramRunoff" value="0.35" step="0.05" min="0.1" max="0.9" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-2.5 py-1.5 text-gray-200 focus:border-cyan-500 focus:outline-none" />
+            </div>
+            <div>
+              <label class="text-[11px] text-gray-400 block mb-1">Pond Depth (m)</label>
+              <input type="number" id="paramDepth" value="3.0" step="0.5" min="1" max="6" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-2.5 py-1.5 text-gray-200 focus:border-cyan-500 focus:outline-none" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Button -->
+        <button id="analyzeBtn" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-semibold py-2.5 px-4 rounded-xl shadow-lg shadow-cyan-500/25 transition duration-200 flex items-center justify-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+          <i class="fa-solid fa-play"></i> Run Catchment Analysis
+        </button>
+
+        <!-- Results Section (Dynamic) -->
+        <div id="resultsSection" class="hidden space-y-4 pt-2">
+          
+          <!-- Siting Recommendation Card -->
+          <div class="bg-gradient-to-br from-emerald-950/70 to-gray-900 border border-emerald-700/60 rounded-xl p-4 shadow-lg space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                <i class="fa-solid fa-location-dot"></i> Optimal Pond Location
+              </span>
+              <span id="suitabilityScoreBadge" class="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                Score: 97.2/100
+              </span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 text-xs pt-1">
+              <div class="bg-gray-900/80 p-2 rounded-lg border border-gray-800">
+                <div class="text-[10px] text-gray-400">Coordinates (WGS84)</div>
+                <div id="resCoords" class="font-mono text-cyan-300 font-semibold text-[11px] truncate">21.2442° N, 81.2883° E</div>
+              </div>
+              <div class="bg-gray-900/80 p-2 rounded-lg border border-gray-800">
+                <div class="text-[10px] text-gray-400">Elevation</div>
+                <div id="resElev" class="font-mono text-cyan-300 font-semibold text-[11px]">270.97 m MSL</div>
+              </div>
+            </div>
+
+            <p id="resRationale" class="text-[11px] text-gray-300 leading-relaxed italic bg-gray-900/50 p-2 rounded-lg border border-gray-800">
+              Optimal valley confluence with large upstream catchment, gentle bed slope (1.7%), and 3.0m natural depression.
+            </p>
+          </div>
+
+          <!-- Catchment Summary Card -->
+          <div class="bg-gray-800/50 border border-gray-700/60 rounded-xl p-3.5 space-y-2.5">
+            <div class="text-xs font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
+              <i class="fa-solid fa-chart-area"></i> Catchment Hydrology
+            </div>
+            
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div class="bg-gray-900/80 p-2 rounded-lg border border-gray-800">
+                <div class="text-[10px] text-gray-400">Catchment Area</div>
+                <div id="resArea" class="font-bold text-gray-100 text-sm">356.4 ha</div>
+                <div id="resAreaSqM" class="text-[10px] text-gray-500">3,564,200 m²</div>
+              </div>
+              <div class="bg-gray-900/80 p-2 rounded-lg border border-gray-800">
+                <div class="text-[10px] text-gray-400">Annual Runoff</div>
+                <div id="resRunoff" class="font-bold text-cyan-400 text-sm">1,247 ML</div>
+                <div class="text-[10px] text-gray-500">Million Liters</div>
+              </div>
+              <div class="bg-gray-900/80 p-2 rounded-lg border border-gray-800">
+                <div class="text-[10px] text-gray-400">Perimeter</div>
+                <div id="resPerimeter" class="font-semibold text-gray-200">11.8 km</div>
+              </div>
+              <div class="bg-gray-900/80 p-2 rounded-lg border border-gray-800">
+                <div class="text-[10px] text-gray-400">Elevation Range</div>
+                <div id="resElevRange" class="font-semibold text-gray-200">267m - 298m</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pond Engineering Sizing Card -->
+          <div class="bg-gray-800/50 border border-gray-700/60 rounded-xl p-3.5 space-y-2.5">
+            <div class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+              <i class="fa-solid fa-ruler-combined"></i> Pond Sizing & Capacity
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div class="bg-gray-900/80 p-2 rounded-lg border border-gray-800">
+                <div class="text-[10px] text-gray-400">Recommended Storage</div>
+                <div id="resCapacity" class="font-bold text-emerald-400 text-sm">50,000 m³</div>
+                <div class="text-[10px] text-gray-500">50 Million Liters</div>
+              </div>
+              <div class="bg-gray-900/80 p-2 rounded-lg border border-gray-800">
+                <div class="text-[10px] text-gray-400">Surface Area</div>
+                <div id="resPondArea" class="font-bold text-gray-200 text-sm">22,222 m²</div>
+                <div class="text-[10px] text-gray-500">~2.22 ha</div>
+              </div>
+              <div class="bg-gray-900/80 p-2 rounded-lg border border-gray-800">
+                <div class="text-[10px] text-gray-400">Excavation Savings</div>
+                <div id="resSavings" class="font-bold text-emerald-300">100% (Natural Bowl)</div>
+              </div>
+              <div class="bg-gray-900/80 p-2 rounded-lg border border-gray-800">
+                <div class="text-[10px] text-gray-400">Irrigation Potential</div>
+                <div id="resIrrigation" class="font-bold text-cyan-300">12.5 ha Area</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Download JSON/GeoJSON buttons -->
+          <div class="flex gap-2">
+            <button id="downloadGeoJsonBtn" class="flex-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-200 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition">
+              <i class="fa-solid fa-download text-cyan-400"></i> GeoJSON
+            </button>
+            <button id="downloadJsonBtn" class="flex-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-200 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition">
+              <i class="fa-solid fa-code text-emerald-400"></i> JSON Output
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+    </aside>
+
+    <!-- Map Container -->
+    <main class="flex-1 relative">
+      <div id="map" class="w-full h-full bg-gray-950"></div>
+
+      <!-- Map Overlay Legend -->
+      <div class="absolute bottom-6 right-6 bg-gray-900/90 backdrop-blur border border-gray-700/80 rounded-xl p-3.5 shadow-2xl z-[1000] text-xs space-y-2 max-w-xs">
+        <div class="font-bold text-gray-200 flex items-center gap-1.5 text-xs">
+          <i class="fa-solid fa-layer-group text-cyan-400"></i> Hydrological Map Layers
+        </div>
+        <div class="space-y-1.5 text-[11px] text-gray-300">
+          <div class="flex items-center gap-2">
+            <span class="w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white shadow"></span>
+            <span>Recommended Pond Site (Rank 1)</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="w-3.5 h-3.5 rounded-full bg-amber-500 border border-white"></span>
+            <span>Alternative Pond Candidates</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="w-4 h-3 bg-cyan-500/20 border-2 border-cyan-400 rounded"></span>
+            <span>Catchment / Watershed Polygon</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="w-4 h-1 bg-blue-400 rounded"></span>
+            <span>Drainage / Stream Network</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="w-4 h-1 border-t-2 border-dashed border-pink-500"></span>
+            <span>Survey Village Boundary</span>
+          </div>
+        </div>
+      </div>
+    </main>
+
+  </div>
+
+  <!-- App Script -->
+  <script>
+    // Initialize Map
+    const map = L.map('map', {
+      center: [21.2517, 81.2970],
+      zoom: 14,
+      zoomControl: false
+    });
+    L.control.zoom({ position: 'topright' }).addTo(map);
+
+    // Basemaps
+    const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap'
+    });
+    const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      attribution: '&copy; Esri World Imagery'
+    });
+    const darkMap = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; CARTO'
+    }).addTo(map);
+
+    L.control.layers({
+      "Dark Carto": darkMap,
+      "Satellite": satellite,
+      "OpenStreetMap": osm
+    }, null, { position: 'topright' }).addTo(map);
+
+    // Layer Group
+    let currentGeoJsonLayer = null;
+    let latestAnalysisResult = null;
+
+    // File Upload Drag & Drop
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const fileNameDisplay = document.getElementById('fileNameDisplay');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+
+    dropZone.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('border-cyan-400'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('border-cyan-400'));
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('border-cyan-400');
+      if (e.dataTransfer.files.length) {
+        fileInput.files = e.dataTransfer.files;
+        handleFileSelect();
+      }
+    });
+
+    fileInput.addEventListener('change', handleFileSelect);
+
+    function handleFileSelect() {
+      if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        fileNameDisplay.textContent = `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+        fileNameDisplay.classList.add('text-cyan-300');
+      }
+    }
+
+    // Run Analysis
+    analyzeBtn.addEventListener('click', async () => {
+      let file = fileInput.files[0];
+      
+      const formData = new FormData();
+      if (file) {
+        formData.append('file', file);
+      } else {
+        alert('Please upload a .KML or .KMZ file first.');
+        return;
+      }
+
+      formData.append('grid_resolution_m', document.getElementById('paramGridRes').value);
+      formData.append('rainfall_annual_mm', document.getElementById('paramRainfall').value);
+      formData.append('runoff_coefficient', document.getElementById('paramRunoff').value);
+      formData.append('pond_depth_m', document.getElementById('paramDepth').value);
+      formData.append('num_candidate_sites', 5);
+
+      analyzeBtn.disabled = true;
+      analyzeBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing DEM & Hydrology...';
+
+      try {
+        const response = await fetch('/analyzeContour', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!response.ok) {
+          const err = await response.json();
+          throw new Error(err.detail || 'Analysis request failed');
+        }
+
+        const data = await response.json();
+        latestAnalysisResult = data;
+        renderResults(data);
+      } catch (error) {
+        alert('Error: ' + error.message);
+      } finally {
+        analyzeBtn.disabled = false;
+        analyzeBtn.innerHTML = '<i class="fa-solid fa-play"></i> Run Catchment Analysis';
+      }
+    });
+
+    function renderResults(data) {
+      document.getElementById('resultsSection').classList.remove('hidden');
+
+      const site = data.recommended_pond_location;
+      const catchment = data.catchment_summary;
+      const design = data.pond_design_recommendations;
+
+      // Update Card Metrics
+      document.getElementById('suitabilityScoreBadge').textContent = `Score: ${site.suitability_score}/100`;
+      document.getElementById('resCoords').textContent = `${site.coordinates.latitude.toFixed(5)}° N, ${site.coordinates.longitude.toFixed(5)}° E`;
+      document.getElementById('resElev').textContent = `${site.coordinates.elevation_m.toFixed(1)} m MSL`;
+      document.getElementById('resRationale').textContent = site.selection_rationale;
+
+      document.getElementById('resArea').textContent = `${catchment.area_hectares.toFixed(1)} ha`;
+      document.getElementById('resAreaSqM').textContent = `${catchment.area_sq_meters.toLocaleString()} m² (${catchment.area_acres.toFixed(1)} acres)`;
+      document.getElementById('resRunoff').textContent = `${catchment.estimated_annual_runoff_million_liters.toFixed(1)} ML`;
+      document.getElementById('resPerimeter').textContent = `${(catchment.perimeter_meters / 1000).toFixed(2)} km`;
+      document.getElementById('resElevRange').textContent = `${catchment.min_elevation_m.toFixed(0)}m - ${catchment.max_elevation_m.toFixed(0)}m`;
+
+      document.getElementById('resCapacity').textContent = `${design.recommended_storage_capacity_m3.toLocaleString()} m³`;
+      document.getElementById('resPondArea').textContent = `${design.recommended_surface_area_sq_m.toLocaleString()} m²`;
+      document.getElementById('resSavings').textContent = `${design.excavation_savings_from_depression_percent}% Natural Saving`;
+      document.getElementById('resIrrigation').textContent = `${design.utilization_potential.supplemental_irrigation_ha} ha Command Area`;
+
+      // Render on Leaflet Map
+      if (currentGeoJsonLayer) {
+        map.removeLayer(currentGeoJsonLayer);
+      }
+
+      currentGeoJsonLayer = L.geoJSON(data.geojson, {
+        style: function (feature) {
+          if (feature.geometry.type === "Polygon" || feature.geometry.type === "MultiPolygon") {
+            if (feature.properties && feature.properties.name === "Survey Boundary") {
+              return { color: '#E91E63', weight: 2, dashArray: '5, 5', fillOpacity: 0.05 };
+            }
+            return {
+              color: '#06B6D4',
+              weight: 3,
+              fillColor: '#0891B2',
+              fillOpacity: 0.35
+            };
+          } else if (feature.geometry.type === "MultiLineString" || feature.geometry.type === "LineString") {
+            return {
+              color: '#38BDF8',
+              weight: 2,
+              opacity: 0.8
+            };
+          }
+        },
+        pointToLayer: function (feature, latlng) {
+          const isPrimary = feature.properties && feature.properties.is_primary;
+          const color = isPrimary ? '#10B981' : '#F59E0B';
+          const radius = isPrimary ? 9 : 6;
+
+          const marker = L.circleMarker(latlng, {
+            radius: radius,
+            fillColor: color,
+            color: '#FFFFFF',
+            weight: 2,
+            opacity: 1,
+            fillOpacity: 0.95
+          });
+
+          if (isPrimary) {
+            marker._path?.classList.add('pulse-pin');
+          }
+
+          const popupContent = `
+            <div style="font-family: sans-serif; font-size: 12px; line-height: 1.4; color: #111;">
+              <strong style="color: ${color}; font-size: 13px;">${feature.properties.name}</strong><br/>
+              <b>Suitability Score:</b> ${feature.properties.suitability_score}/100<br/>
+              <b>Elevation:</b> ${feature.properties.elevation_m} m<br/>
+              <b>Catchment:</b> ${feature.properties.catchment_area_ha} ha<br/>
+              <p style="margin-top: 4px; font-size: 11px; color: #444;">${feature.properties.selection_rationale}</p>
+            </div>
+          `;
+          marker.bindPopup(popupContent);
+          return marker;
+        }
+      }).addTo(map);
+
+      // Fit map bounds to catchment/survey area
+      map.fitBounds(currentGeoJsonLayer.getBounds(), { padding: [30, 30] });
+    }
+
+    // Download GeoJSON
+    document.getElementById('downloadGeoJsonBtn')?.addEventListener('click', () => {
+      if (!latestAnalysisResult) return;
+      const blob = new Blob([JSON.stringify(latestAnalysisResult.geojson, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'village_pond_catchment.geojson';
+      a.click();
+    });
+
+    // Download JSON Response
+    document.getElementById('downloadJsonBtn')?.addEventListener('click', () => {
+      if (!latestAnalysisResult) return;
+      const blob = new Blob([JSON.stringify(latestAnalysisResult, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'pond_planning_analysis.json';
+      a.click();
+    });
+  </script>
+</body>
+</html>
