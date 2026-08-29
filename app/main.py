@@ -1,21 +1,18 @@
 """
 FastAPI Backend Application for Village Pond Planning & Catchment Analysis
-Provides endpoints:
+Provides backend REST API routes:
 - POST /analyzeContour
 - POST /findCatchment
-- POST /analyzeSample
 - GET /health
-- GET / (Interactive Web Visualizer Dashboard)
+- GET / (Redirects to /docs OpenAPI Specification)
 """
 
 import time
 import os
-import traceback
 from typing import Optional
-from fastapi import FastAPI, UploadFile, File, Form, Query, HTTPException, status
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi.responses import RedirectResponse
 
 from app.kml_parser import KMLParser, KMLParseError
 from app.dem_generator import DEMGenerator
@@ -24,16 +21,16 @@ from app.pond_siting import PondSitingEngine
 from app.models import AnalysisResponse
 
 
-# Initialize FastAPI App
+# Initialize FastAPI Backend Application
 app = FastAPI(
-    title="Village Pond Planning & Catchment Analysis API",
-    description="Automated terrain modeling, optimal pond location identification, and hydrological catchment delineation from KML/KMZ contour maps.",
+    title="Village Pond Planning & Catchment Analysis Backend API",
+    description="Backend API for terrain elevation modeling, optimal pond location identification, and hydrological catchment delineation from KML/KMZ contour maps.",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc"
 )
 
-# Enable CORS for cross-origin frontend requests
+# Enable CORS for backend API access
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -42,12 +39,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount static directory for frontend visualizer
-static_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static")
-if os.path.exists(static_dir):
-    app.mount("/static", StaticFiles(directory=static_dir), name="static")
-
-# Shared Engine Instances
+# Shared Hydrology & Geospatial Engines
 kml_parser = KMLParser()
 dem_generator = DEMGenerator(default_resolution_m=10.0)
 hydrology_engine = HydrologyEngine()
@@ -63,7 +55,7 @@ def _process_contour_map(
     pond_depth_m: float = 3.0,
     num_candidate_sites: int = 5
 ) -> dict:
-    """Core analysis workflow executing DEM generation, hydrological routing, and pond siting."""
+    """Core backend analysis workflow executing DEM generation, hydrological routing, and pond siting."""
     t_start = time.time()
 
     # 1. Parse KML/KMZ
@@ -155,7 +147,7 @@ def _process_contour_map(
     geojson_features.append({
         "type": "Feature",
         "properties": {
-            "name": f"Recommended Pond Site (Rank 1)",
+            "name": "Recommended Pond Site (Rank 1)",
             "site_id": top_site['site_id'],
             "suitability_score": top_site['suitability_score'],
             "elevation_m": top_site['coordinates']['elevation_m'],
@@ -218,7 +210,7 @@ def _process_contour_map(
 
     t_exec = round(time.time() - t_start, 3)
 
-    # 9. Format Complete Response
+    # 9. Format Structured JSON Response
     response = {
         "success": True,
         "message": "Contour map terrain analysis and catchment delineation completed successfully.",
@@ -290,7 +282,6 @@ async def analyze_contour(
         contents = await file.read()
         filename = file.filename
     else:
-        # Fallback to local contours_1m.kml
         sample_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "contours_1m.kml")
         if not os.path.exists(sample_path):
             raise HTTPException(status_code=400, detail="No file uploaded and sample contours_1m.kml not found.")
@@ -315,7 +306,7 @@ async def analyze_contour(
 @app.post(
     "/findCatchment",
     response_model=AnalysisResponse,
-    summary="Find Catchment and Pond Location (Alias)",
+    summary="Find Catchment and Pond Location (Alias Endpoint)",
     description="Alias endpoint for POST /analyzeContour."
 )
 async def find_catchment(
@@ -336,44 +327,18 @@ async def find_catchment(
     )
 
 
-@app.post(
-    "/analyzeSample",
-    response_model=AnalysisResponse,
-    summary="Analyze Provided Sample Map (1-Click Demo)",
-    description="Analyzes the provided contours_1m.kml sample contour map."
-)
-async def analyze_sample(
-    grid_resolution_m: float = Form(10.0),
-    rainfall_annual_mm: float = Form(1000.0),
-    runoff_coefficient: float = Form(0.35),
-    pond_depth_m: float = Form(3.0),
-    num_candidate_sites: int = Form(5)
-):
-    return await analyze_contour(
-        file=None,
-        grid_resolution_m=grid_resolution_m,
-        rainfall_annual_mm=rainfall_annual_mm,
-        runoff_coefficient=runoff_coefficient,
-        pond_depth_m=pond_depth_m,
-        num_candidate_sites=num_candidate_sites
-    )
-
-
 @app.get("/health", summary="Health Check")
 async def health_check():
     """Returns API health status."""
     return {
         "status": "healthy",
-        "service": "Village Pond Planning & Catchment Analysis API",
+        "service": "Village Pond Planning & Catchment Analysis Backend API",
         "version": "1.0.0",
         "timestamp": time.time()
     }
 
 
-@app.get("/", response_class=HTMLResponse, summary="Web Dashboard Visualizer")
-async def serve_dashboard():
-    """Serves the interactive Leaflet map dashboard."""
-    index_file = os.path.join(static_dir, "index.html")
-    if os.path.exists(index_file):
-        return FileResponse(index_file)
-    return HTMLResponse("<h1>Village Pond Planning API</h1><p>Visit <a href='/docs'>/docs</a> for OpenAPI specification.</p>")
+@app.get("/", summary="Root Endpoint (OpenAPI Redirect)")
+async def root():
+    """Redirects to interactive OpenAPI specification docs."""
+    return RedirectResponse(url="/docs")
