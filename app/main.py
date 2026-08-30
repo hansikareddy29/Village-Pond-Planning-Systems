@@ -1,17 +1,18 @@
 """
 FastAPI Backend Application for Village Pond Planning & Catchment Analysis
 Provides backend REST API routes:
-- POST /analyzeContour
+- POST /analyzeContour (Supports format='json' or format='geojson')
 - GET /health
 - GET / (Redirects to /docs OpenAPI Specification)
 """
 
 import time
 import os
+import json
 from typing import Optional
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException, status
+from fastapi import FastAPI, UploadFile, File, Form, Query, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, Response
 
 from app.kml_parser import KMLParser, KMLParseError
 from app.dem_generator import DEMGenerator
@@ -23,7 +24,7 @@ from app.models import AnalysisResponse
 # Initialize FastAPI Backend Application
 app = FastAPI(
     title="Village Pond Planning & Catchment Analysis Backend API",
-    description="Backend API for terrain elevation modeling, optimal pond location identification, and hydrological catchment delineation from KML/KMZ contour maps.",
+    description="Backend API for terrain elevation modeling, optimal pond location identification, and hydrological catchment delineation from KML/KMZ contour maps. Returns structured JSON or downloadable GeoJSON files.",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc"
@@ -265,12 +266,12 @@ def _process_contour_map(
 
 @app.post(
     "/analyzeContour",
-    response_model=AnalysisResponse,
     summary="Analyze Contour Map & Delineate Catchment",
-    description="Accepts a KML/KMZ contour map upload, analyzes terrain elevation, identifies optimal pond locations, delineates the contributing watershed catchment, and computes water storage recommendations."
+    description="Accepts a KML/KMZ contour map upload. Returns structured JSON analysis by default, or direct GeoJSON FeatureCollection file if format='geojson'."
 )
 async def analyze_contour(
     file: Optional[UploadFile] = File(None, description="KML or KMZ contour map file (optional, defaults to sample contours_1m.kml)"),
+    format: str = Form("json", description="Output format: 'json' (complete analysis report) or 'geojson' (pure GeoJSON FeatureCollection file)"),
     grid_resolution_m: float = Form(10.0, description="Spatial DEM grid cell resolution in meters (e.g. 5.0 to 20.0)"),
     rainfall_annual_mm: float = Form(1000.0, description="Average annual precipitation in mm for water yield calculation"),
     runoff_coefficient: float = Form(0.35, description="Catchment runoff coefficient C (0.1 to 0.8)"),
@@ -291,7 +292,7 @@ async def analyze_contour(
     if len(contents) == 0:
         raise HTTPException(status_code=400, detail="Uploaded file is empty.")
     
-    return _process_contour_map(
+    analysis_result = _process_contour_map(
         file_bytes=contents,
         filename=filename,
         grid_resolution_m=grid_resolution_m,
@@ -300,6 +301,20 @@ async def analyze_contour(
         pond_depth_m=pond_depth_m,
         num_candidate_sites=num_candidate_sites
     )
+
+    # Return pure GeoJSON file if requested
+    if format.lower() == "geojson":
+        geojson_str = json.dumps(analysis_result["geojson"], indent=2)
+        return Response(
+            content=geojson_str,
+            media_type="application/geo+json",
+            headers={
+                "Content-Disposition": f"attachment; filename=catchment_pond_output.geojson"
+            }
+        )
+
+    # Otherwise return full JSON analysis
+    return analysis_result
 
 
 @app.get("/health", summary="Health Check")

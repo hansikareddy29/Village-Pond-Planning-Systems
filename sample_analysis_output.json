@@ -1,7 +1,7 @@
 {
   "success": true,
   "message": "Contour map terrain analysis and catchment delineation completed successfully.",
-  "execution_time_seconds": 5.332,
+  "execution_time_seconds": 1.496,
   "metadata": {
     "filename": "contours_1m.kml",
     "num_contours_extracted": 1355,
