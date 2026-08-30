@@ -1,5 +1,6 @@
 """
 Pydantic Models and GeoJSON Schemas for API Requests & Responses
+Clearly separates the physical pond storage location from the hydrological pour point.
 """
 
 from typing import List, Dict, Any, Optional
@@ -21,6 +22,25 @@ class UTMCoordinates(BaseModel):
     zone: int = Field(..., description="UTM Zone number")
 
 
+class GridIndex(BaseModel):
+    row: int = Field(..., description="DEM grid row index")
+    col: int = Field(..., description="DEM grid column index")
+
+
+class PourPoint(BaseModel):
+    coordinates: Coordinates = Field(
+        ..., description="Downstream drainage outlet coordinates on the stream channel"
+    )
+    utm_coordinates: UTMCoordinates
+    grid_index: GridIndex
+    flow_accumulation_cells: float = Field(
+        ..., description="Total upstream contributing DEM cells accumulating at this pour point"
+    )
+    drainage_area_ha: float = Field(
+        ..., description="Upstream contributing drainage area in hectares"
+    )
+
+
 class CriteriaBreakdown(BaseModel):
     catchment_score: float = Field(
         ..., description="Contributing upstream area score (0-100)"
@@ -37,9 +57,9 @@ class CriteriaBreakdown(BaseModel):
 
 
 class LocalTerrain(BaseModel):
-    slope_percent: float = Field(..., description="Local slope gradient in percent")
+    slope_percent: float = Field(..., description="Local slope gradient at the pond location in percent")
     depression_depth_m: float = Field(
-        ..., description="Depth of natural hollow/depression in meters"
+        ..., description="Depth of natural hollow/depression at the pond location in meters"
     )
     topographic_wetness_index: float = Field(
         ..., description="Topographic Wetness Index (TWI)"
@@ -50,8 +70,17 @@ class LocalTerrain(BaseModel):
 class CandidateSite(BaseModel):
     site_id: str
     rank: int
-    coordinates: Coordinates
+    candidate_type: str = Field(
+        ..., description="Classification of candidate: 'natural_depression', 'valley_storage', or 'drainage_convergence'"
+    )
+    coordinates: Coordinates = Field(
+        ..., description="Physical pond storage/construction location center"
+    )
     utm_coordinates: UTMCoordinates
+    grid_index: GridIndex
+    associated_pour_point: PourPoint = Field(
+        ..., description="Downstream hydrological pour point on the drainage path from which the catchment is delineated"
+    )
     suitability_score: float = Field(
         ..., description="Composite suitability score (0-100)"
     )

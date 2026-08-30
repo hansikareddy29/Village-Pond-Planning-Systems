@@ -1,25 +1,31 @@
 """
 Pond Siting and Sizing Module
 Implements Multi-Criteria Decision Analysis (MCDA) to evaluate terrain for optimal
-farm/village pond placement, and computes engineering sizing and water storage estimates.
+farm/village pond placement, clearly distinguishing the physical pond water storage basin
+from the downstream hydrological pour point on the drainage channel.
 """
 
 from typing import Dict, Any, List, Tuple, Optional
 import numpy as np
 from app.dem_generator import DEMGrid
+from app.hydrology import D8_NEIGHBORS
 
 
 class PondSitingEngine:
     """
-    Evaluates topographic, hydrological, and geotechnical factors to rank optimal pond sites
-    and provide engineering design recommendations.
+    Evaluates topographic, hydrological, and geotechnical factors to rank optimal pond sites.
+    Distinguishes:
+    1. Physical Pond Storage Location: The center of the natural topographic hollow, valley bed,
+       or gentle-slope field basin where water is impounded/stored.
+    2. Associated Hydrological Pour Point: The downstream drainage outlet cell along the stream
+       channel from which the contributing upstream watershed catchment is delineated.
     """
 
     def __init__(
         self,
-        weight_catchment: float = 0.40,
+        weight_catchment: float = 0.35,
         weight_depression: float = 0.25,
-        weight_slope: float = 0.20,
+        weight_slope: float = 0.25,
         weight_twi: float = 0.15,
     ):
         self.w_catchment = weight_catchment
@@ -32,165 +38,245 @@ class PondSitingEngine:
         dem: DEMGrid,
         hydro_results: Dict[str, Any],
         num_candidates: int = 5,
-        target_catchment_ha: float = 10.0,
-        boundary_margin_cells: int = 8,
+        target_catchment_ha: float = 15.0,
+        boundary_margin_cells: int = 10,
     ) -> List[Dict[str, Any]]:
         """
-        Scans DEM and hydrology results to identify and rank candidate pond sites.
+        Identifies, evaluates, and ranks candidate pond storage sites across the terrain.
         """
         flow_acc = hydro_results["flow_accumulation"]
+        flow_dir = hydro_results["flow_direction"]
         dep_depth = hydro_results["depression_depth"]
         slope = dem.slope_percent
         rows, cols = dem.rows, dem.cols
-        cell_area = dem.resolution_m**2
+        cell_area = dem.resolution_m ** 2
 
-        # 1. Mask out outer perimeter cells to avoid boundary truncation
+        # 1. Mask out outer perimeter cells to avoid edge boundary truncation
         valid_mask = np.zeros((rows, cols), dtype=bool)
-        m = max(2, boundary_margin_cells)
-        valid_mask[m : rows - m, m : cols - m] = True
+        m = max(3, boundary_margin_cells)
+        valid_mask[m:rows - m, m:cols - m] = True
 
         # 2. Compute Topographic Wetness Index (TWI)
-        slope_rad = np.deg2rad(dem.slope_degrees)
-        twi = np.log(
-            (flow_acc * dem.resolution_m) / (np.tan(np.maximum(slope_rad, 0.01)))
-        )
+        slope_rad = np.deg2rad(np.maximum(0.1, dem.slope_degrees))
+        twi = np.log((flow_acc * dem.resolution_m) / np.tan(slope_rad))
 
-        # 3. Gather candidate locations from:
-        #    a) Top natural depressions (sinks)
-        #    b) High accumulation confluence nodes (top 1% drainage cells)
-        candidate_grids: List[Tuple[int, int]] = []
+        raw_candidates: List[Dict[str, Any]] = []
 
-        # Depressions
-        for dep in hydro_results.get("depressions", [])[:30]:
-            candidate_grids.append(dep["bottom_grid"])
-
-        # High accumulation points
-        high_acc_threshold = np.percentile(flow_acc, 99.0)
-        high_acc_idx = np.where((flow_acc >= high_acc_threshold) & valid_mask)
-        for r, c in zip(high_acc_idx[0], high_acc_idx[1]):
-            candidate_grids.append((int(r), int(c)))
-
-        # 4. Spatially cluster / deduplicate candidates (minimum spacing between candidates)
-        min_cell_spacing = max(4, int(50.0 / dem.resolution_m))  # ~50 meters separation
-        unique_candidates: List[Tuple[int, int]] = []
-
-        for r, c in candidate_grids:
-            if not valid_mask[r, c]:
+        # -------------------------------------------------------------------------
+        # Strategy A: Natural Topographic Depressions / Storage Sinks
+        # -------------------------------------------------------------------------
+        for dep in hydro_results.get("depressions", [])[:25]:
+            br, bc = dep["bottom_grid"]
+            if not valid_mask[br, bc]:
                 continue
+
+            # Trace downstream along D8 flow path to find the natural spillway / outlet pour point
+            curr_r, curr_c = br, bc
+            for _ in range(20):
+                d = flow_dir[curr_r, curr_c]
+                if d >= 0:
+                    dr, dc, _ = D8_NEIGHBORS[d]
+                    nr, nc = curr_r + dr, curr_c + dc
+                    if 0 <= nr < rows and 0 <= nc < cols:
+                        curr_r, curr_c = nr, nc
+                        # Stop when we reach the depression boundary / spillway
+                        if dep_depth[curr_r, curr_c] == 0.0:
+                            break
+                    else:
+                        break
+                else:
+                    break
+
+            pour_r, pour_c = curr_r, curr_c
+            raw_candidates.append({
+                "type": "natural_depression",
+                "pond_grid": (int(br), int(bc)),
+                "pour_grid": (int(pour_r), int(pour_c))
+            })
+
+        # -------------------------------------------------------------------------
+        # Strategy B: Valley Storage & Drainage Confluence Basins
+        # -------------------------------------------------------------------------
+        stream_thresh = np.percentile(flow_acc, 98.0)
+        high_acc_idx = np.where((flow_acc >= stream_thresh) & valid_mask)
+
+        for pr, pc in zip(high_acc_idx[0], high_acc_idx[1]):
+            # pr, pc is on the drainage line (the hydrological pour point)
+            # Find the neighboring gentle valley storage hollow (within a local 4-cell / 40m radius)
+            best_pond = (int(pr), int(pc))
+            best_local_score = -1e9
+            pour_elev = dem.elevation[pr, pc]
+
+            for dr in range(-4, 5):
+                for dc in range(-4, 5):
+                    nr, nc = pr + dr, pc + dc
+                    if 0 <= nr < rows and 0 <= nc < cols and valid_mask[nr, nc]:
+                        dist_m = np.sqrt(dr**2 + dc**2) * dem.resolution_m
+                        if dist_m > 45.0:
+                            continue
+                        slp = slope[nr, nc]
+                        dep_d = dep_depth[nr, nc]
+                        elev = dem.elevation[nr, nc]
+
+                        # Favor gentle slope, natural hollow, elevation close to drainage bed
+                        slp_s = max(0.0, 1.0 - (slp / 8.0))
+                        dep_s = min(1.0, dep_d / 2.0)
+                        elev_diff = abs(elev - pour_elev)
+                        elev_s = max(0.0, 1.0 - (elev_diff / 4.0))
+
+                        local_score = (0.45 * slp_s) + (0.35 * dep_s) + (0.20 * elev_s)
+                        if local_score > best_local_score:
+                            best_local_score = local_score
+                            best_pond = (int(nr), int(nc))
+
+            raw_candidates.append({
+                "type": "valley_storage",
+                "pond_grid": best_pond,
+                "pour_grid": (int(pr), int(pc))
+            })
+
+        # -------------------------------------------------------------------------
+        # 3. Spatial Deduplication & Minimum Spacing between Candidates
+        # -------------------------------------------------------------------------
+        min_cell_spacing = max(6, int(60.0 / dem.resolution_m))  # ~60 meters separation
+        unique_candidates: List[Dict[str, Any]] = []
+
+        for cand in raw_candidates:
+            pr, pc = cand["pond_grid"]
             if any(
-                abs(r - ur) < min_cell_spacing and abs(c - uc) < min_cell_spacing
-                for ur, uc in unique_candidates
+                abs(pr - u["pond_grid"][0]) < min_cell_spacing and abs(pc - u["pond_grid"][1]) < min_cell_spacing
+                for u in unique_candidates
             ):
                 continue
-            unique_candidates.append((r, c))
+            unique_candidates.append(cand)
 
-        # 5. Multi-Criteria Scoring for each candidate
+        # -------------------------------------------------------------------------
+        # 4. Multi-Criteria Decision Analysis (MCDA) Scoring
+        # -------------------------------------------------------------------------
         scored_sites = []
-        for r, c in unique_candidates:
-            catchment_area_m2 = float(flow_acc[r, c] * cell_area)
+        for cand in unique_candidates:
+            pond_r, pond_c = cand["pond_grid"]
+            pour_r, pour_c = cand["pour_grid"]
+
+            # Hydrological catchment metrics from the associated pour point
+            catchment_cells = float(flow_acc[pour_r, pour_c])
+            catchment_area_m2 = catchment_cells * cell_area
             catchment_area_ha = catchment_area_m2 / 10000.0
-            dep_d = float(dep_depth[r, c])
-            slp = float(slope[r, c])
-            tw = float(twi[r, c])
-            elev = float(dem.elevation[r, c])
 
-            # Catchment score (peaks when catchment is substantial, >= target_catchment_ha)
-            score_catchment = min(
-                1.0, catchment_area_ha / max(1.0, target_catchment_ha)
-            )
+            # Local terrain metrics at the physical pond storage location
+            dep_d = float(dep_depth[pond_r, pond_c])
+            slp = float(slope[pond_r, pond_c])
+            tw = float(twi[pond_r, pond_c])
+            pond_elev = float(dem.elevation[pond_r, pond_c])
+            pour_elev = float(dem.elevation[pour_r, pour_c])
 
-            # Depression score (natural storage capacity, 0 to 3m depth)
+            # Catchment score (0.0 to 1.0)
+            score_catchment = min(1.0, catchment_area_ha / max(1.0, target_catchment_ha))
+
+            # Depression storage depth score (0.0 to 1.0)
             score_depression = min(1.0, dep_d / 2.5)
 
-            # Slope score (gentle slope < 5% is ideal, slopes > 15% penalized)
-            score_slope = max(0.0, 1.0 - (slp / 15.0))
+            # Slope stability score (gentle slope < 4% is ideal; penalize steep slopes > 10%)
+            score_slope = max(0.0, 1.0 - (slp / 10.0))
 
-            # TWI score (higher moisture retention / wetness is better)
+            # Topographic wetness index score (0.0 to 1.0)
             score_twi = min(1.0, max(0.0, (tw - 4.0) / 10.0))
 
-            # Weighted composite suitability score (0 - 100)
+            # Composite Suitability Score (0 - 100)
             suitability_score = round(
-                100.0
-                * (
+                100.0 * (
                     self.w_catchment * score_catchment
                     + self.w_depression * score_depression
                     + self.w_slope * score_slope
                     + self.w_twi * score_twi
                 ),
-                1,
+                1
             )
 
-            lon, lat = dem.grid_to_wgs84(r, c)
-            easting, northing = dem.grid_to_utm(r, c)
+            # Coordinates
+            pond_lon, pond_lat = dem.grid_to_wgs84(pond_r, pond_c)
+            pond_easting, pond_northing = dem.grid_to_utm(pond_r, pond_c)
 
-            # Generate natural language engineering rationale
+            pour_lon, pour_lat = dem.grid_to_wgs84(pour_r, pour_c)
+            pour_easting, pour_northing = dem.grid_to_utm(pour_r, pour_c)
+
+            # Dynamic Engineering Selection Rationale
             rationale_parts = []
-            if catchment_area_ha >= 10.0:
+            if cand["type"] == "natural_depression":
                 rationale_parts.append(
-                    f"Substantial upstream drainage ({catchment_area_ha:.1f} ha)"
+                    f"Natural topographic depression with {dep_d:.1f}m existing hollow depth"
                 )
             else:
                 rationale_parts.append(
-                    f"Moderate upstream catchment ({catchment_area_ha:.1f} ha)"
+                    f"Valley storage basin adjacent to drainage convergence"
                 )
 
-            if dep_d >= 1.0:
-                rationale_parts.append(
-                    f"Located in a natural topographic bowl ({dep_d:.1f}m depth) reducing excavation"
-                )
-            elif dep_d > 0.1:
-                rationale_parts.append(f"Mild natural hollow ({dep_d:.1f}m)")
-            else:
-                rationale_parts.append("Even valley bed")
+            rationale_parts.append(
+                f"Substantial upstream drainage ({catchment_area_ha:.1f} ha at pour point)"
+            )
 
             if slp < 3.0:
                 rationale_parts.append(
                     f"very gentle bed slope ({slp:.1f}%) for stable embankment"
                 )
-            elif slp < 8.0:
-                rationale_parts.append(f"moderate slope ({slp:.1f}%)")
             else:
-                rationale_parts.append(f"steep terrain ({slp:.1f}%)")
+                rationale_parts.append(
+                    f"moderate bed slope ({slp:.1f}%)"
+                )
 
             rationale = "; ".join(rationale_parts) + "."
 
-            scored_sites.append(
-                {
-                    "grid_index": {"row": int(r), "col": int(c)},
+            scored_sites.append({
+                "grid_index": {"row": int(pond_r), "col": int(pond_c)},
+                "candidate_type": cand["type"],
+                "coordinates": {
+                    "longitude": round(float(pond_lon), 6),
+                    "latitude": round(float(pond_lat), 6),
+                    "elevation_m": round(float(pond_elev), 2)
+                },
+                "utm_coordinates": {
+                    "easting": round(float(pond_easting), 1),
+                    "northing": round(float(pond_northing), 1),
+                    "epsg": dem.utm_epsg,
+                    "zone": dem.utm_zone
+                },
+                "associated_pour_point": {
                     "coordinates": {
-                        "longitude": round(float(lon), 6),
-                        "latitude": round(float(lat), 6),
-                        "elevation_m": round(float(elev), 2),
+                        "longitude": round(float(pour_lon), 6),
+                        "latitude": round(float(pour_lat), 6),
+                        "elevation_m": round(float(pour_elev), 2)
                     },
                     "utm_coordinates": {
-                        "easting": round(float(easting), 1),
-                        "northing": round(float(northing), 1),
+                        "easting": round(float(pour_easting), 1),
+                        "northing": round(float(pour_northing), 1),
                         "epsg": dem.utm_epsg,
-                        "zone": dem.utm_zone,
+                        "zone": dem.utm_zone
                     },
-                    "suitability_score": float(suitability_score),
-                    "criteria_breakdown": {
-                        "catchment_score": round(float(score_catchment * 100), 1),
-                        "depression_score": round(float(score_depression * 100), 1),
-                        "slope_stability_score": round(float(score_slope * 100), 1),
-                        "wetness_index_score": round(float(score_twi * 100), 1),
-                    },
-                    "local_terrain": {
-                        "slope_percent": round(float(slp), 2),
-                        "depression_depth_m": round(float(dep_d), 2),
-                        "topographic_wetness_index": round(float(tw), 2),
-                        "elevation_m": round(float(elev), 2),
-                    },
-                    "catchment_area_ha": round(float(catchment_area_ha), 3),
-                    "catchment_area_sq_m": round(float(catchment_area_m2), 1),
-                    "selection_rationale": rationale,
-                }
-            )
+                    "grid_index": {"row": int(pour_r), "col": int(pour_c)},
+                    "flow_accumulation_cells": float(catchment_cells),
+                    "drainage_area_ha": round(float(catchment_area_ha), 3)
+                },
+                "suitability_score": float(suitability_score),
+                "criteria_breakdown": {
+                    "catchment_score": round(float(score_catchment * 100), 1),
+                    "depression_score": round(float(score_depression * 100), 1),
+                    "slope_stability_score": round(float(score_slope * 100), 1),
+                    "wetness_index_score": round(float(score_twi * 100), 1)
+                },
+                "local_terrain": {
+                    "slope_percent": round(float(slp), 2),
+                    "depression_depth_m": round(float(dep_d), 2),
+                    "topographic_wetness_index": round(float(tw), 2),
+                    "elevation_m": round(float(pond_elev), 2)
+                },
+                "catchment_area_ha": round(float(catchment_area_ha), 3),
+                "catchment_area_sq_m": round(float(catchment_area_m2), 1),
+                "selection_rationale": rationale
+            })
 
         # Sort by suitability score descending
         scored_sites.sort(key=lambda s: s["suitability_score"], reverse=True)
 
-        # Assign rank IDs
         for idx, site in enumerate(scored_sites[:num_candidates], 1):
             site["site_id"] = f"pond_site_{idx}"
             site["rank"] = idx
@@ -205,21 +291,15 @@ class PondSitingEngine:
         target_pond_depth_m: float = 3.0,
     ) -> Dict[str, Any]:
         """
-        Computes realistic civil engineering sizing recommendations for the pond structure.
+        Computes civil engineering sizing recommendations for the pond structure.
         """
-        # Standard farm/village pond design criteria (Central Water Commission / NABARD guidelines):
-        # Recommended storage capacity is typically 15% to 30% of total annual runoff,
-        # bounded by practical village pond sizes (typically 2,000 m3 to 50,000 m3).
         target_capacity_m3 = min(50000.0, max(2500.0, annual_runoff_m3 * 0.20))
         depth_m = max(1.5, min(5.0, target_pond_depth_m))
 
-        # Effective trapezoidal pond shape (side slopes 1:1.5 to 1:2)
-        # Volume V approx = Area_top * depth * 0.75
         required_surface_area_sq_m = target_capacity_m3 / (depth_m * 0.75)
-        length_m = np.sqrt(required_surface_area_sq_m * 1.5)  # 1.5:1 aspect ratio
+        length_m = np.sqrt(required_surface_area_sq_m * 1.5)
         width_m = required_surface_area_sq_m / length_m
 
-        # Excavation savings due to existing depression
         effective_excavation_depth_m = max(0.5, depth_m - depression_depth_m)
         excavation_vol_m3 = (
             required_surface_area_sq_m * effective_excavation_depth_m * 0.75
@@ -228,16 +308,11 @@ class PondSitingEngine:
             ((depth_m - effective_excavation_depth_m) / depth_m) * 100, 1
         )
 
-        # Embankment bund height (pond depth + 0.6m freeboard)
         bund_height_m = round(effective_excavation_depth_m + 0.6, 2)
-
-        # Storage capacity in Liters and Million Liters (ML)
         storage_liters = target_capacity_m3 * 1000.0
         storage_million_liters = storage_liters / 1e6
 
-        # Estimated household / cattle / supplemental irrigation support
-        # Assuming 150 liters/day per capita or 1 hectare supplemental irrigation (~5,000 m3/ha)
-        household_days = int(storage_liters / (5 * 150))  # 5-member family @ 150L/day
+        household_days = int(storage_liters / (5 * 150))
         irrigation_hectares_supported = round(target_capacity_m3 / 4000.0, 2)
 
         return {

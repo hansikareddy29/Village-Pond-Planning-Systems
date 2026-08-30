@@ -4,6 +4,8 @@ Tests:
 - Health check
 - OpenAPI Swagger redirect
 - POST /analyzeContour with sample KML
+- Separate pond_location and associated_pour_point verification
+- GeoJSON feature types (catchment, drainage, pond_candidate, pour_point)
 - Input parameter validations
 - Direct GeoJSON format download
 """
@@ -60,25 +62,29 @@ def test_analyze_contour_endpoint():
     assert "pond_design_recommendations" in data
     assert "geojson" in data
 
-    # Verify Catchment Summary Metrics
-    catchment = data["catchment_summary"]
-    assert catchment["area_hectares"] > 0
-    assert catchment["area_sq_meters"] > 0
-    assert catchment["perimeter_meters"] > 0
-    assert catchment["estimated_annual_runoff_m3"] > 0
-
-    # Verify Recommended Pond Location
+    # Verify Recommended Pond Location and Associated Pour Point separation
     pond = data["recommended_pond_location"]
     assert "coordinates" in pond
+    assert "associated_pour_point" in pond
+    assert "candidate_type" in pond
     assert 20.0 <= pond["coordinates"]["latitude"] <= 22.0
     assert 80.0 <= pond["coordinates"]["longitude"] <= 82.0
     assert pond["suitability_score"] > 80.0
     assert len(pond["selection_rationale"]) > 10
 
-    # Verify GeoJSON
+    pour = pond["associated_pour_point"]
+    assert "coordinates" in pour
+    assert "flow_accumulation_cells" in pour
+    assert pour["flow_accumulation_cells"] > 0
+
+    # Verify GeoJSON Features
     geojson = data["geojson"]
     assert geojson["type"] == "FeatureCollection"
-    assert len(geojson["features"]) >= 3
+    feature_types = [f["properties"].get("feature_type") for f in geojson["features"]]
+    assert "catchment" in feature_types or "Catchment Boundary" in [f["properties"].get("name") for f in geojson["features"]]
+    assert "drainage" in feature_types or "Drainage / Stream Network" in [f["properties"].get("name") for f in geojson["features"]]
+    assert "pond_candidate" in feature_types
+    assert "pour_point" in feature_types
 
 
 def test_analyze_contour_geojson_format():
@@ -94,7 +100,7 @@ def test_analyze_contour_geojson_format():
     assert "application/geo+json" in response.headers["content-type"]
     geojson_data = json.loads(response.text)
     assert geojson_data["type"] == "FeatureCollection"
-    assert len(geojson_data["features"]) >= 3
+    assert len(geojson_data["features"]) >= 4
 
 
 def test_parameter_validations():

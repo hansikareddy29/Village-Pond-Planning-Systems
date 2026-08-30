@@ -9,7 +9,7 @@ Provides backend REST API routes:
 import time
 import os
 import json
-from typing import Optional, Union
+from typing import Optional
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse, Response
@@ -111,10 +111,13 @@ def _process_contour_map(
 
     top_site = candidate_sites[0]
 
-    # 5. Delineate Catchment Boundary for the Recommended Pond Site
-    top_grid = (top_site['grid_index']['row'], top_site['grid_index']['col'])
+    # 5. Delineate Catchment Boundary from the Associated Hydrological Pour Point
+    pour_grid = (
+        top_site['associated_pour_point']['grid_index']['row'],
+        top_site['associated_pour_point']['grid_index']['col']
+    )
     catchment_info = hydrology_engine.delineate_catchment(
-        pour_point_grid=top_grid,
+        pour_point_grid=pour_grid,
         flow_dir=hydro_results['flow_direction'],
         dem=dem
     )
@@ -134,26 +137,28 @@ def _process_contour_map(
         target_pond_depth_m=pond_depth_m
     )
 
-    # 8. Assemble GeoJSON Feature Collection
+    # 8. Assemble GeoJSON Feature Collection distinguishing Pond Region vs Pour Point
     geojson_features = []
 
     # A. Catchment Boundary Polygon
     geojson_features.append(catchment_info['geojson'])
 
-    # B. Streams / Drainage Network
+    # B. Drainage / Stream Network
     geojson_features.append(hydro_results['streams'])
 
-    # C. Recommended Pond Site Point Feature
+    # C. Recommended Pond Storage Location Feature
     geojson_features.append({
         "type": "Feature",
         "properties": {
-            "name": "Recommended Pond Site (Rank 1)",
+            "name": "Recommended Pond Storage Location (Rank 1)",
+            "feature_type": "pond_candidate",
             "site_id": top_site['site_id'],
+            "candidate_type": top_site['candidate_type'],
             "suitability_score": top_site['suitability_score'],
             "elevation_m": top_site['coordinates']['elevation_m'],
-            "catchment_area_ha": catchment_info['area_hectares'],
+            "local_slope_percent": top_site['local_terrain']['slope_percent'],
+            "depression_depth_m": top_site['local_terrain']['depression_depth_m'],
             "recommended_capacity_m3": pond_design['recommended_storage_capacity_m3'],
-            "recommended_depth_m": pond_design['recommended_depth_m'],
             "selection_rationale": top_site['selection_rationale'],
             "marker_color": "#00E676",
             "is_primary": True
@@ -164,18 +169,40 @@ def _process_contour_map(
         }
     })
 
-    # D. Alternative Candidate Sites
+    # D. Associated Hydrological Pour Point Feature (on the drainage stream)
+    geojson_features.append({
+        "type": "Feature",
+        "properties": {
+            "name": "Associated Hydrological Pour Point (Rank 1)",
+            "feature_type": "pour_point",
+            "site_id": top_site['site_id'],
+            "elevation_m": top_site['associated_pour_point']['coordinates']['elevation_m'],
+            "catchment_area_ha": catchment_info['area_hectares'],
+            "drainage_flow_acc_cells": top_site['associated_pour_point']['flow_accumulation_cells'],
+            "marker_color": "#2979FF"
+        },
+        "geometry": {
+            "type": "Point",
+            "coordinates": [
+                top_site['associated_pour_point']['coordinates']['longitude'],
+                top_site['associated_pour_point']['coordinates']['latitude']
+            ]
+        }
+    })
+
+    # E. Alternative Candidate Sites
     for site in candidate_sites[1:]:
         geojson_features.append({
             "type": "Feature",
             "properties": {
                 "name": f"Alternative Pond Site ({site['site_id']})",
+                "feature_type": "alternative_candidate",
                 "site_id": site['site_id'],
                 "rank": site['rank'],
+                "candidate_type": site['candidate_type'],
                 "suitability_score": site['suitability_score'],
                 "elevation_m": site['coordinates']['elevation_m'],
                 "catchment_area_ha": site['catchment_area_ha'],
-                "selection_rationale": site['selection_rationale'],
                 "marker_color": "#FF9100",
                 "is_primary": False
             },
@@ -185,7 +212,7 @@ def _process_contour_map(
             }
         })
 
-    # E. Survey Boundary Polygon if present in KML
+    # F. Survey Boundary Polygon if present in KML
     if parsed_data.get('boundary_polygon'):
         b_pts = parsed_data['boundary_polygon']
         b_coords = [[pt[0], pt[1]] for pt in b_pts]
@@ -195,6 +222,7 @@ def _process_contour_map(
             "type": "Feature",
             "properties": {
                 "name": "Survey Boundary",
+                "feature_type": "survey_boundary",
                 "style": {"color": "#E91E63", "weight": 2, "dashArray": "5, 5"}
             },
             "geometry": {

@@ -253,6 +253,7 @@ class HydrologyEngine:
             "type": "Feature",
             "properties": {
                 "name": "Drainage / Stream Network",
+                "feature_type": "drainage",
                 "threshold_cells": float(threshold),
                 "threshold_area_m2": float(threshold * (dem.resolution_m ** 2))
             },
@@ -456,6 +457,7 @@ class HydrologyEngine:
             "type": "Feature",
             "properties": {
                 "name": "Catchment Boundary",
+                "feature_type": "catchment",
                 "perimeter_m": round(perimeter_m, 1)
             },
             "geometry": geojson_geom

@@ -10,7 +10,7 @@ Tests:
 
 import numpy as np
 import pytest
-from app.hydrology import HydrologyEngine, D8_NEIGHBORS
+from app.hydrology import HydrologyEngine
 from app.dem_generator import DEMGrid
 
 
