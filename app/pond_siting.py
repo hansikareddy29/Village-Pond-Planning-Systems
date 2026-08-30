@@ -1,11 +1,8 @@
 """
 Pond Siting and Sizing Module
 Implements Multi-Criteria Decision Analysis (MCDA) to evaluate terrain for optimal
-farm/village pond placement.
-Adheres to Central Water Commission & IWMP watershed planning guidelines:
-- Farm/village ponds are sited in agricultural micro-catchments (5 to 30 hectares).
-- Master trunk river channels / floodways (>40 ha) are strictly excluded/penalized.
-- Physical pond storage basin is sited in gentle field hollows, distinct from the drainage stream line.
+farm/village pond placement and catchment delineation.
+Identifies the primary central village watershed and tributary storage hollows.
 """
 
 from typing import Dict, Any, List, Tuple, Optional
@@ -21,9 +18,9 @@ class PondSitingEngine:
 
     def __init__(
         self,
-        weight_catchment: float = 0.35,
+        weight_catchment: float = 0.40,
         weight_depression: float = 0.30,
-        weight_slope: float = 0.25,
+        weight_slope: float = 0.20,
         weight_twi: float = 0.10,
     ):
         self.w_catchment = weight_catchment
@@ -36,7 +33,8 @@ class PondSitingEngine:
         dem: DEMGrid,
         hydro_results: Dict[str, Any],
         num_candidates: int = 5,
-        boundary_margin_cells: int = 12,
+        target_catchment_ha: Optional[float] = None,
+        boundary_margin_cells: int = 8,
     ) -> List[Dict[str, Any]]:
         """
         Identifies, evaluates, and ranks candidate village pond storage sites across the terrain.
@@ -49,11 +47,10 @@ class PondSitingEngine:
         cell_area = dem.resolution_m ** 2
         area_ha = (flow_acc * cell_area) / 10000.0
 
-        # Master trunk stream channels (top 2% flow accumulation)
-        stream_thresh = np.percentile(flow_acc, 98.0)
-        is_stream_channel = flow_acc >= stream_thresh
+        if target_catchment_ha is None or target_catchment_ha <= 0:
+            target_catchment_ha = 40.0
 
-        # 1. Mask out outer perimeter cells to avoid boundary artifacts
+        # 1. Mask out outer perimeter cells to avoid boundary edge effects
         valid_mask = np.zeros((rows, cols), dtype=bool)
         m = max(3, boundary_margin_cells)
         valid_mask[m:rows - m, m:cols - m] = True
@@ -65,14 +62,14 @@ class PondSitingEngine:
         raw_candidates: List[Dict[str, Any]] = []
 
         # -------------------------------------------------------------------------
-        # Strategy A: Natural Depressions in Agricultural Fields / Micro-Basins
+        # Strategy A: Natural Depressions & Sinks with Viable Catchments
         # -------------------------------------------------------------------------
         for dep in hydro_results.get("depressions", []):
             br, bc = dep["bottom_grid"]
             if not valid_mask[br, bc]:
                 continue
 
-            # Trace downstream along D8 flow path to find the natural spillway / outlet pour point
+            # Trace downstream to find the spillway pour point
             curr_r, curr_c = br, bc
             for _ in range(35):
                 d = flow_dir[curr_r, curr_c]
@@ -96,16 +93,17 @@ class PondSitingEngine:
             })
 
         # -------------------------------------------------------------------------
-        # Strategy B: Tributary Micro-Watershed Harvesting (5 to 30 ha catchments)
+        # Strategy B: Valley Convergence Basins & Stream Confluences
         # -------------------------------------------------------------------------
-        trib_mask = (area_ha >= 5.0) & (area_ha <= 32.0) & valid_mask
-        trib_idx = np.where(trib_mask)
+        stream_thresh = np.percentile(flow_acc, 97.0)
+        high_acc_idx = np.where((flow_acc >= stream_thresh) & valid_mask)
 
-        for pr, pc in zip(trib_idx[0], trib_idx[1]):
-            # pr, pc is the stream pour point on the 1st/2nd order tributary
-            # Find the neighboring gentle off-stream storage hollow (within 40m)
+        for pr, pc in zip(high_acc_idx[0], high_acc_idx[1]):
+            # Pour point is on the stream channel
+            # Find the neighboring gentle storage hollow
             best_pond = (int(pr), int(pc))
             best_local_score = -1e9
+            pour_elev = dem.elevation[pr, pc]
 
             for dr in range(-4, 5):
                 for dc in range(-4, 5):
@@ -116,20 +114,20 @@ class PondSitingEngine:
                             continue
                         slp = slope[nr, nc]
                         dep_d = dep_depth[nr, nc]
-                        is_st = is_stream_channel[nr, nc]
+                        elev = dem.elevation[nr, nc]
 
-                        # Favor gentle slope, natural hollow, avoid active stream bed
                         slp_s = max(0.0, 1.0 - (slp / 8.0))
                         dep_s = min(1.0, dep_d / 2.0)
-                        st_pen = 0.4 if is_st else 0.0
+                        elev_diff = abs(elev - pour_elev)
+                        elev_s = max(0.0, 1.0 - (elev_diff / 4.0))
 
-                        local_score = (0.50 * slp_s) + (0.35 * dep_s) - st_pen
+                        local_score = (0.50 * slp_s) + (0.35 * dep_s) + (0.15 * elev_s)
                         if local_score > best_local_score:
                             best_local_score = local_score
                             best_pond = (int(nr), int(nc))
 
             raw_candidates.append({
-                "type": "tributary_harvesting",
+                "type": "valley_storage",
                 "pond_grid": best_pond,
                 "pour_grid": (int(pr), int(pc))
             })
@@ -137,7 +135,7 @@ class PondSitingEngine:
         # -------------------------------------------------------------------------
         # 3. Spatial Deduplication & Minimum Spacing between Candidates
         # -------------------------------------------------------------------------
-        min_cell_spacing = max(8, int(80.0 / dem.resolution_m))  # ~80 meters separation
+        min_cell_spacing = max(6, int(60.0 / dem.resolution_m))  # ~60 meters separation
         unique_candidates: List[Dict[str, Any]] = []
 
         for cand in raw_candidates:
@@ -169,38 +167,26 @@ class PondSitingEngine:
             pond_elev = float(dem.elevation[pond_r, pond_c])
             pour_elev = float(dem.elevation[pour_r, pour_c])
 
-            # Catchment Score: Standard farm/village pond design optimal range is 5 to 30 ha
-            # Below 5 ha: small yield. Above 40 ha: dangerous flood river channel (penalized!)
-            if catchment_area_ha < 5.0:
-                score_catchment = catchment_area_ha / 5.0
-            elif catchment_area_ha <= 30.0:
-                score_catchment = 1.0  # OPTIMAL village pond micro-catchment
-            elif catchment_area_ha <= 45.0:
-                score_catchment = max(0.2, 1.0 - ((catchment_area_ha - 30.0) / 20.0))
-            else:
-                score_catchment = 0.05  # Master river channel: unfeasible for farm pond
+            # Catchment score (peaks when catchment provides substantial village yield)
+            score_catchment = min(1.0, catchment_area_ha / target_catchment_ha)
 
             # Depression storage depth score (0.0 to 1.0)
-            score_depression = min(1.0, dep_d / 2.0)
+            score_depression = min(1.0, dep_d / 2.5)
 
-            # Slope stability score (gentle slope < 3% is ideal; penalize steep slopes > 8%)
-            score_slope = max(0.0, 1.0 - (slp / 8.0))
+            # Slope stability score (gentle slope < 3% is ideal; penalize steep slopes > 10%)
+            score_slope = max(0.0, 1.0 - (slp / 10.0))
 
             # Topographic wetness index score (0.0 to 1.0)
             score_twi = min(1.0, max(0.0, (tw - 4.0) / 10.0))
 
-            # Stream bed penalty: pond should be in off-stream hollow, not active floodway
-            stream_penalty = 0.25 if is_stream_channel[pond_r, pond_c] else 0.0
-
             # Composite Suitability Score (0 - 100)
             suitability_score = round(
-                100.0 * max(0.0, (
+                100.0 * (
                     self.w_catchment * score_catchment
                     + self.w_depression * score_depression
                     + self.w_slope * score_slope
                     + self.w_twi * score_twi
-                    - stream_penalty
-                )),
+                ),
                 1
             )
 
@@ -213,17 +199,17 @@ class PondSitingEngine:
 
             # Dynamic Engineering Selection Rationale
             rationale_parts = []
-            if cand["type"] == "natural_depression":
+            if dep_d >= 1.0:
                 rationale_parts.append(
-                    f"Natural topographic agricultural hollow with {dep_d:.1f}m existing bowl depth"
+                    f"Located in a natural topographic bowl ({dep_d:.1f}m depth) reducing excavation"
                 )
             else:
                 rationale_parts.append(
-                    f"Tributary harvesting basin set back from main drainage channel"
+                    f"Valley storage basin adjacent to drainage convergence"
                 )
 
             rationale_parts.append(
-                f"Optimal village micro-catchment ({catchment_area_ha:.1f} ha at pour point)"
+                f"Substantial upstream drainage ({catchment_area_ha:.1f} ha at pour point)"
             )
 
             if slp < 2.0:
@@ -304,7 +290,7 @@ class PondSitingEngine:
         """
         Computes civil engineering sizing recommendations for the pond structure.
         """
-        target_capacity_m3 = min(50000.0, max(2500.0, annual_runoff_m3 * 0.25))
+        target_capacity_m3 = min(50000.0, max(2500.0, annual_runoff_m3 * 0.20))
         depth_m = max(1.5, min(5.0, target_pond_depth_m))
 
         required_surface_area_sq_m = target_capacity_m3 / (depth_m * 0.75)
