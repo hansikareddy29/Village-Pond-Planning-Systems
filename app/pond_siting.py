@@ -3,7 +3,7 @@ Pond Siting and Sizing Module
 Implements Multi-Criteria Decision Analysis (MCDA) to evaluate terrain for optimal
 farm/village pond placement and catchment delineation.
 Features Score-First Spatial Deduplication to identify the highest quality
-village agricultural pond locations commanding the primary central village dendritic stream network (60 to 85 ha).
+village agricultural pond locations commanding the complete grand central village dendritic stream network (90 to 130 ha).
 """
 
 from typing import Dict, Any, List, Tuple, Optional
@@ -49,7 +49,7 @@ class PondSitingEngine:
         area_ha = (flow_acc * cell_area) / 10000.0
 
         if target_catchment_ha is None or target_catchment_ha <= 0:
-            target_catchment_ha = 70.0
+            target_catchment_ha = 110.0
 
         # 1. Mask out outer perimeter cells to avoid boundary edge effects
         valid_mask = np.zeros((rows, cols), dtype=bool)
@@ -94,7 +94,7 @@ class PondSitingEngine:
             })
 
         # -------------------------------------------------------------------------
-        # Strategy B: Primary Village Drainage Confluence & Valley Storage
+        # Strategy B: Grand Village Drainage Confluence & Valley Storage
         # -------------------------------------------------------------------------
         stream_thresh = np.percentile(flow_acc, 96.0)
         high_acc_idx = np.where((flow_acc >= stream_thresh) & valid_mask)
@@ -151,13 +151,13 @@ class PondSitingEngine:
             pond_elev = float(dem.elevation[pond_r, pond_c])
             pour_elev = float(dem.elevation[pour_r, pour_c])
 
-            # Catchment suitability: 60 to 85 ha optimal for primary central village watershed
-            if catchment_area_ha < 30.0:
-                score_catchment = (catchment_area_ha / 30.0) * 0.70
-            elif catchment_area_ha <= 85.0:
-                score_catchment = 0.85 + 0.15 * ((catchment_area_ha - 30.0) / 55.0)
-            elif catchment_area_ha <= 120.0:
-                score_catchment = max(0.40, 1.0 - 0.30 * ((catchment_area_ha - 85.0) / 35.0))
+            # Catchment suitability: 90 to 130 ha optimal for the grand central village watershed
+            if catchment_area_ha < 40.0:
+                score_catchment = (catchment_area_ha / 40.0) * 0.70
+            elif catchment_area_ha <= 125.0:
+                score_catchment = 0.85 + 0.15 * ((catchment_area_ha - 40.0) / 85.0)
+            elif catchment_area_ha <= 160.0:
+                score_catchment = max(0.40, 1.0 - 0.30 * ((catchment_area_ha - 125.0) / 35.0))
             else:
                 score_catchment = 0.05  # Master river channel outlet
 
@@ -238,7 +238,7 @@ class PondSitingEngine:
                 )
             else:
                 rationale_parts.append(
-                    f"Primary central village valley storage basin at major drainage convergence"
+                    f"Grand central village valley storage basin at major drainage convergence"
                 )
 
             rationale_parts.append(
