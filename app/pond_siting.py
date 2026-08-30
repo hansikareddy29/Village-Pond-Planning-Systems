@@ -2,8 +2,8 @@
 Pond Siting and Sizing Module
 Implements Multi-Criteria Decision Analysis (MCDA) to evaluate terrain for optimal
 farm/village pond placement and catchment delineation.
-Focuses on the primary central village agricultural catchment (40 to 80 ha),
-avoiding the external western river floodplain.
+Focuses on the primary central village drainage confluence (60 to 100 ha),
+commanding the main agricultural stream network across the village.
 """
 
 from typing import Dict, Any, List, Tuple, Optional
@@ -19,8 +19,8 @@ class PondSitingEngine:
 
     def __init__(
         self,
-        weight_catchment: float = 0.40,
-        weight_depression: float = 0.30,
+        weight_catchment: float = 0.45,
+        weight_depression: float = 0.25,
         weight_slope: float = 0.20,
         weight_twi: float = 0.10,
     ):
@@ -49,7 +49,7 @@ class PondSitingEngine:
         area_ha = (flow_acc * cell_area) / 10000.0
 
         if target_catchment_ha is None or target_catchment_ha <= 0:
-            target_catchment_ha = 60.0
+            target_catchment_ha = 75.0
 
         # 1. Mask out outer perimeter cells to avoid boundary edge effects
         valid_mask = np.zeros((rows, cols), dtype=bool)
@@ -94,7 +94,7 @@ class PondSitingEngine:
             })
 
         # -------------------------------------------------------------------------
-        # Strategy B: Valley Convergence Basins & Stream Confluences
+        # Strategy B: Central Valley Confluence & Drainage Convergence
         # -------------------------------------------------------------------------
         stream_thresh = np.percentile(flow_acc, 97.0)
         high_acc_idx = np.where((flow_acc >= stream_thresh) & valid_mask)
@@ -168,14 +168,15 @@ class PondSitingEngine:
             pond_elev = float(dem.elevation[pond_r, pond_c])
             pour_elev = float(dem.elevation[pour_r, pour_c])
 
-            # Catchment Score: Ideal village sub-catchment scale is 30 to 80 ha
-            # Below 20 ha: smaller yield. Above 120 ha: major river outlet (penalized).
+            # Catchment Score: Primary central village watershed scale is 60 to 100 ha
+            # Below 30 ha: smaller yield. Above 120 ha: major river channel outlet.
             if catchment_area_ha < 30.0:
-                score_catchment = catchment_area_ha / 30.0
-            elif catchment_area_ha <= 85.0:
-                score_catchment = 1.0  # OPTIMAL primary village catchment
-            elif catchment_area_ha <= 150.0:
-                score_catchment = max(0.2, 1.0 - ((catchment_area_ha - 85.0) / 65.0))
+                score_catchment = (catchment_area_ha / 30.0) * 0.70
+            elif catchment_area_ha <= 100.0:
+                # OPTIMAL primary central village watershed
+                score_catchment = 0.85 + 0.15 * ((catchment_area_ha - 30.0) / 70.0)
+            elif catchment_area_ha <= 160.0:
+                score_catchment = max(0.2, 1.0 - ((catchment_area_ha - 100.0) / 60.0))
             else:
                 score_catchment = 0.05  # Master river channel outlet
 
@@ -214,7 +215,7 @@ class PondSitingEngine:
                 )
             else:
                 rationale_parts.append(
-                    f"Valley storage basin adjacent to drainage convergence"
+                    f"Central valley storage basin at major drainage convergence"
                 )
 
             rationale_parts.append(
