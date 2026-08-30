@@ -9,8 +9,8 @@ Provides backend REST API routes:
 import time
 import os
 import json
-from typing import Optional
-from fastapi import FastAPI, UploadFile, File, Form, Query, HTTPException, status
+from typing import Optional, Union
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse, Response
 
@@ -24,7 +24,7 @@ from app.models import AnalysisResponse
 # Initialize FastAPI Backend Application
 app = FastAPI(
     title="Village Pond Planning & Catchment Analysis Backend API",
-    description="Backend API for terrain elevation modeling, optimal pond location identification, and hydrological catchment delineation from KML/KMZ contour maps. Returns structured JSON or downloadable GeoJSON files.",
+    description="Automated backend API for continuous terrain elevation modeling, optimal village pond location ranking, and exact hydrological catchment delineation from KML/KMZ contour maps.",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc"
@@ -272,12 +272,39 @@ def _process_contour_map(
 async def analyze_contour(
     file: Optional[UploadFile] = File(None, description="KML or KMZ contour map file (optional, defaults to sample contours_1m.kml)"),
     format: str = Form("json", description="Output format: 'json' (complete analysis report) or 'geojson' (pure GeoJSON FeatureCollection file)"),
-    grid_resolution_m: float = Form(10.0, description="Spatial DEM grid cell resolution in meters (e.g. 5.0 to 20.0)"),
+    grid_resolution_m: float = Form(10.0, description="Spatial DEM grid cell resolution in meters (e.g. 5.0 to 25.0)"),
     rainfall_annual_mm: float = Form(1000.0, description="Average annual precipitation in mm for water yield calculation"),
-    runoff_coefficient: float = Form(0.35, description="Catchment runoff coefficient C (0.1 to 0.8)"),
+    runoff_coefficient: float = Form(0.35, description="Catchment runoff coefficient C (0.0 to 1.0]"),
     pond_depth_m: float = Form(3.0, description="Target pond excavation depth in meters"),
     num_candidate_sites: int = Form(5, description="Number of top candidate pond locations to return")
 ):
+    # Parameter Validations
+    if grid_resolution_m <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="grid_resolution_m must be strictly greater than 0."
+        )
+    if not (0 < runoff_coefficient <= 1.0):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="runoff_coefficient must be between 0.0 (exclusive) and 1.0 (inclusive)."
+        )
+    if rainfall_annual_mm < 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="rainfall_annual_mm cannot be negative."
+        )
+    if pond_depth_m <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="pond_depth_m must be strictly greater than 0."
+        )
+    if num_candidate_sites < 1:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="num_candidate_sites must be at least 1."
+        )
+
     if file is not None and file.filename:
         contents = await file.read()
         filename = file.filename

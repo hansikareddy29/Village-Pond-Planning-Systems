@@ -16,7 +16,7 @@ This document provides the complete REST API specification for the Village Pond 
 
 | Method | Path | Summary | Description |
 | :--- | :--- | :--- | :--- |
-| `POST` | `/analyzeContour` | Analyze Contour Map & Delineate Catchment | Uploads KML/KMZ, generates DEM, delineates catchment, identifies optimal pond site, and returns structured JSON & GeoJSON. |
+| `POST` | `/analyzeContour` | Analyze Contour Map & Delineate Catchment | Uploads KML/KMZ, generates DEM, performs graph-based hydrological analysis, identifies optimal pond site, and returns structured JSON or direct GeoJSON. |
 | `GET` | `/health` | Health Check | Verifies service status and version. |
 | `GET` | `/` | Root Redirect | Redirects to interactive OpenAPI specification docs (`/docs`). |
 
@@ -29,14 +29,15 @@ This document provides the complete REST API specification for the Village Pond 
 
 ### Request Parameters (Form-Data)
 
-| Parameter | Type | Required | Default | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| `file` | `File` | No | `contours_1m.kml` | The contour map file (`.kml`, `.kmz`, or `.xml`). Defaults to sample if omitted. |
-| `grid_resolution_m` | `float` | No | `10.0` | Digital Elevation Model grid resolution in meters (e.g. `5.0` to `25.0`). |
-| `rainfall_annual_mm` | `float` | No | `1000.0` | Average annual precipitation in mm for water yield calculation. |
-| `runoff_coefficient` | `float` | No | `0.35` | Rational runoff coefficient $C$ (typically `0.2` to `0.5` for rural/agricultural soil). |
-| `pond_depth_m` | `float` | No | `3.0` | Target pond depth in meters (used for sizing and excavation estimations). |
-| `num_candidate_sites`| `int` | No | `5` | Number of top candidate pond locations to evaluate and return. |
+| Parameter | Type | Required | Default | Validation Rules | Description |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `file` | `File` | No | `contours_1m.kml` | Valid KML or KMZ archive | The contour map file. Defaults to sample if omitted. |
+| `format` | `string` | No | `json` | `'json'` or `'geojson'` | Output format: complete JSON analysis or direct GeoJSON file download. |
+| `grid_resolution_m` | `float` | No | `10.0` | `> 0.0` | Digital Elevation Model grid resolution in meters. |
+| `rainfall_annual_mm` | `float` | No | `1000.0` | `>= 0.0` | Average annual precipitation in mm for water yield calculation. |
+| `runoff_coefficient` | `float` | No | `0.35` | `0.0 < C <= 1.0` | Rational runoff coefficient $C$ for rural/agricultural soil. |
+| `pond_depth_m` | `float` | No | `3.0` | `> 0.0` | Target pond depth in meters for sizing and excavation estimations. |
+| `num_candidate_sites`| `int` | No | `5` | `>= 1` | Number of top candidate pond locations to evaluate and return. |
 
 ---
 
@@ -47,7 +48,7 @@ This document provides the complete REST API specification for the Village Pond 
 {
   "success": true,
   "message": "Contour map terrain analysis and catchment delineation completed successfully.",
-  "execution_time_seconds": 1.39,
+  "execution_time_seconds": 1.45,
   "metadata": {
     "filename": "contours_1m.kml",
     "num_contours_extracted": 1355,
@@ -61,10 +62,7 @@ This document provides the complete REST API specification for the Village Pond 
       "min_lat": 21.239822,
       "max_lat": 21.263581,
       "min_elevation": 267.0,
-      "max_elevation": 298.0,
-      "elevation_range": 31.0,
-      "center_lon": 81.297026,
-      "center_lat": 21.251702
+      "max_elevation": 298.0
     }
   },
   "terrain_summary": {
@@ -83,13 +81,13 @@ This document provides the complete REST API specification for the Village Pond 
     "site_id": "pond_site_1",
     "rank": 1,
     "coordinates": {
-      "latitude": 21.251178,
-      "longitude": 81.295404,
-      "elevation_m": 278.0
+      "latitude": 21.243691,
+      "longitude": 81.288354,
+      "elevation_m": 271.0
     },
     "utm_coordinates": {
-      "easting": 530649.5,
-      "northing": 2349975.3,
+      "easting": 529919.5,
+      "northing": 2349145.3,
       "epsg": 32644,
       "zone": 44
     },
@@ -102,75 +100,65 @@ This document provides the complete REST API specification for the Village Pond 
     },
     "local_terrain": {
       "slope_percent": 0.38,
-      "depression_depth_m": 4.02,
-      "topographic_wetness_index": 13.92,
-      "elevation_m": 278.0
+      "depression_depth_m": 3.0,
+      "topographic_wetness_index": 12.8,
+      "elevation_m": 271.0
     },
-    "catchment_area_ha": 161.18,
-    "catchment_area_sq_m": 1611800.0,
-    "selection_rationale": "Substantial upstream drainage (161.2 ha); Located in a natural topographic bowl (4.0m depth) reducing excavation; very gentle bed slope (0.4%) for stable embankment."
+    "catchment_area_ha": 43.91,
+    "catchment_area_sq_m": 439100.0,
+    "selection_rationale": "Substantial upstream drainage (43.9 ha); Located in a natural topographic bowl (3.0m depth) reducing excavation; very gentle bed slope (0.4%) for stable embankment."
   },
   "catchment_summary": {
-    "area_sq_meters": 1611800.0,
-    "area_hectares": 161.18,
-    "area_acres": 398.284,
-    "perimeter_meters": 8360.0,
-    "min_elevation_m": 276.0,
-    "max_elevation_m": 297.82,
-    "mean_elevation_m": 286.76,
-    "elevation_range_m": 21.82,
-    "average_slope_percent": 5.26,
-    "average_slope_degrees": 3.0,
+    "area_sq_meters": 439100.0,
+    "area_hectares": 43.91,
+    "area_acres": 108.5,
+    "perimeter_meters": 4840.0,
+    "min_elevation_m": 269.53,
+    "max_elevation_m": 290.87,
+    "mean_elevation_m": 281.78,
+    "elevation_range_m": 21.34,
+    "average_slope_percent": 5.72,
+    "average_slope_degrees": 3.27,
     "centroid_wgs84": {
-      "longitude": 81.300582,
-      "latitude": 21.252514
+      "longitude": 81.2915,
+      "latitude": 21.2462
     },
     "annual_rainfall_mm": 1000.0,
     "runoff_coefficient": 0.35,
-    "estimated_annual_runoff_m3": 564130.0,
-    "estimated_annual_runoff_liters": 564130000.0,
-    "estimated_annual_runoff_million_liters": 564.13,
-    "estimated_peak_discharge_m3_per_sec": 7.84
+    "estimated_annual_runoff_m3": 153685.0,
+    "estimated_annual_runoff_liters": 153685000.0,
+    "estimated_annual_runoff_million_liters": 153.69,
+    "estimated_peak_discharge_m3_per_sec": 2.13
   },
   "pond_design_recommendations": {
     "recommended_depth_m": 3.0,
-    "recommended_surface_area_sq_m": 22222.2,
-    "recommended_surface_area_hectares": 2.222,
+    "recommended_surface_area_sq_m": 13660.9,
+    "recommended_surface_area_hectares": 1.366,
     "estimated_dimensions_m": {
-      "length_m": 182.6,
-      "width_m": 121.7,
+      "length_m": 143.1,
+      "width_m": 95.4,
       "side_slope": "1.5:1 (Horizontal:Vertical)"
     },
-    "recommended_storage_capacity_m3": 50000.0,
-    "storage_capacity_liters": 50000000.0,
-    "storage_capacity_million_liters": 50.0,
-    "estimated_excavation_volume_m3": 8333.3,
+    "recommended_storage_capacity_m3": 30737.0,
+    "storage_capacity_liters": 30737000.0,
+    "storage_capacity_million_liters": 30.74,
+    "estimated_excavation_volume_m3": 5122.8,
     "excavation_savings_from_depression_percent": 83.3,
     "recommended_bund_height_m": 1.1,
     "recommended_freeboard_m": 0.6,
     "utilization_potential": {
-      "supplemental_irrigation_ha": 12.5,
-      "family_water_supply_days": 66666,
+      "supplemental_irrigation_ha": 7.68,
+      "family_water_supply_days": 40982,
       "estimated_annual_refill_cycles": 5.0
-    },
-    "construction_notes": [
-      "Clay puddle lining or 300-500 micron LDPE geomembrane recommended if soil permeability > 10^-5 cm/s.",
-      "Inlet silt trap / sediment basin recommended to capture runoff sediment before entering main storage.",
-      "Earthen surplus weir / emergency spillway required with 0.6m freeboard above maximum water level."
-    ]
+    }
   },
   "candidate_pond_sites": [
     {
       "site_id": "pond_site_1",
       "rank": 1,
-      "coordinates": { "longitude": 81.295404, "latitude": 21.251178, "elevation_m": 278.0 },
-      "utm_coordinates": { "easting": 530649.5, "northing": 2349975.3, "epsg": 32644, "zone": 44 },
+      "coordinates": { "longitude": 81.288354, "latitude": 21.243691, "elevation_m": 271.0 },
       "suitability_score": 99.5,
-      "criteria_breakdown": { "catchment_score": 100.0, "depression_score": 100.0, "slope_stability_score": 97.5, "wetness_index_score": 99.2 },
-      "local_terrain": { "slope_percent": 0.38, "depression_depth_m": 4.02, "topographic_wetness_index": 13.92, "elevation_m": 278.0 },
-      "catchment_area_ha": 161.18,
-      "catchment_area_sq_m": 1611800.0,
-      "selection_rationale": "Substantial upstream drainage (161.2 ha); Located in a natural topographic bowl (4.0m depth) reducing excavation; very gentle bed slope (0.4%) for stable embankment."
+      "catchment_area_ha": 43.91
     }
   ],
   "geojson": {
@@ -178,25 +166,18 @@ This document provides the complete REST API specification for the Village Pond 
     "features": [
       {
         "type": "Feature",
-        "properties": { "name": "Catchment Boundary", "perimeter_m": 8360.0 },
-        "geometry": { "type": "Polygon", "coordinates": [...] }
+        "properties": { "name": "Catchment Boundary", "perimeter_m": 4840.0 },
+        "geometry": { "type": "MultiPolygon", "coordinates": [...] }
       },
       {
         "type": "Feature",
-        "properties": { "name": "Drainage / Stream Network", "threshold_cells": 100.0 },
+        "properties": { "name": "Drainage / Stream Network" },
         "geometry": { "type": "MultiLineString", "coordinates": [...] }
       },
       {
         "type": "Feature",
-        "properties": {
-          "name": "Recommended Pond Site (Rank 1)",
-          "site_id": "pond_site_1",
-          "suitability_score": 99.5,
-          "elevation_m": 278.0,
-          "catchment_area_ha": 161.18,
-          "is_primary": true
-        },
-        "geometry": { "type": "Point", "coordinates": [81.295404, 21.251178] }
+        "properties": { "name": "Recommended Pond Site (Rank 1)" },
+        "geometry": { "type": "Point", "coordinates": [81.288354, 21.243691] }
       }
     ]
   }
@@ -207,7 +188,7 @@ This document provides the complete REST API specification for the Village Pond 
 
 ## 2. Invocation Examples
 
-### cURL
+### cURL (JSON Response)
 ```bash
 curl -X POST "http://localhost:8000/analyzeContour" \
   -F "file=@contours_1m.kml" \
@@ -215,6 +196,14 @@ curl -X POST "http://localhost:8000/analyzeContour" \
   -F "rainfall_annual_mm=1000.0" \
   -F "runoff_coefficient=0.35" \
   -F "pond_depth_m=3.0"
+```
+
+### cURL (Direct GeoJSON File Download)
+```bash
+curl -X POST "http://localhost:8000/analyzeContour" \
+  -F "file=@contours_1m.kml" \
+  -F "format=geojson" \
+  -o catchment.geojson
 ```
 
 ### Python (`requests`)
