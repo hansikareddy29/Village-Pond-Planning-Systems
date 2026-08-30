@@ -2,7 +2,8 @@
 Pond Siting and Sizing Module
 Implements Multi-Criteria Decision Analysis (MCDA) to evaluate terrain for optimal
 farm/village pond placement and catchment delineation.
-Identifies the primary central village watershed and tributary storage hollows.
+Focuses on the primary central village agricultural catchment (40 to 80 ha),
+avoiding the external western river floodplain.
 """
 
 from typing import Dict, Any, List, Tuple, Optional
@@ -48,7 +49,7 @@ class PondSitingEngine:
         area_ha = (flow_acc * cell_area) / 10000.0
 
         if target_catchment_ha is None or target_catchment_ha <= 0:
-            target_catchment_ha = 40.0
+            target_catchment_ha = 60.0
 
         # 1. Mask out outer perimeter cells to avoid boundary edge effects
         valid_mask = np.zeros((rows, cols), dtype=bool)
@@ -100,7 +101,7 @@ class PondSitingEngine:
 
         for pr, pc in zip(high_acc_idx[0], high_acc_idx[1]):
             # Pour point is on the stream channel
-            # Find the neighboring gentle storage hollow
+            # Find the neighboring gentle storage hollow (within 40m)
             best_pond = (int(pr), int(pc))
             best_local_score = -1e9
             pour_elev = dem.elevation[pr, pc]
@@ -167,8 +168,16 @@ class PondSitingEngine:
             pond_elev = float(dem.elevation[pond_r, pond_c])
             pour_elev = float(dem.elevation[pour_r, pour_c])
 
-            # Catchment score (peaks when catchment provides substantial village yield)
-            score_catchment = min(1.0, catchment_area_ha / target_catchment_ha)
+            # Catchment Score: Ideal village sub-catchment scale is 30 to 80 ha
+            # Below 20 ha: smaller yield. Above 120 ha: major river outlet (penalized).
+            if catchment_area_ha < 30.0:
+                score_catchment = catchment_area_ha / 30.0
+            elif catchment_area_ha <= 85.0:
+                score_catchment = 1.0  # OPTIMAL primary village catchment
+            elif catchment_area_ha <= 150.0:
+                score_catchment = max(0.2, 1.0 - ((catchment_area_ha - 85.0) / 65.0))
+            else:
+                score_catchment = 0.05  # Master river channel outlet
 
             # Depression storage depth score (0.0 to 1.0)
             score_depression = min(1.0, dep_d / 2.5)
