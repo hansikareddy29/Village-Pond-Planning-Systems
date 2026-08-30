@@ -38,7 +38,7 @@ class PondSitingEngine:
         dem: DEMGrid,
         hydro_results: Dict[str, Any],
         num_candidates: int = 5,
-        target_catchment_ha: float = 15.0,
+        target_catchment_ha: Optional[float] = None,
         boundary_margin_cells: int = 10,
     ) -> List[Dict[str, Any]]:
         """
@@ -50,6 +50,11 @@ class PondSitingEngine:
         slope = dem.slope_percent
         rows, cols = dem.rows, dem.cols
         cell_area = dem.resolution_m ** 2
+
+        # Dynamically compute target catchment benchmark from total uploaded survey area (15% of map)
+        if target_catchment_ha is None or target_catchment_ha <= 0:
+            total_map_area_ha = (rows * cols * cell_area) / 10000.0
+            target_catchment_ha = max(2.0, total_map_area_ha * 0.15)
 
         # 1. Mask out outer perimeter cells to avoid edge boundary truncation
         valid_mask = np.zeros((rows, cols), dtype=bool)

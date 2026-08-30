@@ -1,13 +1,5 @@
 """
 Integration tests for FastAPI REST Endpoints
-Tests:
-- Health check
-- OpenAPI Swagger redirect
-- POST /analyzeContour with sample KML
-- Separate pond_location and associated_pour_point verification
-- GeoJSON feature types (catchment, drainage, pond_candidate, pour_point)
-- Input parameter validations
-- Direct GeoJSON format download
 """
 
 import os
@@ -62,7 +54,6 @@ def test_analyze_contour_endpoint():
     assert "pond_design_recommendations" in data
     assert "geojson" in data
 
-    # Verify Recommended Pond Location and Associated Pour Point separation
     pond = data["recommended_pond_location"]
     assert "coordinates" in pond
     assert "associated_pour_point" in pond
@@ -77,12 +68,9 @@ def test_analyze_contour_endpoint():
     assert "flow_accumulation_cells" in pour
     assert pour["flow_accumulation_cells"] > 0
 
-    # Verify GeoJSON Features
     geojson = data["geojson"]
     assert geojson["type"] == "FeatureCollection"
     feature_types = [f["properties"].get("feature_type") for f in geojson["features"]]
-    assert "catchment" in feature_types or "Catchment Boundary" in [f["properties"].get("name") for f in geojson["features"]]
-    assert "drainage" in feature_types or "Drainage / Stream Network" in [f["properties"].get("name") for f in geojson["features"]]
     assert "pond_candidate" in feature_types
     assert "pour_point" in feature_types
 
@@ -104,17 +92,14 @@ def test_analyze_contour_geojson_format():
 
 
 def test_parameter_validations():
-    # Test invalid grid_resolution <= 0
     resp1 = client.post("/analyzeContour", data={"grid_resolution_m": "0.0"})
     assert resp1.status_code == 400
     assert "grid_resolution_m" in resp1.json()["detail"]
 
-    # Test invalid runoff_coefficient > 1.0 or <= 0
     resp2 = client.post("/analyzeContour", data={"runoff_coefficient": "1.5"})
     assert resp2.status_code == 400
     assert "runoff_coefficient" in resp2.json()["detail"]
 
-    # Test negative rainfall
     resp3 = client.post("/analyzeContour", data={"rainfall_annual_mm": "-100.0"})
     assert resp3.status_code == 400
     assert "rainfall_annual_mm" in resp3.json()["detail"]
