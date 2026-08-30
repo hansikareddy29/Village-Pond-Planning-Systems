@@ -3,7 +3,7 @@ Pond Siting and Sizing Module
 Implements Multi-Criteria Decision Analysis (MCDA) to evaluate terrain for optimal
 farm/village pond placement and catchment delineation.
 Features Score-First Spatial Deduplication to identify the highest quality
-village agricultural pond locations (35 to 60 ha catchment, low bed slope, natural hollow depth).
+village agricultural pond locations (35 to 65 ha catchment, flat bed slope, natural bowl depth).
 """
 
 from typing import Dict, Any, List, Tuple, Optional
@@ -117,7 +117,7 @@ class PondSitingEngine:
                         dep_d = dep_depth[nr, nc]
                         elev = dem.elevation[nr, nc]
 
-                        slp_s = max(0.0, 1.0 - (slp / 6.0))
+                        slp_s = max(0.0, 1.0 - (slp / 4.0))
                         dep_s = min(1.0, dep_d / 2.0)
                         elev_diff = abs(elev - pour_elev)
                         elev_s = max(0.0, 1.0 - (elev_diff / 4.0))
@@ -151,18 +151,20 @@ class PondSitingEngine:
             pond_elev = float(dem.elevation[pond_r, pond_c])
             pour_elev = float(dem.elevation[pour_r, pour_c])
 
-            # Catchment suitability curve: optimal 35 to 60 ha for primary village watershed
-            if catchment_area_ha < 20.0:
-                score_catchment = (catchment_area_ha / 20.0) * 0.70
-            elif catchment_area_ha <= 55.0:
-                score_catchment = 0.85 + 0.15 * ((catchment_area_ha - 20.0) / 35.0)
+            # Catchment suitability: optimal 35 to 65 ha for primary village watershed
+            if catchment_area_ha < 15.0:
+                score_catchment = (catchment_area_ha / 15.0) * 0.50
+            elif catchment_area_ha <= 45.0:
+                score_catchment = 0.60 + 0.40 * ((catchment_area_ha - 15.0) / 30.0)
+            elif catchment_area_ha <= 65.0:
+                score_catchment = 1.0
             elif catchment_area_ha <= 85.0:
-                score_catchment = max(0.40, 1.0 - ((catchment_area_ha - 55.0) / 30.0))
+                score_catchment = max(0.40, 1.0 - 0.30 * ((catchment_area_ha - 65.0) / 20.0))
             else:
                 score_catchment = 0.05  # Master river channel outlet
 
             score_depression = min(1.0, dep_d / 2.5)
-            score_slope = max(0.0, 1.0 - (slp / 6.0))
+            score_slope = max(0.0, 1.0 - (slp / 4.0))
             score_twi = min(1.0, max(0.0, (tw - 4.0) / 10.0))
 
             suitability_score = round(
@@ -238,14 +240,18 @@ class PondSitingEngine:
                 )
             else:
                 rationale_parts.append(
-                    f"Central-southern valley storage basin at primary drainage convergence"
+                    f"Primary central-southern valley storage basin at major drainage convergence"
                 )
 
             rationale_parts.append(
                 f"Substantial upstream drainage ({c_ha:.1f} ha at pour point)"
             )
 
-            if slp < 1.0:
+            if slp < 0.1:
+                rationale_parts.append(
+                    f"ultra-flat bed slope ({slp:.2f}%) for stable embankment"
+                )
+            elif slp < 1.0:
                 rationale_parts.append(
                     f"flat bed slope ({slp:.1f}%) for stable embankment"
                 )
