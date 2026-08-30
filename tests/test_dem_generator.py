@@ -12,7 +12,9 @@ from app.dem_generator import DEMGenerator
 @pytest.fixture
 def sample_kml_data():
     parser = KMLParser()
-    kml_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "contours_1m.kml")
+    kml_path = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)), "contours_1m.kml"
+    )
     with open(kml_path, "rb") as f:
         return parser.parse(f.read(), filename="contours_1m.kml")
 

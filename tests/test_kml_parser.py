@@ -13,7 +13,9 @@ def parser():
 
 
 def test_parse_sample_kml(parser):
-    kml_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "contours_1m.kml")
+    kml_path = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)), "contours_1m.kml"
+    )
     assert os.path.exists(kml_path)
 
     with open(kml_path, "rb") as f:

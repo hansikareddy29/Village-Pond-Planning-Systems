@@ -26,20 +26,24 @@ def test_root_redirect_to_docs():
 
 
 def test_analyze_contour_endpoint():
-    kml_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "contours_1m.kml")
+    kml_path = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)), "contours_1m.kml"
+    )
     assert os.path.exists(kml_path), "contours_1m.kml must exist"
 
     with open(kml_path, "rb") as f:
         response = client.post(
             "/analyzeContour",
-            files={"file": ("contours_1m.kml", f, "application/vnd.google-earth.kml+xml")},
+            files={
+                "file": ("contours_1m.kml", f, "application/vnd.google-earth.kml+xml")
+            },
             data={
                 "grid_resolution_m": "10.0",
                 "rainfall_annual_mm": "1000.0",
                 "runoff_coefficient": "0.35",
                 "pond_depth_m": "3.0",
-                "num_candidate_sites": "5"
-            }
+                "num_candidate_sites": "5",
+            },
         )
 
     assert response.status_code == 200, f"Error: {response.text}"
@@ -76,12 +80,16 @@ def test_analyze_contour_endpoint():
 
 
 def test_analyze_contour_geojson_format():
-    kml_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "contours_1m.kml")
+    kml_path = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)), "contours_1m.kml"
+    )
     with open(kml_path, "rb") as f:
         response = client.post(
             "/analyzeContour",
-            files={"file": ("contours_1m.kml", f, "application/vnd.google-earth.kml+xml")},
-            data={"format": "geojson"}
+            files={
+                "file": ("contours_1m.kml", f, "application/vnd.google-earth.kml+xml")
+            },
+            data={"format": "geojson"},
         )
 
     assert response.status_code == 200

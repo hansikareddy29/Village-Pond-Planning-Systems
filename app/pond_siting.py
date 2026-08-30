@@ -49,7 +49,7 @@ class PondSitingEngine:
         dep_depth = hydro_results["depression_depth"]
         slope = dem.slope_percent
         rows, cols = dem.rows, dem.cols
-        cell_area = dem.resolution_m ** 2
+        cell_area = dem.resolution_m**2
 
         # Dynamically compute target catchment benchmark from total uploaded survey area (15% of map)
         if target_catchment_ha is None or target_catchment_ha <= 0:
@@ -59,7 +59,7 @@ class PondSitingEngine:
         # 1. Mask out outer perimeter cells to avoid edge boundary truncation
         valid_mask = np.zeros((rows, cols), dtype=bool)
         m = max(3, boundary_margin_cells)
-        valid_mask[m:rows - m, m:cols - m] = True
+        valid_mask[m : rows - m, m : cols - m] = True
 
         # 2. Compute Topographic Wetness Index (TWI)
         slope_rad = np.deg2rad(np.maximum(0.1, dem.slope_degrees))
@@ -93,11 +93,13 @@ class PondSitingEngine:
                     break
 
             pour_r, pour_c = curr_r, curr_c
-            raw_candidates.append({
-                "type": "natural_depression",
-                "pond_grid": (int(br), int(bc)),
-                "pour_grid": (int(pour_r), int(pour_c))
-            })
+            raw_candidates.append(
+                {
+                    "type": "natural_depression",
+                    "pond_grid": (int(br), int(bc)),
+                    "pour_grid": (int(pour_r), int(pour_c)),
+                }
+            )
 
         # -------------------------------------------------------------------------
         # Strategy B: Valley Storage & Drainage Confluence Basins
@@ -134,11 +136,13 @@ class PondSitingEngine:
                             best_local_score = local_score
                             best_pond = (int(nr), int(nc))
 
-            raw_candidates.append({
-                "type": "valley_storage",
-                "pond_grid": best_pond,
-                "pour_grid": (int(pr), int(pc))
-            })
+            raw_candidates.append(
+                {
+                    "type": "valley_storage",
+                    "pond_grid": best_pond,
+                    "pour_grid": (int(pr), int(pc)),
+                }
+            )
 
         # -------------------------------------------------------------------------
         # 3. Spatial Deduplication & Minimum Spacing between Candidates
@@ -149,7 +153,8 @@ class PondSitingEngine:
         for cand in raw_candidates:
             pr, pc = cand["pond_grid"]
             if any(
-                abs(pr - u["pond_grid"][0]) < min_cell_spacing and abs(pc - u["pond_grid"][1]) < min_cell_spacing
+                abs(pr - u["pond_grid"][0]) < min_cell_spacing
+                and abs(pc - u["pond_grid"][1]) < min_cell_spacing
                 for u in unique_candidates
             ):
                 continue
@@ -176,7 +181,9 @@ class PondSitingEngine:
             pour_elev = float(dem.elevation[pour_r, pour_c])
 
             # Catchment score (0.0 to 1.0)
-            score_catchment = min(1.0, catchment_area_ha / max(1.0, target_catchment_ha))
+            score_catchment = min(
+                1.0, catchment_area_ha / max(1.0, target_catchment_ha)
+            )
 
             # Depression storage depth score (0.0 to 1.0)
             score_depression = min(1.0, dep_d / 2.5)
@@ -189,13 +196,14 @@ class PondSitingEngine:
 
             # Composite Suitability Score (0 - 100)
             suitability_score = round(
-                100.0 * (
+                100.0
+                * (
                     self.w_catchment * score_catchment
                     + self.w_depression * score_depression
                     + self.w_slope * score_slope
                     + self.w_twi * score_twi
                 ),
-                1
+                1,
             )
 
             # Coordinates
@@ -225,59 +233,59 @@ class PondSitingEngine:
                     f"very gentle bed slope ({slp:.1f}%) for stable embankment"
                 )
             else:
-                rationale_parts.append(
-                    f"moderate bed slope ({slp:.1f}%)"
-                )
+                rationale_parts.append(f"moderate bed slope ({slp:.1f}%)")
 
             rationale = "; ".join(rationale_parts) + "."
 
-            scored_sites.append({
-                "grid_index": {"row": int(pond_r), "col": int(pond_c)},
-                "candidate_type": cand["type"],
-                "coordinates": {
-                    "longitude": round(float(pond_lon), 6),
-                    "latitude": round(float(pond_lat), 6),
-                    "elevation_m": round(float(pond_elev), 2)
-                },
-                "utm_coordinates": {
-                    "easting": round(float(pond_easting), 1),
-                    "northing": round(float(pond_northing), 1),
-                    "epsg": dem.utm_epsg,
-                    "zone": dem.utm_zone
-                },
-                "associated_pour_point": {
+            scored_sites.append(
+                {
+                    "grid_index": {"row": int(pond_r), "col": int(pond_c)},
+                    "candidate_type": cand["type"],
                     "coordinates": {
-                        "longitude": round(float(pour_lon), 6),
-                        "latitude": round(float(pour_lat), 6),
-                        "elevation_m": round(float(pour_elev), 2)
+                        "longitude": round(float(pond_lon), 6),
+                        "latitude": round(float(pond_lat), 6),
+                        "elevation_m": round(float(pond_elev), 2),
                     },
                     "utm_coordinates": {
-                        "easting": round(float(pour_easting), 1),
-                        "northing": round(float(pour_northing), 1),
+                        "easting": round(float(pond_easting), 1),
+                        "northing": round(float(pond_northing), 1),
                         "epsg": dem.utm_epsg,
-                        "zone": dem.utm_zone
+                        "zone": dem.utm_zone,
                     },
-                    "grid_index": {"row": int(pour_r), "col": int(pour_c)},
-                    "flow_accumulation_cells": float(catchment_cells),
-                    "drainage_area_ha": round(float(catchment_area_ha), 3)
-                },
-                "suitability_score": float(suitability_score),
-                "criteria_breakdown": {
-                    "catchment_score": round(float(score_catchment * 100), 1),
-                    "depression_score": round(float(score_depression * 100), 1),
-                    "slope_stability_score": round(float(score_slope * 100), 1),
-                    "wetness_index_score": round(float(score_twi * 100), 1)
-                },
-                "local_terrain": {
-                    "slope_percent": round(float(slp), 2),
-                    "depression_depth_m": round(float(dep_d), 2),
-                    "topographic_wetness_index": round(float(tw), 2),
-                    "elevation_m": round(float(pond_elev), 2)
-                },
-                "catchment_area_ha": round(float(catchment_area_ha), 3),
-                "catchment_area_sq_m": round(float(catchment_area_m2), 1),
-                "selection_rationale": rationale
-            })
+                    "associated_pour_point": {
+                        "coordinates": {
+                            "longitude": round(float(pour_lon), 6),
+                            "latitude": round(float(pour_lat), 6),
+                            "elevation_m": round(float(pour_elev), 2),
+                        },
+                        "utm_coordinates": {
+                            "easting": round(float(pour_easting), 1),
+                            "northing": round(float(pour_northing), 1),
+                            "epsg": dem.utm_epsg,
+                            "zone": dem.utm_zone,
+                        },
+                        "grid_index": {"row": int(pour_r), "col": int(pour_c)},
+                        "flow_accumulation_cells": float(catchment_cells),
+                        "drainage_area_ha": round(float(catchment_area_ha), 3),
+                    },
+                    "suitability_score": float(suitability_score),
+                    "criteria_breakdown": {
+                        "catchment_score": round(float(score_catchment * 100), 1),
+                        "depression_score": round(float(score_depression * 100), 1),
+                        "slope_stability_score": round(float(score_slope * 100), 1),
+                        "wetness_index_score": round(float(score_twi * 100), 1),
+                    },
+                    "local_terrain": {
+                        "slope_percent": round(float(slp), 2),
+                        "depression_depth_m": round(float(dep_d), 2),
+                        "topographic_wetness_index": round(float(tw), 2),
+                        "elevation_m": round(float(pond_elev), 2),
+                    },
+                    "catchment_area_ha": round(float(catchment_area_ha), 3),
+                    "catchment_area_sq_m": round(float(catchment_area_m2), 1),
+                    "selection_rationale": rationale,
+                }
+            )
 
         # Sort by suitability score descending
         scored_sites.sort(key=lambda s: s["suitability_score"], reverse=True)

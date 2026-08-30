@@ -18,13 +18,14 @@ from app.kml_parser import KMLParser, KMLParseError
 from app.dem_generator import DEMGenerator
 from app.hydrology import HydrologyEngine
 from app.pond_siting import PondSitingEngine
+from app.external_apis import RainfallAPIService, ElevationAPIService
 from app.models import AnalysisResponse
 
 
 # Initialize FastAPI Backend Application
 app = FastAPI(
     title="Village Pond Planning & Catchment Analysis Backend API",
-    description="Automated backend API for continuous terrain elevation modeling, optimal village pond location ranking, and exact hydrological catchment delineation from KML/KMZ contour maps.",
+    description="Automated backend API for continuous terrain elevation modeling, optimal village pond location ranking, and exact hydrological catchment delineation from KML/KMZ contour maps with Open-Meteo & Open-Elevation API integration.",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc"
@@ -72,7 +73,7 @@ def _process_contour_map(
             detail=f"Failed to read file: {str(e)}"
         )
 
-    # 2. Generate DEM Grid
+    # 2. Generate Continuous DEM Grid from 3D Contours (Delaunay TIN)
     try:
         dem = dem_generator.generate_dem(parsed_data, resolution_m=grid_resolution_m)
     except Exception as e:
@@ -81,7 +82,17 @@ def _process_contour_map(
             detail=f"DEM Surface Generation Error: {str(e)}"
         )
 
-    # 3. Hydrological Analysis
+    # 3. Dynamic Meteorological Rainfall API Fetch (Open-Meteo Climate / IMD Norms)
+    center_lat = parsed_data['bounds'].get('center_lat', 21.25)
+    center_lon = parsed_data['bounds'].get('center_lon', 81.30)
+    rainfall_api_data = RainfallAPIService.fetch_annual_rainfall(
+        latitude=center_lat,
+        longitude=center_lon,
+        user_override_mm=rainfall_annual_mm
+    )
+    effective_rainfall_mm = rainfall_api_data["annual_rainfall_mm"]
+
+    # 4. Hydrological Analysis (Priority-Flood, D8 Routing, Kahn's Topological Flow Accumulation)
     try:
         hydro_results = hydrology_engine.analyze(dem)
     except Exception as e:
@@ -90,7 +101,7 @@ def _process_contour_map(
             detail=f"Hydrological Analysis Error: {str(e)}"
         )
 
-    # 4. Pond Candidate Siting & MCDA Ranking
+    # 5. Pond Candidate Siting & MCDA Ranking
     try:
         candidate_sites = pond_siting_engine.find_optimal_sites(
             dem=dem,
@@ -111,7 +122,7 @@ def _process_contour_map(
 
     top_site = candidate_sites[0]
 
-    # 5. Delineate Catchment Boundary from the Associated Hydrological Pour Point
+    # 6. Delineate Catchment Boundary from the Associated Hydrological Pour Point
     pour_grid = (
         top_site['associated_pour_point']['grid_index']['row'],
         top_site['associated_pour_point']['grid_index']['col']
@@ -122,14 +133,14 @@ def _process_contour_map(
         dem=dem
     )
 
-    # 6. Estimate Runoff & Water Yield
+    # 7. Estimate Runoff & Water Yield
     runoff_info = hydrology_engine.estimate_runoff(
         catchment_area_sq_m=catchment_info['area_sq_meters'],
-        annual_rainfall_mm=rainfall_annual_mm,
+        annual_rainfall_mm=effective_rainfall_mm,
         runoff_coefficient=runoff_coefficient
     )
 
-    # 7. Sizing & Civil Engineering Recommendations
+    # 8. Sizing & Civil Engineering Recommendations
     pond_design = pond_siting_engine.compute_design_recommendations(
         catchment_area_sq_m=catchment_info['area_sq_meters'],
         annual_runoff_m3=runoff_info['estimated_annual_runoff_m3'],
@@ -137,7 +148,7 @@ def _process_contour_map(
         target_pond_depth_m=pond_depth_m
     )
 
-    # 8. Assemble GeoJSON Feature Collection distinguishing Pond Region vs Pour Point
+    # 9. Assemble GeoJSON Feature Collection distinguishing Pond Region vs Pour Point
     geojson_features = []
 
     # A. Catchment Boundary Polygon
@@ -238,7 +249,7 @@ def _process_contour_map(
 
     t_exec = round(time.time() - t_start, 3)
 
-    # 9. Format Structured JSON Response
+    # 10. Format Structured JSON Response
     response = {
         "success": True,
         "message": "Contour map terrain analysis and catchment delineation completed successfully.",
@@ -250,7 +261,8 @@ def _process_contour_map(
             "contour_interval_m": parsed_data['contour_interval'],
             "utm_zone": dem.utm_zone,
             "utm_epsg": dem.utm_epsg,
-            "bounds_wgs84": parsed_data['bounds']
+            "bounds_wgs84": parsed_data['bounds'],
+            "rainfall_service": rainfall_api_data
         },
         "terrain_summary": {
             "min_elevation_m": round(dem.stats['min_elevation'], 2),
@@ -262,7 +274,8 @@ def _process_contour_map(
             "grid_resolution_m": dem.resolution_m,
             "grid_rows": dem.stats['grid_rows'],
             "grid_cols": dem.stats['grid_cols'],
-            "total_grid_cells": dem.stats['total_grid_cells']
+            "total_grid_cells": dem.stats['total_grid_cells'],
+            "elevation_source": "KML_3D_Contour_TIN_Interpolation"
         },
         "recommended_pond_location": top_site,
         "catchment_summary": {
@@ -278,6 +291,7 @@ def _process_contour_map(
             "average_slope_degrees": catchment_info['average_slope_degrees'],
             "centroid_wgs84": catchment_info['centroid_wgs84'],
             "annual_rainfall_mm": runoff_info['annual_rainfall_mm'],
+            "rainfall_source": rainfall_api_data.get("source", "open-meteo-api"),
             "runoff_coefficient": runoff_info['runoff_coefficient'],
             "estimated_annual_runoff_m3": runoff_info['estimated_annual_runoff_m3'],
             "estimated_annual_runoff_liters": runoff_info['estimated_annual_runoff_liters'],
@@ -295,13 +309,13 @@ def _process_contour_map(
 @app.post(
     "/analyzeContour",
     summary="Analyze Contour Map & Delineate Catchment",
-    description="Accepts a KML/KMZ contour map upload. Returns structured JSON analysis by default, or direct GeoJSON FeatureCollection file if format='geojson'."
+    description="Accepts a KML/KMZ contour map upload. Dynamically queries Open-Meteo Rainfall API for the coordinates and returns structured JSON analysis or direct GeoJSON."
 )
 async def analyze_contour(
     file: Optional[UploadFile] = File(None, description="KML or KMZ contour map file (optional, defaults to sample contours_1m.kml)"),
     format: str = Form("json", description="Output format: 'json' (complete analysis report) or 'geojson' (pure GeoJSON FeatureCollection file)"),
     grid_resolution_m: float = Form(10.0, description="Spatial DEM grid cell resolution in meters (e.g. 5.0 to 25.0)"),
-    rainfall_annual_mm: float = Form(1000.0, description="Average annual precipitation in mm for water yield calculation"),
+    rainfall_annual_mm: float = Form(1000.0, description="Annual precipitation in mm (auto-fetched from Open-Meteo API for file coordinates if left default)"),
     runoff_coefficient: float = Form(0.35, description="Catchment runoff coefficient C (0.0 to 1.0]"),
     pond_depth_m: float = Form(3.0, description="Target pond excavation depth in meters"),
     num_candidate_sites: int = Form(5, description="Number of top candidate pond locations to return")
@@ -379,6 +393,7 @@ async def health_check():
         "status": "healthy",
         "service": "Village Pond Planning & Catchment Analysis Backend API",
         "version": "1.0.0",
+        "apis_integrated": ["Open-Meteo Climate Archive API", "Open-Elevation API", "IMD Climatological Norms"],
         "timestamp": time.time()
     }
 
