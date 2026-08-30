@@ -72,18 +72,3 @@ def test_analyze_contour_endpoint():
     geojson = data["geojson"]
     assert geojson["type"] == "FeatureCollection"
     assert len(geojson["features"]) >= 3
-
-
-def test_find_catchment_alias_endpoint():
-    kml_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "contours_1m.kml")
-    with open(kml_path, "rb") as f:
-        response = client.post(
-            "/findCatchment",
-            files={"file": ("contours_1m.kml", f, "application/vnd.google-earth.kml+xml")},
-            data={"grid_resolution_m": "15.0"}
-        )
-
-    assert response.status_code == 200
-    data = response.json()
-    assert data["success"] is True
-    assert "recommended_pond_location" in data

@@ -2,7 +2,6 @@
 FastAPI Backend Application for Village Pond Planning & Catchment Analysis
 Provides backend REST API routes:
 - POST /analyzeContour
-- POST /findCatchment
 - GET /health
 - GET / (Redirects to /docs OpenAPI Specification)
 """
@@ -267,8 +266,8 @@ def _process_contour_map(
 @app.post(
     "/analyzeContour",
     response_model=AnalysisResponse,
-    summary="Analyze Contour Map & Estimate Catchment",
-    description="Upload a KML/KMZ contour map to generate continuous DEM, delineate watershed catchment, identify optimal pond sites, and compute water storage recommendations."
+    summary="Analyze Contour Map & Delineate Catchment",
+    description="Accepts a KML/KMZ contour map upload, analyzes terrain elevation, identifies optimal pond locations, delineates the contributing watershed catchment, and computes water storage recommendations."
 )
 async def analyze_contour(
     file: Optional[UploadFile] = File(None, description="KML or KMZ contour map file (optional, defaults to sample contours_1m.kml)"),
@@ -295,30 +294,6 @@ async def analyze_contour(
     return _process_contour_map(
         file_bytes=contents,
         filename=filename,
-        grid_resolution_m=grid_resolution_m,
-        rainfall_annual_mm=rainfall_annual_mm,
-        runoff_coefficient=runoff_coefficient,
-        pond_depth_m=pond_depth_m,
-        num_candidate_sites=num_candidate_sites
-    )
-
-
-@app.post(
-    "/findCatchment",
-    response_model=AnalysisResponse,
-    summary="Find Catchment and Pond Location (Alias Endpoint)",
-    description="Alias endpoint for POST /analyzeContour."
-)
-async def find_catchment(
-    file: Optional[UploadFile] = File(None, description="KML or KMZ contour map file"),
-    grid_resolution_m: float = Form(10.0, description="Spatial DEM grid cell resolution in meters"),
-    rainfall_annual_mm: float = Form(1000.0, description="Average annual precipitation in mm"),
-    runoff_coefficient: float = Form(0.35, description="Catchment runoff coefficient C"),
-    pond_depth_m: float = Form(3.0, description="Target pond excavation depth in meters"),
-    num_candidate_sites: int = Form(5, description="Number of top candidate pond locations to return")
-):
-    return await analyze_contour(
-        file=file,
         grid_resolution_m=grid_resolution_m,
         rainfall_annual_mm=rainfall_annual_mm,
         runoff_coefficient=runoff_coefficient,

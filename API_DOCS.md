@@ -1,14 +1,14 @@
 # Village Pond Planning & Catchment Analysis — API Documentation
 
-This document provides complete REST API specifications for the Village Pond Planning & Catchment Analysis backend service.
+This document provides the complete REST API specification for the Village Pond Planning & Catchment Analysis backend service.
 
 ---
 
 ## Base URLs
-- **Local Development**: `http://localhost:8000`
+- **API Base URL**: `http://localhost:8000`
 - **Interactive OpenAPI (Swagger) UI**: `http://localhost:8000/docs`
 - **Interactive Redoc UI**: `http://localhost:8000/redoc`
-- **Interactive Web Visualizer**: `http://localhost:8000/`
+- **Health Check Endpoint**: `http://localhost:8000/health`
 
 ---
 
@@ -16,14 +16,13 @@ This document provides complete REST API specifications for the Village Pond Pla
 
 | Method | Path | Summary | Description |
 | :--- | :--- | :--- | :--- |
-| `POST` | `/analyzeContour` | Analyze Contour Map | Uploads KML/KMZ, generates DEM, delineates catchment, and finds optimal pond site. |
-| `POST` | `/findCatchment` | Find Catchment (Alias) | Direct alias for `/analyzeContour`. |
+| `POST` | `/analyzeContour` | Analyze Contour Map & Delineate Catchment | Uploads KML/KMZ, generates DEM, delineates catchment, identifies optimal pond site, and returns structured JSON & GeoJSON. |
 | `GET` | `/health` | Health Check | Verifies service status and version. |
-| `GET` | `/` | Web Dashboard | Serves the interactive Leaflet map dashboard. |
+| `GET` | `/` | Root Redirect | Redirects to interactive OpenAPI specification docs (`/docs`). |
 
 ---
 
-## 1. POST `/analyzeContour` (and `/findCatchment`)
+## 1. POST `/analyzeContour`
 
 ### Request Headers
 - `Content-Type: multipart/form-data`
@@ -32,7 +31,7 @@ This document provides complete REST API specifications for the Village Pond Pla
 
 | Parameter | Type | Required | Default | Description |
 | :--- | :--- | :--- | :--- | :--- |
-| `file` | `File` | **Yes** | — | The contour map file (`.kml`, `.kmz`, or `.xml`). |
+| `file` | `File` | No | `contours_1m.kml` | The contour map file (`.kml`, `.kmz`, or `.xml`). Defaults to sample if omitted. |
 | `grid_resolution_m` | `float` | No | `10.0` | Digital Elevation Model grid resolution in meters (e.g. `5.0` to `25.0`). |
 | `rainfall_annual_mm` | `float` | No | `1000.0` | Average annual precipitation in mm for water yield calculation. |
 | `runoff_coefficient` | `float` | No | `0.35` | Rational runoff coefficient $C$ (typically `0.2` to `0.5` for rural/agricultural soil). |
@@ -84,8 +83,8 @@ This document provides complete REST API specifications for the Village Pond Pla
     "site_id": "pond_site_1",
     "rank": 1,
     "coordinates": {
-      "longitude": 81.295404,
       "latitude": 21.251178,
+      "longitude": 81.295404,
       "elevation_m": 278.0
     },
     "utm_coordinates": {
@@ -115,7 +114,7 @@ This document provides complete REST API specifications for the Village Pond Pla
     "area_sq_meters": 1611800.0,
     "area_hectares": 161.18,
     "area_acres": 398.284,
-    "perimeter_meters": 6832.0,
+    "perimeter_meters": 8360.0,
     "min_elevation_m": 276.0,
     "max_elevation_m": 297.82,
     "mean_elevation_m": 286.76,
@@ -179,7 +178,7 @@ This document provides complete REST API specifications for the Village Pond Pla
     "features": [
       {
         "type": "Feature",
-        "properties": { "name": "Catchment Boundary", "perimeter_m": 6832.0 },
+        "properties": { "name": "Catchment Boundary", "perimeter_m": 8360.0 },
         "geometry": { "type": "Polygon", "coordinates": [...] }
       },
       {
@@ -215,8 +214,7 @@ curl -X POST "http://localhost:8000/analyzeContour" \
   -F "grid_resolution_m=10.0" \
   -F "rainfall_annual_mm=1000.0" \
   -F "runoff_coefficient=0.35" \
-  -F "pond_depth_m=3.0" \
-  -F "num_candidate_sites=5"
+  -F "pond_depth_m=3.0"
 ```
 
 ### Python (`requests`)
@@ -224,46 +222,11 @@ curl -X POST "http://localhost:8000/analyzeContour" \
 import requests
 
 url = "http://localhost:8000/analyzeContour"
-files = {"file": open("contours_1m.kml", "rb")}
-data = {
-    "grid_resolution_m": 10.0,
-    "rainfall_annual_mm": 1000.0,
-    "runoff_coefficient": 0.35,
-    "pond_depth_m": 3.0,
-    "num_candidate_sites": 5
-}
+with open("contours_1m.kml", "rb") as f:
+    response = requests.post(url, files={"file": f})
 
-response = requests.post(url, files=files, data=data)
 result = response.json()
-
-print(f"Optimal Pond Site: {result['recommended_pond_location']['coordinates']}")
-print(f"Catchment Area: {result['catchment_summary']['area_hectares']} ha")
-print(f"Annual Runoff Yield: {result['catchment_summary']['estimated_annual_runoff_million_liters']} ML")
+print("Optimal Pond Location:", result["recommended_pond_location"]["coordinates"])
+print("Catchment Area (ha):", result["catchment_summary"]["area_hectares"])
+print("Annual Runoff (ML):", result["catchment_summary"]["estimated_annual_runoff_million_liters"])
 ```
-
-### JavaScript / Fetch
-```javascript
-const formData = new FormData();
-formData.append('file', fileBlob, 'contours_1m.kml');
-formData.append('grid_resolution_m', 10.0);
-formData.append('rainfall_annual_mm', 1000.0);
-formData.append('runoff_coefficient', 0.35);
-
-const response = await fetch('http://localhost:8000/analyzeContour', {
-  method: 'POST',
-  body: formData
-});
-const data = await response.json();
-console.log(data);
-```
-
----
-
-## 3. Error Handling
-
-| Status Code | Reason | Example Response |
-| :--- | :--- | :--- |
-| `400 Bad Request` | Missing file, empty file, or corrupted KML syntax. | `{"detail": "KML/KMZ Parsing Error: No valid contour lines found"}` |
-| `422 Unprocessable Entity`| Missing required parameters or invalid parameter types. | `{"detail": [{"loc": ["body", "file"], "msg": "Field required"}]}` |
-| `500 Internal Server Error`| Siting failure on flat or degenerate grid. | `{"detail": "No viable pond candidate locations identified."}` |
-

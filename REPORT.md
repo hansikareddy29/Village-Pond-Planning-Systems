@@ -5,17 +5,15 @@
 ## 1. Project Information & Repository
 
 - **GitHub Repository**: [https://github.com/hansikareddy29/Village-Pond-Planning-Systems](https://github.com/hansikareddy29/Village-Pond-Planning-Systems)
-- **Primary Working API Endpoint**: `POST http://localhost:8000/analyzeContour`
-- **Alias Working API Endpoint**: `POST http://localhost:8000/findCatchment`
+- **Working API Endpoint**: `POST http://localhost:8000/analyzeContour`
 - **Health Check URL**: `GET http://localhost:8000/health`
 - **Interactive OpenAPI Documentation**: `http://localhost:8000/docs`
-- **Interactive Web Visualization Dashboard**: `http://localhost:8000/`
 
 ---
 
 ## 2. Executive Summary
 
-This project implements an automated, generalized, production-ready backend system for **Village Pond Planning and Hydrological Catchment Analysis** from raw contour maps in KML and KMZ formats. 
+This project implements an automated, generalized, production-ready backend REST API system for **Village Pond Planning and Hydrological Catchment Analysis** from raw contour maps in KML and KMZ formats.
 
 Given an uploaded contour dataset, the system:
 1. Automatically parses 3D contour geometries, line strings, and elevation tags.
@@ -25,7 +23,7 @@ Given an uploaded contour dataset, the system:
 5. Identifies natural topographic sinks/bowls and calculates natural storage volume.
 6. Evaluates candidate pond locations using a multi-criteria decision analysis (MCDA) scoring framework (catchment yield, depression depth, slope stability, and topographic wetness index).
 7. Delineates the exact upstream contributing watershed catchment boundary polygon and calculates surface area ($m^2$, ha, acres), perimeter, elevation statistics, and annual runoff volume.
-8. Returns structured JSON output with GeoJSON layers and provides a full-featured web dashboard for interactive visual exploration.
+8. Returns structured JSON output with GeoJSON layers for direct GIS integration.
 
 ---
 
@@ -75,7 +73,7 @@ $$\text{Suitability Index} = 100 \times \left(0.40 \cdot S_{\text{catchment}} + 
 
 ### 3.6. Watershed / Catchment Delineation & Vector Polygonization
 - For the selected optimal pond outlet $(r_0, c_0)$, an inverted Breadth-First Search (BFS) traverses all upstream cells that route water to $(r_0, c_0)$.
-- The binary raster mask is vectorized using contour boundary extraction into a clean Shapely `Polygon` and transformed back to WGS84 coordinates.
+- The binary raster mask is vectorized into a clean Shapely `Polygon` (GeoJSON) and transformed back to WGS84 coordinates.
 - Annual water yield is calculated using the **Rational Method**:
   $$V_{\text{annual\_runoff}} = C \cdot P_{\text{annual}} \cdot A_{\text{catchment}}$$
   where $C$ is the runoff coefficient (default $0.35$), $P$ is annual precipitation in meters, and $A$ is the catchment area in $m^2$.
@@ -106,7 +104,7 @@ $$\text{Suitability Index} = 100 \times \left(0.40 \cdot S_{\text{catchment}} + 
 
 ### 4.3. Catchment / Watershed Results
 - **Total Catchment Area**: **161.18 hectares** ($1,611,800\text{ m}^2$ / $398.28\text{ acres}$)
-- **Catchment Perimeter**: **6,832.0 meters** ($6.83\text{ km}$)
+- **Catchment Perimeter**: **8,360.0 meters** ($8.36\text{ km}$)
 - **Catchment Elevation Range**: 276.0 m to 297.8 m (Mean: 286.76 m)
 - **Catchment Average Slope**: $5.26\%$ ($3.01^\circ$)
 - **Estimated Annual Runoff Harvest**: **564.13 Million Liters / year** ($564,130\text{ m}^3$)
@@ -120,34 +118,9 @@ $$\text{Suitability Index} = 100 \times \left(0.40 \cdot S_{\text{catchment}} + 
 - **Excavation Savings**: **$83.3\%$** earthwork reduction achieved by utilizing the existing topographic depression
 - **Agricultural Support**: Provides supplemental irrigation for **$12.5\text{ hectares}$** of crops
 
-### 4.5. Top Alternative Candidate Pond Locations
-| Rank | Site ID | Latitude (°N) | Longitude (°E) | Elevation (m) | Catchment Area (ha) | Suitability Score | Key Highlight |
-| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
-| **1** | `pond_site_1` | **21.25118** | **81.29540** | **278.00** | **161.18** | **99.5 / 100** | Primary natural bowl & major confluence |
-| 2 | `pond_site_2` | 21.24857 | 81.28991 | 271.04 | 51.97 | 97.1 / 100 | Secondary valley stream convergence |
-| 3 | `pond_site_3` | 21.24514 | 81.28922 | 269.06 | 309.35 | 97.0 / 100 | Major downstream valley basin |
-| 4 | `pond_site_4` | 21.24423 | 81.28855 | 270.08 | 41.16 | 95.0 / 100 | Stable slope sub-catchment |
-| 5 | `pond_site_5` | 21.24225 | 81.28700 | 271.33 | 371.31 | 94.9 / 100 | Village outlet main drain |
-
 ---
 
-## 5. Visualizations & Map Demonstrations
-
-The system generates visual analytical outputs illustrating terrain, flow channels, and catchment boundaries:
-
-### 5.1. Delineated Catchment & Pond Location Map
-The hillshade map below shows the interpolated terrain, the extracted drainage stream network, candidate pond locations, and the delineated 161.2 ha watershed catchment boundary:
-
-![Catchment Terrain Map](assets/catchment_terrain_map.png)
-
-### 5.2. Multi-Panel Hydrological Analysis
-The figure below depicts the four analytical layers: (A) Digital Elevation Model, (B) Log-scaled Flow Accumulation Network, (C) Terrain Slope (%), and (D) Topographic Depressions / Natural Storage Bowls:
-
-![Hydrology Panels](assets/hydrology_panels.png)
-
----
-
-## 6. How to Run & Verify the Solution
+## 5. How to Run & Verify the Solution
 
 ### Prerequisites
 - Python 3.10+
@@ -158,24 +131,10 @@ The figure below depicts the four analytical layers: (A) Digital Elevation Model
 ./run.sh
 ```
 
-### Manual Installation & Execution
-```bash
-# 1. Create and activate virtual environment
-python3 -m venv venv
-source venv/bin/activate
-
-# 2. Install dependencies
-pip install -r requirements.txt
-
-# 3. Start FastAPI Server
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-```
-
 ### Run Automated Test Suite
 ```bash
 ./venv/bin/python -m pytest tests/ -v
 ```
-*(All 14 unit and integration tests execute with 100% pass rate in < 10 seconds)*
 
 ### Execute Standalone Demonstration Script
 ```bash
@@ -191,15 +150,3 @@ curl -X POST "http://localhost:8000/analyzeContour" \
   -F "runoff_coefficient=0.35" \
   -F "pond_depth_m=3.0"
 ```
-
----
-
-## 7. Code Extensibility & Generalization to Future Phases
-
-The architecture was intentionally designed for modularity and future expansion:
-1. **Zero Hardcoded Constants**: The pipeline dynamically computes bounding boxes, UTM projections, grid extents, contour intervals, and slope matrices for any geographic region on Earth.
-2. **Support for Heterogeneous KML/KMZ Schemas**: Handles compressed `.kmz` zip archives, 3D coordinate tuples, `<ExtendedData><SimpleData>` attributes (`ELEV`, `CONTOUR`, `Z`), and multi-geometry placemarks.
-3. **Pluggable Hydrological Models**: The `HydrologyEngine` is isolated from the API and DEM layers, allowing future integration of multi-flow direction models (D-Infinity, MFD) or Soil Conservation Service (SCS-CN) runoff models.
-4. **Interactive GIS Integration**: Full GeoJSON compliance enables direct integration with QGIS, ArcGIS, Mapbox, Leaflet, and Google Earth.
-5. **Configurable Engineering Criteria**: Parameters for rainfall, soil permeability, runoff coefficient, and pond excavation depth are dynamically passed via API parameters without code modification.
-
