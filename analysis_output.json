@@ -1,7 +1,7 @@
 {
   "success": true,
   "message": "Contour map terrain analysis and catchment delineation completed successfully.",
-  "execution_time_seconds": 6.298,
+  "execution_time_seconds": 9.487,
   "metadata": {
     "filename": "contours_1m.kml",
     "num_contours_extracted": 1355,
@@ -45,102 +45,102 @@
     "elevation_source": "KML_3D_Contour_TIN_Interpolation"
   },
   "recommended_pond_location": {
+    "site_id": "pond_site_1",
+    "rank": 1,
     "grid_index": {
-      "row": 218,
-      "col": 117
+      "row": 125,
+      "col": 90
     },
-    "candidate_type": "natural_depression",
+    "candidate_type": "valley_storage",
     "coordinates": {
-      "longitude": 81.292529,
-      "latitude": 21.259406,
-      "elevation_m": 278.0
+      "longitude": 81.28991,
+      "latitude": 21.251007,
+      "elevation_m": 271.0
     },
     "utm_coordinates": {
-      "easting": 530349.5,
-      "northing": 2350885.3,
+      "easting": 530079.5,
+      "northing": 2349955.3,
       "epsg": 32644,
       "zone": 44
     },
     "associated_pour_point": {
       "coordinates": {
-        "longitude": 81.293981,
-        "latitude": 21.262565,
-        "elevation_m": 280.83
+        "longitude": 81.28991,
+        "latitude": 21.250646,
+        "elevation_m": 270.8
       },
       "utm_coordinates": {
-        "easting": 530499.5,
-        "northing": 2351235.3,
+        "easting": 530079.5,
+        "northing": 2349915.3,
         "epsg": 32644,
         "zone": 44
       },
       "grid_index": {
-        "row": 253,
-        "col": 132
+        "row": 121,
+        "col": 90
       },
-      "flow_accumulation_cells": 9315.0,
-      "drainage_area_ha": 93.15
+      "flow_accumulation_cells": 5177.0,
+      "drainage_area_ha": 51.77
     },
-    "suitability_score": 96.7,
+    "suitability_score": 98.4,
     "criteria_breakdown": {
-      "catchment_score": 98.5,
+      "catchment_score": 98.6,
       "depression_score": 100.0,
-      "slope_stability_score": 99.0,
-      "wetness_index_score": 76.0
+      "slope_stability_score": 94.6,
+      "wetness_index_score": 100.0
     },
     "local_terrain": {
-      "slope_percent": 0.1,
-      "depression_depth_m": 3.38,
-      "topographic_wetness_index": 11.6,
-      "elevation_m": 278.0
+      "slope_percent": 0.33,
+      "depression_depth_m": 3.01,
+      "topographic_wetness_index": 16.55,
+      "elevation_m": 271.0
     },
-    "catchment_area_ha": 93.15,
-    "catchment_area_sq_m": 931500.0,
-    "selection_rationale": "Located in a natural topographic bowl (3.4m depth) reducing excavation; Substantial upstream drainage (93.2 ha at pour point); flat bed slope (0.1%) for stable embankment.",
-    "site_id": "pond_site_1",
-    "rank": 1
+    "catchment_area_ha": 51.77,
+    "catchment_area_sq_m": 517700.0,
+    "selection_rationale": "Located in a natural topographic bowl (3.0m depth) reducing excavation; Substantial upstream drainage (51.8 ha at pour point); flat bed slope (0.3%) for stable embankment."
   },
   "catchment_summary": {
-    "area_sq_meters": 931500.0,
-    "area_hectares": 93.15,
-    "area_acres": 230.179,
-    "perimeter_meters": 5700.0,
-    "min_elevation_m": 274.76,
-    "max_elevation_m": 295.28,
-    "mean_elevation_m": 284.47,
-    "elevation_range_m": 20.52,
-    "average_slope_percent": 6.0,
-    "average_slope_degrees": 3.42,
+    "area_sq_meters": 517700.0,
+    "area_hectares": 51.77,
+    "area_acres": 127.926,
+    "perimeter_meters": 4320.0,
+    "min_elevation_m": 269.0,
+    "max_elevation_m": 290.71,
+    "mean_elevation_m": 278.51,
+    "elevation_range_m": 21.7,
+    "average_slope_percent": 7.35,
+    "average_slope_degrees": 4.19,
     "centroid_wgs84": {
-      "longitude": 81.296866,
-      "latitude": 21.258856
+      "longitude": 81.289147,
+      "latitude": 21.254894
     },
     "annual_rainfall_mm": 1000.0,
     "rainfall_source": "regional_climatology_fallback",
     "runoff_coefficient": 0.35,
-    "estimated_annual_runoff_m3": 326025.0,
-    "estimated_annual_runoff_liters": 326025000.0,
-    "estimated_annual_runoff_million_liters": 326.02,
-    "estimated_peak_discharge_m3_per_sec": 4.53
+    "estimated_annual_runoff_m3": 181195.0,
+    "estimated_annual_runoff_liters": 181195000.0,
+    "estimated_annual_runoff_million_liters": 181.19,
+    "estimated_peak_discharge_m3_per_sec": 2.52
   },
   "pond_design_recommendations": {
     "recommended_depth_m": 3.0,
-    "recommended_surface_area_sq_m": 22222.2,
-    "recommended_surface_area_hectares": 2.222,
+    "recommended_surface_area_sq_m": 16106.2,
+    "recommended_surface_area_hectares": 1.611,
     "estimated_dimensions_m": {
-      "length_m": 182.6,
-      "width_m": 121.7,
+      "length_m": 155.4,
+      "width_m": 103.6,
       "side_slope": "1.5:1 (Horizontal:Vertical)"
     },
-    "recommended_storage_capacity_m3": 50000.0,
-    "storage_capacity_liters": 50000000.0,
-    "storage_capacity_million_liters": 50.0,
-    "estimated_excavation_volume_m3": 8333.3,
+    "recommended_storage_capacity_m3": 36239.0,
+    "storage_capacity_liters": 36239000.0,
+    "storage_capacity_million_liters": 36.24,
+    "estimated_excavation_volume_m3": 6039.8,
     "excavation_savings_from_depression_percent": 83.3,
     "recommended_bund_height_m": 1.1,
     "recommended_freeboard_m": 0.6,
     "utilization_potential": {
-      "supplemental_irrigation_ha": 12.5,
-      "family_water_supply_days": 66666,
+      "supplemental_irrigation_ha": 9.06,
+      "family_water_supply_days": 48318,
       "estimated_annual_refill_cycles": 5.0
     },
     "construction_notes": [
@@ -151,279 +151,279 @@
   },
   "candidate_pond_sites": [
     {
-      "grid_index": {
-        "row": 218,
-        "col": 117
-      },
-      "candidate_type": "natural_depression",
-      "coordinates": {
-        "longitude": 81.292529,
-        "latitude": 21.259406,
-        "elevation_m": 278.0
-      },
-      "utm_coordinates": {
-        "easting": 530349.5,
-        "northing": 2350885.3,
-        "epsg": 32644,
-        "zone": 44
-      },
-      "associated_pour_point": {
-        "coordinates": {
-          "longitude": 81.293981,
-          "latitude": 21.262565,
-          "elevation_m": 280.83
-        },
-        "utm_coordinates": {
-          "easting": 530499.5,
-          "northing": 2351235.3,
-          "epsg": 32644,
-          "zone": 44
-        },
-        "grid_index": {
-          "row": 253,
-          "col": 132
-        },
-        "flow_accumulation_cells": 9315.0,
-        "drainage_area_ha": 93.15
-      },
-      "suitability_score": 96.7,
-      "criteria_breakdown": {
-        "catchment_score": 98.5,
-        "depression_score": 100.0,
-        "slope_stability_score": 99.0,
-        "wetness_index_score": 76.0
-      },
-      "local_terrain": {
-        "slope_percent": 0.1,
-        "depression_depth_m": 3.38,
-        "topographic_wetness_index": 11.6,
-        "elevation_m": 278.0
-      },
-      "catchment_area_ha": 93.15,
-      "catchment_area_sq_m": 931500.0,
-      "selection_rationale": "Located in a natural topographic bowl (3.4m depth) reducing excavation; Substantial upstream drainage (93.2 ha at pour point); flat bed slope (0.1%) for stable embankment.",
       "site_id": "pond_site_1",
-      "rank": 1
-    },
-    {
+      "rank": 1,
       "grid_index": {
-        "row": 98,
-        "col": 214
+        "row": 125,
+        "col": 90
       },
       "candidate_type": "valley_storage",
       "coordinates": {
-        "longitude": 81.301857,
-        "latitude": 21.248547,
-        "elevation_m": 281.13
-      },
-      "utm_coordinates": {
-        "easting": 531319.5,
-        "northing": 2349685.3,
-        "epsg": 32644,
-        "zone": 44
-      },
-      "associated_pour_point": {
-        "coordinates": {
-          "longitude": 81.301567,
-          "latitude": 21.248276,
-          "elevation_m": 280.27
-        },
-        "utm_coordinates": {
-          "easting": 531289.5,
-          "northing": 2349655.3,
-          "epsg": 32644,
-          "zone": 44
-        },
-        "grid_index": {
-          "row": 95,
-          "col": 211
-        },
-        "flow_accumulation_cells": 8625.0,
-        "drainage_area_ha": 86.25
-      },
-      "suitability_score": 95.6,
-      "criteria_breakdown": {
-        "catchment_score": 97.1,
-        "depression_score": 100.0,
-        "slope_stability_score": 99.3,
-        "wetness_index_score": 70.5
-      },
-      "local_terrain": {
-        "slope_percent": 0.07,
-        "depression_depth_m": 2.87,
-        "topographic_wetness_index": 11.05,
-        "elevation_m": 281.13
-      },
-      "catchment_area_ha": 86.25,
-      "catchment_area_sq_m": 862500.0,
-      "selection_rationale": "Located in a natural topographic bowl (2.9m depth) reducing excavation; Substantial upstream drainage (86.2 ha at pour point); flat bed slope (0.1%) for stable embankment.",
-      "site_id": "pond_site_2",
-      "rank": 2
-    },
-    {
-      "grid_index": {
-        "row": 26,
-        "col": 281
-      },
-      "candidate_type": "natural_depression",
-      "coordinates": {
-        "longitude": 81.3083,
-        "latitude": 21.24203,
-        "elevation_m": 284.0
-      },
-      "utm_coordinates": {
-        "easting": 531989.5,
-        "northing": 2348965.3,
-        "epsg": 32644,
-        "zone": 44
-      },
-      "associated_pour_point": {
-        "coordinates": {
-          "longitude": 81.311005,
-          "latitude": 21.244916,
-          "elevation_m": 287.34
-        },
-        "utm_coordinates": {
-          "easting": 532269.5,
-          "northing": 2349285.3,
-          "epsg": 32644,
-          "zone": 44
-        },
-        "grid_index": {
-          "row": 58,
-          "col": 309
-        },
-        "flow_accumulation_cells": 4228.0,
-        "drainage_area_ha": 42.28
-      },
-      "suitability_score": 90.9,
-      "criteria_breakdown": {
-        "catchment_score": 87.6,
-        "depression_score": 100.0,
-        "slope_stability_score": 100.0,
-        "wetness_index_score": 64.5
-      },
-      "local_terrain": {
-        "slope_percent": 0.0,
-        "depression_depth_m": 3.98,
-        "topographic_wetness_index": 10.45,
-        "elevation_m": 284.0
-      },
-      "catchment_area_ha": 42.28,
-      "catchment_area_sq_m": 422800.0,
-      "selection_rationale": "Located in a natural topographic bowl (4.0m depth) reducing excavation; Substantial upstream drainage (42.3 ha at pour point); flat bed slope (0.0%) for stable embankment.",
-      "site_id": "pond_site_3",
-      "rank": 3
-    },
-    {
-      "grid_index": {
-        "row": 120,
-        "col": 89
-      },
-      "candidate_type": "valley_storage",
-      "coordinates": {
-        "longitude": 81.289813,
-        "latitude": 21.250556,
+        "longitude": 81.28991,
+        "latitude": 21.251007,
         "elevation_m": 271.0
       },
       "utm_coordinates": {
-        "easting": 530069.5,
-        "northing": 2349905.3,
+        "easting": 530079.5,
+        "northing": 2349955.3,
         "epsg": 32644,
         "zone": 44
       },
       "associated_pour_point": {
         "coordinates": {
-          "longitude": 81.289909,
-          "latitude": 21.250284,
-          "elevation_m": 269.71
+          "longitude": 81.28991,
+          "latitude": 21.250646,
+          "elevation_m": 270.8
         },
         "utm_coordinates": {
           "easting": 530079.5,
-          "northing": 2349875.3,
+          "northing": 2349915.3,
           "epsg": 32644,
           "zone": 44
         },
         "grid_index": {
-          "row": 117,
+          "row": 121,
           "col": 90
         },
-        "flow_accumulation_cells": 5288.0,
-        "drainage_area_ha": 52.88
+        "flow_accumulation_cells": 5177.0,
+        "drainage_area_ha": 51.77
       },
-      "suitability_score": 90.1,
+      "suitability_score": 98.4,
       "criteria_breakdown": {
-        "catchment_score": 89.9,
+        "catchment_score": 98.6,
         "depression_score": 100.0,
-        "slope_stability_score": 94.4,
-        "wetness_index_score": 57.9
+        "slope_stability_score": 94.6,
+        "wetness_index_score": 100.0
       },
       "local_terrain": {
-        "slope_percent": 0.56,
+        "slope_percent": 0.33,
         "depression_depth_m": 3.01,
-        "topographic_wetness_index": 9.79,
+        "topographic_wetness_index": 16.55,
         "elevation_m": 271.0
       },
-      "catchment_area_ha": 52.88,
-      "catchment_area_sq_m": 528800.0,
-      "selection_rationale": "Located in a natural topographic bowl (3.0m depth) reducing excavation; Substantial upstream drainage (52.9 ha at pour point); flat bed slope (0.6%) for stable embankment.",
-      "site_id": "pond_site_4",
-      "rank": 4
+      "catchment_area_ha": 51.77,
+      "catchment_area_sq_m": 517700.0,
+      "selection_rationale": "Located in a natural topographic bowl (3.0m depth) reducing excavation; Substantial upstream drainage (51.8 ha at pour point); flat bed slope (0.3%) for stable embankment."
     },
     {
+      "site_id": "pond_site_2",
+      "rank": 2,
       "grid_index": {
         "row": 44,
-        "col": 283
+        "col": 75
       },
-      "candidate_type": "natural_depression",
+      "candidate_type": "valley_storage",
       "coordinates": {
-        "longitude": 81.308497,
-        "latitude": 21.243656,
-        "elevation_m": 283.0
+        "longitude": 81.28845,
+        "latitude": 21.243691,
+        "elevation_m": 271.0
       },
       "utm_coordinates": {
-        "easting": 532009.5,
+        "easting": 529929.5,
         "northing": 2349145.3,
         "epsg": 32644,
         "zone": 44
       },
       "associated_pour_point": {
         "coordinates": {
-          "longitude": 81.311198,
-          "latitude": 21.244916,
-          "elevation_m": 287.98
+          "longitude": 81.288065,
+          "latitude": 21.243692,
+          "elevation_m": 271.69
         },
         "utm_coordinates": {
-          "easting": 532289.5,
+          "easting": 529889.5,
+          "northing": 2349145.3,
+          "epsg": 32644,
+          "zone": 44
+        },
+        "grid_index": {
+          "row": 44,
+          "col": 71
+        },
+        "flow_accumulation_cells": 4489.0,
+        "drainage_area_ha": 44.89
+      },
+      "suitability_score": 98.2,
+      "criteria_breakdown": {
+        "catchment_score": 95.7,
+        "depression_score": 100.0,
+        "slope_stability_score": 99.7,
+        "wetness_index_score": 100.0
+      },
+      "local_terrain": {
+        "slope_percent": 0.02,
+        "depression_depth_m": 3.01,
+        "topographic_wetness_index": 17.03,
+        "elevation_m": 271.0
+      },
+      "catchment_area_ha": 44.89,
+      "catchment_area_sq_m": 448900.0,
+      "selection_rationale": "Located in a natural topographic bowl (3.0m depth) reducing excavation; Substantial upstream drainage (44.9 ha at pour point); flat bed slope (0.0%) for stable embankment."
+    },
+    {
+      "site_id": "pond_site_3",
+      "rank": 3,
+      "grid_index": {
+        "row": 58,
+        "col": 303
+      },
+      "candidate_type": "valley_storage",
+      "coordinates": {
+        "longitude": 81.310427,
+        "latitude": 21.244917,
+        "elevation_m": 285.0
+      },
+      "utm_coordinates": {
+        "easting": 532209.5,
+        "northing": 2349285.3,
+        "epsg": 32644,
+        "zone": 44
+      },
+      "associated_pour_point": {
+        "coordinates": {
+          "longitude": 81.310716,
+          "latitude": 21.244917,
+          "elevation_m": 285.18
+        },
+        "utm_coordinates": {
+          "easting": 532239.5,
           "northing": 2349285.3,
           "epsg": 32644,
           "zone": 44
         },
         "grid_index": {
           "row": 58,
-          "col": 311
+          "col": 306
         },
-        "flow_accumulation_cells": 4348.0,
-        "drainage_area_ha": 43.48
+        "flow_accumulation_cells": 4164.0,
+        "drainage_area_ha": 41.64
       },
-      "suitability_score": 89.7,
+      "suitability_score": 97.7,
       "criteria_breakdown": {
-        "catchment_score": 87.9,
+        "catchment_score": 94.3,
         "depression_score": 100.0,
-        "slope_stability_score": 93.7,
-        "wetness_index_score": 64.2
+        "slope_stability_score": 100.0,
+        "wetness_index_score": 100.0
       },
       "local_terrain": {
-        "slope_percent": 0.63,
-        "depression_depth_m": 4.98,
-        "topographic_wetness_index": 10.42,
-        "elevation_m": 283.0
+        "slope_percent": 0.0,
+        "depression_depth_m": 2.98,
+        "topographic_wetness_index": 16.24,
+        "elevation_m": 285.0
       },
-      "catchment_area_ha": 43.48,
-      "catchment_area_sq_m": 434800.0,
-      "selection_rationale": "Located in a natural topographic bowl (5.0m depth) reducing excavation; Substantial upstream drainage (43.5 ha at pour point); flat bed slope (0.6%) for stable embankment.",
+      "catchment_area_ha": 41.64,
+      "catchment_area_sq_m": 416400.0,
+      "selection_rationale": "Located in a natural topographic bowl (3.0m depth) reducing excavation; Substantial upstream drainage (41.6 ha at pour point); flat bed slope (0.0%) for stable embankment."
+    },
+    {
+      "site_id": "pond_site_4",
+      "rank": 4,
+      "grid_index": {
+        "row": 113,
+        "col": 92
+      },
+      "candidate_type": "valley_storage",
+      "coordinates": {
+        "longitude": 81.290101,
+        "latitude": 21.249923,
+        "elevation_m": 267.0
+      },
+      "utm_coordinates": {
+        "easting": 530099.5,
+        "northing": 2349835.3,
+        "epsg": 32644,
+        "zone": 44
+      },
+      "associated_pour_point": {
+        "coordinates": {
+          "longitude": 81.289908,
+          "latitude": 21.249742,
+          "elevation_m": 267.71
+        },
+        "utm_coordinates": {
+          "easting": 530079.5,
+          "northing": 2349815.3,
+          "epsg": 32644,
+          "zone": 44
+        },
+        "grid_index": {
+          "row": 111,
+          "col": 90
+        },
+        "flow_accumulation_cells": 5505.0,
+        "drainage_area_ha": 55.05
+      },
+      "suitability_score": 96.8,
+      "criteria_breakdown": {
+        "catchment_score": 99.8,
+        "depression_score": 100.0,
+        "slope_stability_score": 98.7,
+        "wetness_index_score": 71.4
+      },
+      "local_terrain": {
+        "slope_percent": 0.08,
+        "depression_depth_m": 7.01,
+        "topographic_wetness_index": 11.14,
+        "elevation_m": 267.0
+      },
+      "catchment_area_ha": 55.05,
+      "catchment_area_sq_m": 550500.0,
+      "selection_rationale": "Located in a natural topographic bowl (7.0m depth) reducing excavation; Substantial upstream drainage (55.0 ha at pour point); flat bed slope (0.1%) for stable embankment."
+    },
+    {
       "site_id": "pond_site_5",
-      "rank": 5
+      "rank": 5,
+      "grid_index": {
+        "row": 208,
+        "col": 149
+      },
+      "candidate_type": "valley_storage",
+      "coordinates": {
+        "longitude": 81.295612,
+        "latitude": 21.258497,
+        "elevation_m": 279.0
+      },
+      "utm_coordinates": {
+        "easting": 530669.5,
+        "northing": 2350785.3,
+        "epsg": 32644,
+        "zone": 44
+      },
+      "associated_pour_point": {
+        "coordinates": {
+          "longitude": 81.295997,
+          "latitude": 21.258315,
+          "elevation_m": 280.96
+        },
+        "utm_coordinates": {
+          "easting": 530709.5,
+          "northing": 2350765.3,
+          "epsg": 32644,
+          "zone": 44
+        },
+        "grid_index": {
+          "row": 206,
+          "col": 153
+        },
+        "flow_accumulation_cells": 4531.0,
+        "drainage_area_ha": 45.31
+      },
+      "suitability_score": 95.7,
+      "criteria_breakdown": {
+        "catchment_score": 95.8,
+        "depression_score": 95.1,
+        "slope_stability_score": 94.2,
+        "wetness_index_score": 100.0
+      },
+      "local_terrain": {
+        "slope_percent": 0.35,
+        "depression_depth_m": 2.38,
+        "topographic_wetness_index": 15.13,
+        "elevation_m": 279.0
+      },
+      "catchment_area_ha": 45.31,
+      "catchment_area_sq_m": 453100.0,
+      "selection_rationale": "Located in a natural topographic bowl (2.4m depth) reducing excavation; Substantial upstream drainage (45.3 ha at pour point); flat bed slope (0.3%) for stable embankment."
     }
   ],
   "geojson": {
@@ -434,1287 +434,1037 @@
         "properties": {
           "name": "Catchment Boundary",
           "feature_type": "catchment",
-          "perimeter_m": 5700.0
+          "perimeter_m": 4320.0
         },
         "geometry": {
           "type": "Polygon",
           "coordinates": [
             [
               [
-                81.29184811941481,
-                21.256154050350464
+                81.28750137765999,
+                21.251282460395505
               ],
               [
-                81.29175173555831,
-                21.25615421717527
+                81.28750155295563,
+                21.251372813060442
               ],
               [
-                81.291752091423,
-                21.25633492233173
+                81.2874051721721,
+                21.251372977365133
               ],
               [
-                81.29184847539709,
-                21.256334755505375
+                81.28740534740989,
+                21.251463330029864
               ],
               [
-                81.2918488313831,
-                21.25651546065641
+                81.28730896656668,
+                21.25146349428023
               ],
               [
-                81.2919452154738,
-                21.256515293773397
+                81.28730914174663,
+                21.25155384694476
               ],
               [
-                81.29194557158115,
-                21.256695998918996
+                81.28721276084373,
+                21.251554011140797
               ],
               [
-                81.29184918737289,
-                21.25669616580356
+                81.28721346133773,
+                21.25191542179229
               ],
               [
-                81.29184989936371,
-                21.257057576086236
+                81.28711708019885,
+                21.2519155859363
               ],
               [
-                81.29194628380709,
-                21.257057409198577
+                81.2871172552659,
+                21.25200593859751
               ],
               [
-                81.2919466399257,
-                21.257238114332548
+                81.28702087406732,
+                21.252006102687194
               ],
               [
-                81.29204302448572,
-                21.257237947388223
+                81.28702104907651,
+                21.2520964553482
               ],
               [
-                81.29204338072564,
-                21.257418652516765
+                81.28682828655907,
+                21.252096783363818
               ],
               [
-                81.29194699604807,
-                21.257418819462643
+                81.28682846145166,
+                21.25218713602538
               ],
               [
-                81.29194735217419,
-                21.257599524588862
+                81.2867320801328,
+                21.25218729995132
               ],
               [
-                81.29185096737811,
-                21.257599691481193
+                81.28673225496753,
+                21.25227765261268
               ],
               [
-                81.29185114538379,
-                21.257690044043628
+                81.28663587358896,
+                21.252277816484288
               ],
               [
-                81.29165837567123,
-                21.25769037766452
+                81.2866362231437,
+                21.25245852180563
               ],
               [
-                81.29165855356027,
-                21.25778073022753
+                81.28653984164667,
+                21.25245868562367
               ],
               [
-                81.29117662896853,
-                21.257781563319277
+                81.28654019108755,
+                21.252639390942658
               ],
               [
-                81.29117680656458,
-                21.257871915885193
+                81.28644380947209,
+                21.25263955470713
               ],
               [
-                81.29108042158464,
-                21.257872082339
+                81.28644468279656,
+                21.253091317991462
               ],
               [
-                81.29108059912285,
-                21.257962434904726
+                81.28654106470587,
+                21.253091154223174
               ],
               [
-                81.2909842140832,
-                21.257962601304197
+                81.2865412394323,
+                21.253181506876366
               ],
               [
-                81.29098474652709,
-                21.25823365899789
+                81.28644485746422,
+                21.253181670645414
               ],
               [
-                81.29088836131011,
-                21.25823382534458
+                81.28644503213279,
+                21.253272023298408
               ],
               [
-                81.2908885387345,
-                21.25832417790797
+                81.28634865010501,
+                21.253272187013124
               ],
               [
-                81.29079215345782,
-                21.258324344200325
+                81.28634882471574,
+                21.253362539665908
               ],
               [
-                81.29079233082435,
-                21.25841469676353
+                81.28605967845058,
+                21.253363030481772
               ],
               [
-                81.29069594548794,
-                21.25841486300155
+                81.28605985288593,
+                21.253453383135863
               ],
               [
-                81.29069612279662,
-                21.258505215564558
+                81.28577070643615,
+                21.253453873458167
               ],
               [
-                81.2905997374005,
-                21.25850538174824
+                81.2857708806961,
+                21.253544226113583
               ],
               [
-                81.29059991465132,
-                21.258595734311054
+                81.28538535184848,
+                21.25354487910837
+              ],
+              [
+                81.28538639601693,
+                21.254086995038715
+              ],
+              [
+                81.2852900134501,
+                21.254087158154228
+              ],
+              [
+                81.28529036139604,
+                21.25426786345811
+              ],
+              [
+                81.28519397871075,
+                21.254268026520045
+              ],
+              [
+                81.28519450046022,
+                21.25453908447088
+              ],
+              [
+                81.28509811759768,
+                21.25453924747999
+              ],
+              [
+                81.28509846531772,
+                21.254719952777226
+              ],
+              [
+                81.28500208233672,
+                21.254720115732756
+              ],
+              [
+                81.28500242994285,
+                21.254900821027622
+              ],
+              [
+                81.28490604684337,
+                21.254900983929573
+              ],
+              [
+                81.28490639433565,
+                21.25508168922208
+              ],
+              [
+                81.2848100111177,
+                21.255081852070447
+              ],
+              [
+                81.28481018480643,
+                21.255172204716008
+              ],
+              [
+                81.2847138015288,
+                21.25517236751004
+              ],
+              [
+                81.28471397515966,
+                21.255262720155383
+              ],
+              [
+                81.28461759182234,
+                21.255262882895067
+              ],
+              [
+                81.28461793896926,
+                21.255443588184374
+              ],
+              [
+                81.28471432242415,
+                21.255443425443165
+              ],
+              [
+                81.28471501696409,
+                21.255804836007112
+              ],
+              [
+                81.28461863327409,
+                21.255804998751344
+              ],
+              [
+                81.28461880685259,
+                21.255895351390663
+              ],
+              [
+                81.28548626055854,
+                21.25589388470214
+              ],
+              [
+                81.28548643466696,
+                21.255984237333664
+              ],
+              [
+                81.28567920226465,
+                21.25598391079525
+              ],
+              [
+                81.28567937649156,
+                21.256074263424292
+              ],
+              [
+                81.28577576034779,
+                21.25607410007167
+              ],
+              [
+                81.28577593463439,
+                21.25616445269898
+              ],
+              [
+                81.28587231854848,
+                21.2561642892905
+              ],
+              [
+                81.2858724928948,
+                21.256254641916076
+              ],
+              [
+                81.2865471806792,
+                21.256253496508513
+              ],
+              [
+                81.28654735543788,
+                21.256343849127795
+              ],
+              [
+                81.28645097141266,
+                21.256344012923513
+              ],
+              [
+                81.2864516702215,
+                21.256705423394003
+              ],
+              [
+                81.28654805448183,
+                21.25670525959523
+              ],
+              [
+                81.28654857877446,
+                21.256976317435633
+              ],
+              [
+                81.28664496321024,
+                21.256976153579473
+              ],
+              [
+                81.28664601217311,
+                21.257518269229543
+              ],
+              [
+                81.28674239696065,
+                21.2575181053137
+              ],
+              [
+                81.2867425718498,
+                21.257608457917883
+              ],
+              [
+                81.28683895669522,
+                21.257608293946173
+              ],
+              [
+                81.28683913164407,
+                21.257698646548643
+              ],
+              [
+                81.2870319014497,
+                21.257698318438372
+              ],
+              [
+                81.28703207651706,
+                21.257788671038337
+              ],
+              [
+                81.28712846147728,
+                21.257788506899782
+              ],
+              [
+                81.28712863660434,
+                21.257878859498007
+              ],
+              [
+                81.28722502162242,
+                21.257878695303585
+              ],
+              [
+                81.28722519680919,
+                21.257969047900083
+              ],
+              [
+                81.28732158188514,
+                21.257968883649784
+              ],
+              [
+                81.28732175713161,
+                21.258059236244545
+              ],
+              [
+                81.28741814226541,
+                21.258059071938376
+              ],
+              [
+                81.28741831757162,
+                21.258149424531407
+              ],
+              [
+                81.28751470276327,
+                21.258149260169372
+              ],
+              [
+                81.28751487812917,
+                21.25823961276066
+              ],
+              [
+                81.28761126337871,
+                21.25823944834275
+              ],
+              [
+                81.28761143880432,
+                21.258329800932312
+              ],
+              [
+                81.28799698002832,
+                21.25832914270652
+              ],
+              [
+                81.28799715569001,
+                21.258419495292056
+              ],
+              [
+                81.28809354105249,
+                21.258419330597064
+              ],
+              [
+                81.2880937167739,
+                21.258509683180858
+              ],
+              [
+                81.28819010219422,
+                21.258509518430003
+              ],
+              [
+                81.28819027797535,
+                21.258599871012063
+              ],
+              [
+                81.28828666345353,
+                21.258599706205327
+              ],
+              [
+                81.28828683929439,
+                21.25869005878565
+              ],
+              [
+                81.28838322483044,
+                21.25868989392304
+              ],
+              [
+                81.28838357663248,
+                21.258870599079245
+              ],
+              [
+                81.28828719097883,
+                21.25887076394339
+              ],
+              [
+                81.28828736682246,
+                21.25896111652081
+              ],
+              [
+                81.28819098110911,
+                21.258961281330603
+              ],
+              [
+                81.28819133268156,
+                21.25914198648406
+              ],
+              [
+                81.28838410434248,
+                21.259141656806282
+              ],
+              [
+                81.28838428024768,
+                21.25923200938002
+              ],
+              [
+                81.28848066613554,
+                21.259231844457698
+              ],
+              [
+                81.28848049017155,
+                21.259141491884726
+              ],
+              [
+                81.28915519094909,
+                21.25914033589075
+              ],
+              [
+                81.28915501457449,
+                21.25904998332218
+              ],
+              [
+                81.29011887216112,
+                21.259048327225525
+              ],
+              [
+                81.29011869519958,
+                21.258957974663705
+              ],
+              [
+                81.29050423797295,
+                21.258957310685048
               ],
               [
                 81.29050352919546,
                 21.2585959004404
               ],
               [
-                81.29050441516966,
-                21.259047663243784
+                81.29059991465132,
+                21.258595734311054
               ],
               [
-                81.29060080091946,
-                21.259047497110572
+                81.2905997374005,
+                21.25850538174824
               ],
               [
-                81.29060168721098,
-                21.259499259885867
+                81.29069612279662,
+                21.258505215564558
               ],
               [
-                81.29069807325381,
-                21.25949909369368
+                81.29069594548794,
+                21.25841486300155
               ],
               [
-                81.29069966916656,
-                21.26031226662119
+                81.29079233082435,
+                21.25841469676353
               ],
               [
-                81.2906032825946,
-                21.26031243282034
+                81.29079215345782,
+                21.258324344200325
               ],
               [
-                81.2906039916783,
-                21.260673842988236
+                81.2908885387345,
+                21.25832417790797
               ],
               [
-                81.29050760487023,
-                21.260674009135364
+                81.29088836131011,
+                21.25823382534458
               ],
               [
-                81.29050795930009,
-                21.260854714215043
+                81.29098474652709,
+                21.25823365899789
               ],
               [
-                81.2904115723735,
-                21.260854880308596
+                81.2909842140832,
+                21.257962601304197
               ],
               [
-                81.2904119266895,
-                21.261035585385944
+                81.29108059912285,
+                21.257962434904726
               ],
               [
-                81.29031553964438,
-                21.26103575142593
+                81.29108042158464,
+                21.257872082339
               ],
               [
-                81.29031589384653,
-                21.261216456500946
+                81.29117680656458,
+                21.257871915885193
               ],
               [
-                81.29041228100925,
-                21.261216290459416
+                81.29117662896853,
+                21.257781563319277
               ],
               [
-                81.29041245817052,
-                21.2613066429947
+                81.29165855356027,
+                21.25778073022753
               ],
               [
-                81.2905088453911,
-                21.26130647689728
+                81.29165837567123,
+                21.25769037766452
               ],
               [
-                81.29050973150547,
-                21.26175823955528
+                81.29185114538379,
+                21.257690044043628
               ],
               [
-                81.2906061190191,
-                21.26175807339888
+                81.29185096737811,
+                21.257599691481193
               ],
               [
-                81.29060594173556,
-                21.26166772087
+                81.29194735217419,
+                21.257599524588862
               ],
               [
-                81.29147342878697,
-                21.261666222989067
+                81.29194699604807,
+                21.257418819462643
               ],
               [
-                81.2914736065997,
-                21.26175657551099
+                81.29204338072564,
+                21.257418652516765
               ],
               [
-                81.29156999410397,
-                21.26175640880341
+                81.29204302448572,
+                21.257237947388223
               ],
               [
-                81.29156981623244,
-                21.26166605628227
+                81.2919466399257,
+                21.257238114332548
               ],
               [
-                81.29166620367698,
-                21.26166588952035
+                81.29194628380709,
+                21.257057409198577
               ],
               [
-                81.29166602574759,
-                21.26157553699901
+                81.29184989936371,
+                21.257057576086236
               ],
               [
-                81.29185880051624,
-                21.26157520331137
+                81.29184918737289,
+                21.25669616580356
               ],
               [
-                81.29185897856323,
-                21.261665555831158
+                81.29194557158115,
+                21.256695998918996
               ],
               [
-                81.29195536600496,
-                21.26166538890389
+                81.2919452154738,
+                21.256515293773397
               ],
               [
-                81.29195554411167,
-                21.261755741421926
+                81.2918488313831,
+                21.25651546065641
               ],
               [
-                81.29205193161124,
-                21.261755574438762
+                81.29184847539709,
+                21.256334755505375
               ],
               [
-                81.29205228794513,
-                21.261936279470383
+                81.291752091423,
+                21.25633492233173
               ],
               [
-                81.29234145079103,
-                21.261935778185517
+                81.29175173555831,
+                21.25615421717527
               ],
               [
-                81.29234162913576,
-                21.26202613069754
-              ],
-              [
-                81.29243801680798,
-                21.26202596349157
-              ],
-              [
-                81.29243819521247,
-                21.26211631600185
-              ],
-              [
-                81.29282374612713,
-                21.262115646623666
-              ],
-              [
-                81.29282392476775,
-                21.262205999129865
-              ],
-              [
-                81.29301670033703,
-                21.262205664108507
-              ],
-              [
-                81.2930168790962,
-                21.26229601661217
-              ],
-              [
-                81.29311326693824,
-                21.262295849018024
-              ],
-              [
-                81.29311344575714,
-                21.26238620151995
-              ],
-              [
-                81.29320983365703,
-                21.26238603386991
-              ],
-              [
-                81.29321001253568,
-                21.262476386370075
-              ],
-              [
-                81.29330640049344,
-                21.262476218664137
-              ],
-              [
-                81.29330657943184,
-                21.26256657116256
-              ],
-              [
-                81.2934993554621,
-                21.262566235583762
-              ],
-              [
-                81.29349953451904,
-                21.262656588079654
-              ],
-              [
-                81.29407786293997,
-                21.262655580015693
-              ],
-              [
-                81.29407768353022,
-                21.262565227524497
-              ],
-              [
-                81.29417407153825,
-                21.2625650593217
-              ],
-              [
-                81.29417389207065,
-                21.26247470683031
-              ],
-              [
-                81.29427028001895,
-                21.262474538573173
-              ],
-              [
-                81.29427010049346,
-                21.262384186081608
-              ],
-              [
-                81.29513759145628,
-                21.26238266929406
-              ],
-              [
-                81.2951379515666,
-                21.262563374262122
-              ],
-              [
-                81.29523433956422,
-                21.262563205453006
-              ],
-              [
-                81.29523542027077,
-                21.263105320329224
-              ],
-              [
-                81.29513903192034,
-                21.26310548914305
-              ],
-              [
-                81.29513921198262,
-                21.26319584161981
-              ],
-              [
-                81.29581393082734,
-                21.263194658759954
-              ],
-              [
-                81.29581375035342,
-                21.263104306288692
-              ],
-              [
-                81.2959101386972,
-                21.26310413708901
-              ],
-              [
-                81.29590977763463,
-                21.262923432145158
-              ],
-              [
-                81.29600616585986,
-                21.262923262891935
-              ],
-              [
-                81.2960058046835,
-                21.262742557945774
-              ],
-              [
-                81.29610219279016,
-                21.262742388639005
-              ],
-              [
-                81.2961020121446,
-                21.26265203616526
-              ],
-              [
-                81.29619840019153,
-                21.262651866804156
-              ],
-              [
-                81.29619821948812,
-                21.26256151433023
-              ],
-              [
-                81.29629460747526,
-                21.26256134491479
-              ],
-              [
-                81.29629442671401,
-                21.262470992440683
-              ],
-              [
-                81.29648720256786,
-                21.262470653446023
-              ],
-              [
-                81.29648738344672,
-                21.26256100591856
-              ],
-              [
-                81.29658377143102,
-                21.26256083633776
-              ],
-              [
-                81.29658359049336,
-                21.262470483866018
-              ],
-              [
-                81.2966799784179,
-                21.26247031423089
-              ],
-              [
-                81.29667979742239,
-                21.26237996175897
-              ],
-              [
-                81.29677618528717,
-                21.262379792069517
-              ],
-              [
-                81.29677600423382,
-                21.26228943959741
-              ],
-              [
-                81.2971615554482,
-                21.26228876029154
-              ],
-              [
-                81.29716064901976,
-                21.2618369979323
-              ],
-              [
-                81.29725703652697,
-                21.261836827971987
-              ],
-              [
-                81.29725685518535,
-                21.26174647549802
-              ],
-              [
-                81.2973532426328,
-                21.261746305483378
-              ],
-              [
-                81.29735306123334,
-                21.26165595300923
-              ],
-              [
-                81.29764222339355,
-                21.26165544263699
-              ],
-              [
-                81.29764240496941,
-                21.261745795108755
-              ],
-              [
-                81.2979315672974,
-                21.261745284238074
-              ],
-              [
-                81.29793174905062,
-                21.261835636706508
-              ],
-              [
-                81.29860646152731,
-                21.261834442740252
-              ],
-              [
-                81.29860627936252,
-                21.261744090277375
-              ],
-              [
-                81.2997629285074,
-                21.26174203720419
-              ],
-              [
-                81.2997631113778,
-                21.26183238965752
-              ],
-              [
-                81.30005227381875,
-                21.261831875146683
-              ],
-              [
-                81.3000524568665,
-                21.26192222759664
-              ],
-              [
-                81.3001488444037,
-                21.261922055981994
-              ],
-              [
-                81.30014902751121,
-                21.26201240843018
-              ],
-              [
-                81.30101651583159,
-                21.262010861410864
-              ],
-              [
-                81.30101669946927,
-                21.26210121385089
-              ],
-              [
-                81.30111308711437,
-                21.262101041683465
-              ],
-              [
-                81.30111327081184,
-                21.262191394121714
-              ],
-              [
-                81.30140243391777,
-                21.26219087728632
-              ],
-              [
-                81.3014026177926,
-                21.262281229721193
-              ],
-              [
-                81.30149900555145,
-                21.262281057331688
-              ],
-              [
-                81.30149918948604,
-                21.262371409764796
-              ],
-              [
-                81.3015955773027,
-                21.26237123731937
-              ],
-              [
-                81.30159576129708,
-                21.262461589750707
-              ],
-              [
-                81.30169214917159,
-                21.262461417249355
-              ],
-              [
-                81.30169233322572,
-                21.262551769678925
-              ],
-              [
-                81.30178872115805,
-                21.262551597121654
-              ],
-              [
-                81.30178890527196,
-                21.262641949549447
-              ],
-              [
-                81.30198168125132,
-                21.262641604267934
-              ],
-              [
-                81.3019818654838,
-                21.262731956693152
-              ],
-              [
-                81.30207825353082,
-                21.262731783968913
-              ],
-              [
-                81.30207843782307,
-                21.262822136392362
-              ],
-              [
-                81.30217482592793,
-                21.262821963612193
-              ],
-              [
-                81.30217501027997,
-                21.26291231603387
-              ],
-              [
-                81.3024641747651,
-                21.26291179736025
-              ],
-              [
-                81.30246435929452,
-                21.26300214977854
-              ],
-              [
-                81.30256074751308,
-                21.26300197677628
-              ],
-              [
-                81.30256056292487,
-                21.262911624358797
-              ],
-              [
-                81.30265695108368,
-                21.262911451302227
-              ],
-              [
-                81.30265676643762,
-                21.262821098884583
-              ],
-              [
-                81.30275315453665,
-                21.262820925773703
-              ],
-              [
-                81.30275278512987,
-                21.262640220937104
-              ],
-              [
-                81.3028491731103,
-                21.262640047772706
-              ],
-              [
-                81.30284898834958,
-                21.262549695353762
-              ],
-              [
-                81.30294537627024,
-                21.262549522135057
-              ],
-              [
-                81.30294519145168,
-                21.262459169715942
-              ],
-              [
-                81.30304157931258,
-                21.262458996442923
-              ],
-              [
-                81.30304139443619,
-                21.262368644023653
-              ],
-              [
-                81.3033305578366,
-                21.262368123876286
-              ],
-              [
-                81.30333018773396,
-                21.262187419039673
-              ],
-              [
-                81.3032338000524,
-                21.26218759247563
-              ],
-              [
-                81.30323361506134,
-                21.262097240055063
-              ],
-              [
-                81.3031372274376,
-                21.262097413435097
-              ],
-              [
-                81.30313704250632,
-                21.262007061012756
-              ],
-              [
-                81.3030406549404,
-                21.26200723433686
-              ],
-              [
-                81.30303954572598,
-                21.261465119777604
-              ],
-              [
-                81.3031359329391,
-                21.261464946458332
-              ],
-              [
-                81.30313574801464,
-                21.261374594029203
-              ],
-              [
-                81.30323213516799,
-                21.261374420655617
-              ],
-              [
-                81.3032319501857,
-                21.26128406822632
-              ],
-              [
-                81.30332833727928,
-                21.261283894798428
-              ],
-              [
-                81.30332796720006,
-                21.261103189938552
-              ],
-              [
-                81.30342435417506,
-                21.261103016457156
-              ],
-              [
-                81.30342398398214,
-                21.260922311595014
-              ],
-              [
-                81.30352037083857,
-                21.260922138060117
-              ],
-              [
-                81.30352018568479,
-                21.260831785628397
-              ],
-              [
-                81.30361657248145,
-                21.26083161203919
-              ],
-              [
-                81.30361638726984,
-                21.260741259607315
-              ],
-              [
-                81.30371277400674,
-                21.260741085963804
-              ],
-              [
-                81.30371240346885,
-                21.26056038109875
-              ],
-              [
-                81.30380879008717,
-                21.26056020740174
-              ],
-              [
-                81.30380730750439,
-                21.259837387909215
-              ],
-              [
-                81.30390369365139,
-                21.259837214163564
-              ],
-              [
-                81.30390295214828,
-                21.25947580439727
-              ],
-              [
-                81.30399933805914,
-                21.259475630599734
-              ],
-              [
-                81.30399915262701,
-                21.259385278156543
-              ],
-              [
-                81.3040955384781,
-                21.25938510430471
-              ],
-              [
-                81.3040951674992,
-                21.259204399417044
-              ],
-              [
-                81.30342046734414,
-                21.259205615211258
-              ],
-              [
-                81.30342028226768,
-                21.259115262760318
-              ],
-              [
-                81.30322751090361,
-                21.259115609632488
-              ],
-              [
-                81.3032273259457,
-                21.259025257178955
-              ],
-              [
-                81.302841783441,
-                21.259025950258753
-              ],
-              [
-                81.30284141399845,
-                21.258845245342343
-              ],
-              [
-                81.30274502848741,
-                21.258845418472905
-              ],
-              [
-                81.30274484382639,
-                21.258755066012444
-              ],
-              [
-                81.30264845837316,
-                21.25875523908709
-              ],
-              [
-                81.30264808917161,
-                21.258574534161646
-              ],
-              [
-                81.302551703835,
-                21.258574707179577
-              ],
-              [
-                81.30255151929445,
-                21.25848435471459
-              ],
-              [
-                81.30245513401566,
-                21.258484527676607
-              ],
-              [
-                81.30245494953489,
-                21.25839417520985
-              ],
-              [
-                81.30226217909194,
-                21.25839452096695
-              ],
-              [
-                81.30226199472972,
-                21.25830416849761
-              ],
-              [
-                81.30216560956558,
-                21.258304341292696
-              ],
-              [
-                81.30216542526311,
-                21.258213988821595
-              ],
-              [
-                81.30197265504948,
-                21.258214334244826
-              ],
-              [
-                81.30197247086556,
-                21.258123981771146
-              ],
-              [
-                81.30187608581608,
-                21.258124154399297
-              ],
-              [
-                81.3018755334465,
-                21.257853096970017
-              ],
-              [
-                81.30177914857241,
-                21.257853269540654
-              ],
-              [
-                81.3017780442122,
-                21.25731115465111
-              ],
-              [
-                81.30168165968982,
-                21.25731132716183
-              ],
-              [
-                81.30168147569198,
-                21.257220974676045
-              ],
-              [
-                81.30158509122742,
-                21.257221147130856
-              ],
-              [
-                81.30158472335219,
-                21.257040442154764
-              ],
-              [
-                81.30129557030543,
-                21.257040959183755
-              ],
-              [
-                81.3012957540662,
-                21.257131311674684
-              ],
-              [
-                81.30071744759381,
-                21.257132344249644
-              ],
-              [
-                81.30071726418572,
-                21.25704199175391
-              ],
-              [
-                81.30062087982905,
-                21.25704216365607
-              ],
-              [
-                81.30062032978695,
-                21.256771106160656
-              ],
-              [
-                81.30052394560565,
-                21.256771278005314
-              ],
-              [
-                81.3005233957486,
-                21.25650022049876
-              ],
-              [
-                81.30042701174267,
-                21.256500392285922
-              ],
-              [
-                81.30042572918815,
-                21.255867924731128
-              ],
-              [
-                81.3005221127826,
-                21.255867752949566
-              ],
-              [
-                81.30052156295453,
-                21.255596695413946
-              ],
-              [
-                81.30042517953642,
-                21.255596867193113
-              ],
-              [
-                81.30042499632111,
-                21.2555065146785
-              ],
-              [
-                81.3003286129608,
-                21.255506686401766
-              ],
-              [
-                81.30032842980523,
-                21.255416333885385
-              ],
-              [
-                81.30023204650273,
-                21.25541650555275
-              ],
-              [
-                81.3002318634069,
-                21.255326153034606
-              ],
-              [
-                81.30013548016223,
-                21.255326324646074
-              ],
-              [
-                81.30013529712613,
-                21.255235972126158
-              ],
-              [
-                81.30003891393926,
-                21.255236143681728
-              ],
-              [
-                81.30003854798755,
-                21.2550554386374
-              ],
-              [
-                81.29994216491727,
-                21.25505561013627
-              ],
-              [
-                81.29994179908695,
-                21.254874905086464
-              ],
-              [
-                81.29974903317859,
-                21.25487524791573
-              ],
-              [
-                81.29974885038244,
-                21.254784895387775
-              ],
-              [
-                81.29907417008424,
-                21.254786093549033
-              ],
-              [
-                81.29907435246896,
-                21.254876446082562
-              ],
-              [
-                81.2989779695066,
-                21.254876617028867
-              ],
-              [
-                81.29897742253162,
-                21.25460555942298
-              ],
-              [
-                81.29888103974461,
-                21.2546057303118
-              ],
-              [
-                81.29888049295461,
-                21.254334672694814
-              ],
-              [
-                81.29878411034296,
-                21.25433484352615
-              ],
-              [
-                81.29878392814032,
-                21.254244490984423
-              ],
-              [
-                81.29810925024334,
-                21.25424568525549
-              ],
-              [
-                81.29810906845307,
-                21.254155332707235
-              ],
-              [
-                81.2980126859513,
-                21.254155503096207
-              ],
-              [
-                81.29801250422076,
-                21.254065150546197
-              ],
-              [
-                81.29791612177681,
-                21.25406532087928
-              ],
-              [
-                81.297915940106,
-                21.2539749683275
-              ],
-              [
-                81.29781955771985,
-                21.253975138604698
-              ],
-              [
-                81.29781937610878,
-                21.253884786051156
-              ],
-              [
-                81.29772299378044,
-                21.253884956272465
-              ],
-              [
-                81.2977228122291,
-                21.25379460371717
-              ],
-              [
-                81.29733728314129,
-                21.253795284048287
-              ],
-              [
-                81.29733710182597,
-                21.253704931488855
-              ],
-              [
-                81.29714433739387,
-                21.253705271322264
-              ],
-              [
-                81.29714451859162,
-                21.253795623883278
-              ],
-              [
-                81.29704813631537,
-                21.25379579371813
-              ],
-              [
-                81.2970483174553,
-                21.253886146278965
-              ],
-              [
-                81.29695193511934,
-                21.253886316059514
-              ],
-              [
-                81.29695211620145,
-                21.253976668620176
-              ],
-              [
-                81.29685573380574,
-                21.253976838346425
-              ],
-              [
-                81.29685591483006,
-                21.2540671909069
-              ],
-              [
-                81.29666314991822,
-                21.254067530195673
-              ],
-              [
-                81.29666333082595,
-                21.25415788275676
-              ],
-              [
-                81.29656694830982,
-                21.25415805231929
-              ],
-              [
-                81.29656712915973,
-                21.254248404880208
-              ],
-              [
-                81.29618159885062,
-                21.254249082582533
-              ],
-              [
-                81.29618177946637,
-                21.254339435145617
-              ],
-              [
-                81.29598901418855,
-                21.25433977366778
-              ],
-              [
-                81.29598919468772,
-                21.254430126231483
-              ],
-              [
-                81.29589281198861,
-                21.254430295410707
-              ],
-              [
-                81.29589299242996,
-                21.25452064797422
-              ],
-              [
-                81.29579660967111,
-                21.254520817099138
-              ],
-              [
-                81.29579679005464,
-                21.254611169662464
-              ],
-              [
-                81.29570040723607,
-                21.254611338733074
-              ],
-              [
-                81.29570058756177,
-                21.254701691296223
-              ],
-              [
-                81.29550782180425,
-                21.254702029273712
-              ],
-              [
-                81.29550800201335,
-                21.25479238183747
-              ],
-              [
-                81.29541161907437,
-                21.254792550744348
-              ],
-              [
-                81.29541179922565,
-                21.254882903307923
-              ],
-              [
-                81.29521903322733,
-                21.25488324095796
-              ],
-              [
-                81.295219213262,
-                21.254973593522145
-              ],
-              [
-                81.29512283020264,
-                21.254973762265298
-              ],
-              [
-                81.29512301017948,
-                21.25506411482929
-              ],
-              [
-                81.29464109457456,
-                21.255064957722528
-              ],
-              [
-                81.29464127425847,
-                21.25515531028947
-              ],
-              [
-                81.29454489107586,
-                21.255155478703607
-              ],
-              [
-                81.29454525032898,
-                21.25533618383616
-              ],
-              [
-                81.29444886702787,
-                21.255336352196757
-              ],
-              [
-                81.29444922616723,
-                21.255517057327
-              ],
-              [
-                81.29435284274761,
-                21.25551722563407
-              ],
-              [
-                81.2943532017732,
-                21.255697930762004
-              ],
-              [
-                81.29425681823508,
-                21.255698099015532
-              ],
-              [
-                81.2942571771469,
-                21.255878804141158
-              ],
-              [
-                81.29338972420334,
-                21.25588031595752
-              ],
-              [
-                81.29338990313165,
-                21.255970668525908
-              ],
-              [
-                81.29300436823041,
-                21.25597133901478
-              ],
-              [
-                81.29300418953721,
-                21.255880986443277
-              ],
-              [
-                81.29213673648333,
-                21.25588249181281
-              ],
-              [
-                81.29213691464753,
-                21.255972844391323
-              ],
-              [
-                81.2919441471743,
-                21.255973178313333
-              ],
-              [
-                81.29194432522188,
-                21.256063530892433
+                81.29184811941481,
+                21.256154050350464
               ],
               [
                 81.29184794142509,
                 21.25606369777156
               ],
               [
-                81.29184811941481,
-                21.256154050350464
+                81.29194432522188,
+                21.256063530892433
+              ],
+              [
+                81.2919441471743,
+                21.255973178313333
+              ],
+              [
+                81.29213691464753,
+                21.255972844391323
+              ],
+              [
+                81.29213673648333,
+                21.25588249181281
+              ],
+              [
+                81.29300418953721,
+                21.255880986443277
+              ],
+              [
+                81.29300436823041,
+                21.25597133901478
+              ],
+              [
+                81.29338990313165,
+                21.255970668525908
+              ],
+              [
+                81.29338972420334,
+                21.25588031595752
+              ],
+              [
+                81.29348610786752,
+                21.25588014819833
+              ],
+              [
+                81.2934855709119,
+                21.255609090489678
+              ],
+              [
+                81.29358195439879,
+                21.255608922677727
+              ],
+              [
+                81.29358105919776,
+                21.2551571598145
+              ],
+              [
+                81.29367744238982,
+                21.25515699195136
+              ],
+              [
+                81.29367726329367,
+                21.255066639376594
+              ],
+              [
+                81.29358088016038,
+                21.255066807238958
+              ],
+              [
+                81.29358052208846,
+                21.25488610208495
+              ],
+              [
+                81.29348413907178,
+                21.25488626989064
+              ],
+              [
+                81.29348324420239,
+                21.25443450698476
+              ],
+              [
+                81.2935796269252,
+                21.25443433918296
+              ],
+              [
+                81.2935792688665,
+                21.25425363401538
+              ],
+              [
+                81.29348288626124,
+                21.254253801815622
+              ],
+              [
+                81.29348252832386,
+                21.254073096642603
+              ],
+              [
+                81.2932897633456,
+                21.25407343207467
+              ],
+              [
+                81.29328994219627,
+                21.254163784663216
+              ],
+              [
+                81.29261526433126,
+                21.254164956945377
+              ],
+              [
+                81.29261544277146,
+                21.25425530953842
+              ],
+              [
+                81.29251906015678,
+                21.254255476787687
+              ],
+              [
+                81.29251888177535,
+                21.25416512419387
+              ],
+              [
+                81.29242249921849,
+                21.25416529138727
+              ],
+              [
+                81.29242214257602,
+                21.253984586195177
+              ],
+              [
+                81.29232576013577,
+                21.25398475333192
+              ],
+              [
+                81.29232558187469,
+                21.253894400733635
+              ],
+              [
+                81.2919400523394,
+                21.253895068726553
+              ],
+              [
+                81.29193987431437,
+                21.253804716124208
+              ],
+              [
+                81.29184349198697,
+                21.253804882983918
+              ],
+              [
+                81.29184331402163,
+                21.25371453037982
+              ],
+              [
+                81.29174693175207,
+                21.25371469718366
+              ],
+              [
+                81.29174657594179,
+                21.253533991970993
+              ],
+              [
+                81.29165019378883,
+                21.253534158718193
+              ],
+              [
+                81.29164948241458,
+                21.25317274827813
+              ],
+              [
+                81.29174586433247,
+                21.25317258153403
+              ],
+              [
+                81.29174444115887,
+                21.252449760613604
+              ],
+              [
+                81.29184082260566,
+                21.252449593820632
+              ],
+              [
+                81.29184064465441,
+                21.252359241201994
+              ],
+              [
+                81.29193702604151,
+                21.252359074354704
+              ],
+              [
+                81.2919366700243,
+                21.25217836911607
+              ],
+              [
+                81.29203305129292,
+                21.25217820221524
+              ],
+              [
+                81.29203287322696,
+                21.252087849595256
+              ],
+              [
+                81.29212925443588,
+                21.252087682640106
+              ],
+              [
+                81.29212889818923,
+                21.251906977398768
+              ],
+              [
+                81.29222527927969,
+                21.251906810390093
+              ],
+              [
+                81.2922247447405,
+                21.25163575252316
+              ],
+              [
+                81.29212836382634,
+                21.2516359195295
+              ],
+              [
+                81.2921278294719,
+                21.25136486165151
+              ],
+              [
+                81.29203144873308,
+                21.25136502860044
+              ],
+              [
+                81.29203127067558,
+                21.25127467597173
+              ],
+              [
+                81.29135660588906,
+                21.251275843066313
+              ],
+              [
+                81.29135678353522,
+                21.251366195700456
+              ],
+              [
+                81.29126040278892,
+                21.25136636220868
+              ],
+              [
+                81.29126022520151,
+                21.251276009573765
+              ],
+              [
+                81.29077832174978,
+                21.25127684128467
+              ],
+              [
+                81.29077814445714,
+                21.251186488644915
+              ],
+              [
+                81.29048900255115,
+                21.251186987008094
+              ],
+              [
+                81.29048882543572,
+                21.251096634365048
+              ],
+              [
+                81.29039244485729,
+                21.25109680037515
+              ],
+              [
+                81.29039226780156,
+                21.251006447730365
+              ],
+              [
+                81.29029588728096,
+                21.251006613684613
+              ],
+              [
+                81.29029571028492,
+                21.25091626103809
+              ],
+              [
+                81.29019932982216,
+                21.250916426936474
+              ],
+              [
+                81.2901991528858,
+                21.25082607428821
+              ],
+              [
+                81.29010277248086,
+                21.25082624013074
+              ],
+              [
+                81.29010259560422,
+                21.25073588748073
+              ],
+              [
+                81.2900062152571,
+                21.250736053267403
+              ],
+              [
+                81.29000603844015,
+                21.250645700615653
+              ],
+              [
+                81.28990965815086,
+                21.250645866346467
+              ],
+              [
+                81.28990983490905,
+                21.250736218998988
+              ],
+              [
+                81.28981345456008,
+                21.250736384675488
+              ],
+              [
+                81.28981363126043,
+                21.250826737327813
+              ],
+              [
+                81.28971725085175,
+                21.250826902949992
+              ],
+              [
+                81.2897174274943,
+                21.25091725560212
+              ],
+              [
+                81.28962104702592,
+                21.250917421169987
+              ],
+              [
+                81.28962122361062,
+                21.251007773821918
+              ],
+              [
+                81.28952484308255,
+                21.251007939335466
+              ],
+              [
+                81.28952501960943,
+                21.251098291987194
+              ],
+              [
+                81.28942863902168,
+                21.251098457446435
+              ],
+              [
+                81.28942881549071,
+                21.25118881009796
+              ],
+              [
+                81.28933243484326,
+                21.251188975502874
+              ],
+              [
+                81.28933261125447,
+                21.25127932815421
+              ],
+              [
+                81.28923623054732,
+                21.251279493504803
+              ],
+              [
+                81.28923640690068,
+                21.251369846155935
+              ],
+              [
+                81.28914002613386,
+                21.251370011452217
+              ],
+              [
+                81.2891402024294,
+                21.251460364103146
+              ],
+              [
+                81.28904382160287,
+                21.25146052934511
+              ],
+              [
+                81.28904399784058,
+                21.25155088199584
+              ],
+              [
+                81.28827295072479,
+                21.25155220195447
+              ],
+              [
+                81.28827277495719,
+                21.2514618492976
+              ],
+              [
+                81.2881763941223,
+                21.251462014043756
+              ],
+              [
+                81.28817621841439,
+                21.251371661385143
+              ],
+              [
+                81.28807983763735,
+                21.251371826075456
+              ],
+              [
+                81.2880793106955,
+                21.251100768091508
+              ],
+              [
+                81.28779016888767,
+                21.251101261825006
+              ],
+              [
+                81.28779034435773,
+                21.251191614489585
+              ],
+              [
+                81.28769396369451,
+                21.251191778958013
+              ],
+              [
+                81.28769413910675,
+                21.251282131622386
+              ],
+              [
+                81.28750137765999,
+                21.251282460395505
+              ]
+            ],
+            [
+              [
+                81.28654700592143,
+                21.256163143888262
+              ],
+              [
+                81.28664338982817,
+                21.256162980038958
+              ],
+              [
+                81.28664356464472,
+                21.25625333265845
+              ],
+              [
+                81.2865471806792,
+                21.256253496508513
+              ],
+              [
+                81.28654700592143,
+                21.256163143888262
               ]
             ]
           ]
@@ -19170,21 +18920,21 @@
           "name": "Recommended Pond Storage Location (Rank 1)",
           "feature_type": "pond_candidate",
           "site_id": "pond_site_1",
-          "candidate_type": "natural_depression",
-          "suitability_score": 96.7,
-          "elevation_m": 278.0,
-          "local_slope_percent": 0.1,
-          "depression_depth_m": 3.38,
-          "recommended_capacity_m3": 50000.0,
-          "selection_rationale": "Located in a natural topographic bowl (3.4m depth) reducing excavation; Substantial upstream drainage (93.2 ha at pour point); flat bed slope (0.1%) for stable embankment.",
+          "candidate_type": "valley_storage",
+          "suitability_score": 98.4,
+          "elevation_m": 271.0,
+          "local_slope_percent": 0.33,
+          "depression_depth_m": 3.01,
+          "recommended_capacity_m3": 36239.0,
+          "selection_rationale": "Located in a natural topographic bowl (3.0m depth) reducing excavation; Substantial upstream drainage (51.8 ha at pour point); flat bed slope (0.3%) for stable embankment.",
           "marker_color": "#00E676",
           "is_primary": true
         },
         "geometry": {
           "type": "Point",
           "coordinates": [
-            81.292529,
-            21.259406
+            81.28991,
+            21.251007
           ]
         }
       },
@@ -19194,16 +18944,16 @@
           "name": "Associated Hydrological Pour Point (Rank 1)",
           "feature_type": "pour_point",
           "site_id": "pond_site_1",
-          "elevation_m": 280.83,
-          "catchment_area_ha": 93.15,
-          "drainage_flow_acc_cells": 9315.0,
+          "elevation_m": 270.8,
+          "catchment_area_ha": 51.77,
+          "drainage_flow_acc_cells": 5177.0,
           "marker_color": "#2979FF"
         },
         "geometry": {
           "type": "Point",
           "coordinates": [
-            81.293981,
-            21.262565
+            81.28991,
+            21.250646
           ]
         }
       },
@@ -19215,17 +18965,17 @@
           "site_id": "pond_site_2",
           "rank": 2,
           "candidate_type": "valley_storage",
-          "suitability_score": 95.6,
-          "elevation_m": 281.13,
-          "catchment_area_ha": 86.25,
+          "suitability_score": 98.2,
+          "elevation_m": 271.0,
+          "catchment_area_ha": 44.89,
           "marker_color": "#FF9100",
           "is_primary": false
         },
         "geometry": {
           "type": "Point",
           "coordinates": [
-            81.301857,
-            21.248547
+            81.28845,
+            21.243691
           ]
         }
       },
@@ -19236,18 +18986,18 @@
           "feature_type": "alternative_candidate",
           "site_id": "pond_site_3",
           "rank": 3,
-          "candidate_type": "natural_depression",
-          "suitability_score": 90.9,
-          "elevation_m": 284.0,
-          "catchment_area_ha": 42.28,
+          "candidate_type": "valley_storage",
+          "suitability_score": 97.7,
+          "elevation_m": 285.0,
+          "catchment_area_ha": 41.64,
           "marker_color": "#FF9100",
           "is_primary": false
         },
         "geometry": {
           "type": "Point",
           "coordinates": [
-            81.3083,
-            21.24203
+            81.310427,
+            21.244917
           ]
         }
       },
@@ -19259,17 +19009,17 @@
           "site_id": "pond_site_4",
           "rank": 4,
           "candidate_type": "valley_storage",
-          "suitability_score": 90.1,
-          "elevation_m": 271.0,
-          "catchment_area_ha": 52.88,
+          "suitability_score": 96.8,
+          "elevation_m": 267.0,
+          "catchment_area_ha": 55.05,
           "marker_color": "#FF9100",
           "is_primary": false
         },
         "geometry": {
           "type": "Point",
           "coordinates": [
-            81.289813,
-            21.250556
+            81.290101,
+            21.249923
           ]
         }
       },
@@ -19280,18 +19030,18 @@
           "feature_type": "alternative_candidate",
           "site_id": "pond_site_5",
           "rank": 5,
-          "candidate_type": "natural_depression",
-          "suitability_score": 89.7,
-          "elevation_m": 283.0,
-          "catchment_area_ha": 43.48,
+          "candidate_type": "valley_storage",
+          "suitability_score": 95.7,
+          "elevation_m": 279.0,
+          "catchment_area_ha": 45.31,
           "marker_color": "#FF9100",
           "is_primary": false
         },
         "geometry": {
           "type": "Point",
           "coordinates": [
-            81.308497,
-            21.243656
+            81.295612,
+            21.258497
           ]
         }
       },
