@@ -13,6 +13,12 @@ class Coordinates(BaseModel):
     elevation_m: float = Field(
         ..., description="Surface elevation in meters above sea level"
     )
+    elevation_api_m: Optional[float] = Field(
+        None, description="External Elevation API verified elevation in meters"
+    )
+    elevation_api_diff_m: Optional[float] = Field(
+        None, description="Difference between API elevation and TIN elevation in meters"
+    )
 
 
 class UTMCoordinates(BaseModel):
@@ -34,7 +40,8 @@ class PourPoint(BaseModel):
     utm_coordinates: UTMCoordinates
     grid_index: GridIndex
     flow_accumulation_cells: float = Field(
-        ..., description="Total upstream contributing DEM cells accumulating at this pour point"
+        ...,
+        description="Total upstream contributing DEM cells accumulating at this pour point",
     )
     drainage_area_ha: float = Field(
         ..., description="Upstream contributing drainage area in hectares"
@@ -57,9 +64,12 @@ class CriteriaBreakdown(BaseModel):
 
 
 class LocalTerrain(BaseModel):
-    slope_percent: float = Field(..., description="Local slope gradient at the pond location in percent")
+    slope_percent: float = Field(
+        ..., description="Local slope gradient at the pond location in percent"
+    )
     depression_depth_m: float = Field(
-        ..., description="Depth of natural hollow/depression at the pond location in meters"
+        ...,
+        description="Depth of natural hollow/depression at the pond location in meters",
     )
     topographic_wetness_index: float = Field(
         ..., description="Topographic Wetness Index (TWI)"
@@ -71,7 +81,8 @@ class CandidateSite(BaseModel):
     site_id: str
     rank: int
     candidate_type: str = Field(
-        ..., description="Classification of candidate: 'natural_depression', 'valley_storage', or 'drainage_convergence'"
+        ...,
+        description="Classification of candidate: 'natural_depression', 'stream_confluence_basin', or 'valley_storage'",
     )
     coordinates: Coordinates = Field(
         ..., description="Physical pond storage/construction location center"
@@ -79,7 +90,8 @@ class CandidateSite(BaseModel):
     utm_coordinates: UTMCoordinates
     grid_index: GridIndex
     associated_pour_point: PourPoint = Field(
-        ..., description="Downstream hydrological pour point on the drainage path from which the catchment is delineated"
+        ...,
+        description="Downstream hydrological pour point on the drainage path from which the catchment is delineated",
     )
     suitability_score: float = Field(
         ..., description="Composite suitability score (0-100)"
@@ -88,6 +100,23 @@ class CandidateSite(BaseModel):
     local_terrain: LocalTerrain
     catchment_area_ha: float
     catchment_area_sq_m: float
+    continuous_basin_footprint_ha: Optional[float] = Field(
+        None,
+        description="Actual localized continuous deep depression basin area in hectares",
+    )
+    continuous_basin_geometry: Optional[Dict[str, Any]] = Field(
+        None,
+        description="GeoJSON geometry of the localized continuous deep depression basin",
+    )
+    compact_pond_footprint_ha: Optional[float] = Field(
+        None,
+        description="Compact core village farm pond construction footprint area in hectares",
+    )
+    compact_pond_geometry: Optional[Dict[str, Any]] = Field(
+        None,
+        description="GeoJSON geometry of the compact core village farm pond construction footprint",
+    )
+    estimated_annual_water_yield_m3: Optional[float] = None
     selection_rationale: str
 
 
@@ -102,6 +131,7 @@ class TerrainSummary(BaseModel):
     grid_rows: int
     grid_cols: int
     total_grid_cells: int
+    elevation_source: Optional[str] = "KML_3D_Contour_TIN_Interpolation"
 
 
 class CatchmentSummary(BaseModel):
@@ -117,6 +147,7 @@ class CatchmentSummary(BaseModel):
     average_slope_degrees: float
     centroid_wgs84: Dict[str, float]
     annual_rainfall_mm: float
+    rainfall_source: Optional[str] = None
     runoff_coefficient: float
     estimated_annual_runoff_m3: float
     estimated_annual_runoff_liters: float
@@ -160,6 +191,8 @@ class AnalysisMetadata(BaseModel):
     utm_zone: int
     utm_epsg: int
     bounds_wgs84: Dict[str, float]
+    rainfall_service: Optional[Dict[str, Any]] = None
+    elevation_service: Optional[Dict[str, Any]] = None
 
 
 class AnalysisResponse(BaseModel):

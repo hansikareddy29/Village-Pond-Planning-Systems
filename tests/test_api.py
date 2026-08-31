@@ -111,3 +111,32 @@ def test_parameter_validations():
     resp3 = client.post("/analyzeContour", data={"rainfall_annual_mm": "-100.0"})
     assert resp3.status_code == 400
     assert "rainfall_annual_mm" in resp3.json()["detail"]
+
+
+def test_rainfall_api_service():
+    from app.external_apis import RainfallAPIService
+
+    data = RainfallAPIService.fetch_annual_rainfall(
+        latitude=21.25, longitude=81.30, timeout_seconds=5.0
+    )
+    assert isinstance(data, dict)
+    assert "annual_rainfall_mm" in data
+    assert data["annual_rainfall_mm"] > 0
+    assert "source" in data
+
+
+def test_elevation_api_service():
+    from app.external_apis import ElevationAPIService
+
+    data = ElevationAPIService.fetch_point_elevation(
+        latitude=21.25, longitude=81.30, timeout_seconds=5.0
+    )
+    assert isinstance(data, dict)
+    assert "source" in data
+    assert "latitude" in data
+    assert "longitude" in data
+
+    points = [(21.25, 81.30), (21.26, 81.31)]
+    elevs = ElevationAPIService.fetch_batch_elevations(points, timeout_seconds=5.0)
+    assert isinstance(elevs, list)
+    assert len(elevs) == 2

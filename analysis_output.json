@@ -1,7 +1,7 @@
 {
   "success": true,
   "message": "Contour map terrain analysis and catchment delineation completed successfully.",
-  "execution_time_seconds": 6.512,
+  "execution_time_seconds": 4.542,
   "metadata": {
     "filename": "contours_1m.kml",
     "num_contours_extracted": 1355,
@@ -21,14 +21,23 @@
       "center_lat": 21.251701545279502
     },
     "rainfall_service": {
-      "annual_rainfall_mm": 1000.0,
-      "source": "regional_climatology_fallback",
-      "api_status": "offline_fallback",
-      "station_or_model": "IMD_Climatological_Norms_Central_India",
+      "annual_rainfall_mm": 1382.6,
+      "source": "open-meteo-archive-api",
+      "api_status": "success",
+      "station_or_model": "ERA5_Reanalysis_OpenMeteo",
+      "year_sampled": 2025,
+      "daily_records_count": 365,
       "query_coordinates": {
         "latitude": 21.251701545279502,
         "longitude": 81.29702568054199
       }
+    },
+    "elevation_service": {
+      "elevation_m": 278.0,
+      "source": "open-meteo-elevation-api",
+      "api_status": "success",
+      "latitude": 21.251701545279502,
+      "longitude": 81.29702568054199
     }
   },
   "terrain_summary": {
@@ -48,99 +57,514 @@
     "site_id": "pond_site_1",
     "rank": 1,
     "grid_index": {
-      "row": 58,
-      "col": 303
+      "row": 134,
+      "col": 160
     },
-    "candidate_type": "tributary_harvesting",
+    "candidate_type": "natural_depression",
     "coordinates": {
-      "longitude": 81.310427,
-      "latitude": 21.244917,
-      "elevation_m": 285.0
+      "longitude": 81.296659,
+      "latitude": 21.251809,
+      "elevation_m": 270.01,
+      "elevation_api_m": 278.0,
+      "elevation_api_diff_m": 7.99
     },
     "utm_coordinates": {
-      "easting": 532209.5,
-      "northing": 2349285.3,
+      "easting": 530779.5,
+      "northing": 2350045.3,
       "epsg": 32644,
       "zone": 44
     },
     "associated_pour_point": {
       "coordinates": {
-        "longitude": 81.31033,
-        "latitude": 21.244556,
-        "elevation_m": 286.89
+        "longitude": 81.294731,
+        "latitude": 21.251812,
+        "elevation_m": 281.99
       },
       "utm_coordinates": {
-        "easting": 532199.5,
-        "northing": 2349245.3,
+        "easting": 530579.5,
+        "northing": 2350045.3,
         "epsg": 32644,
         "zone": 44
       },
       "grid_index": {
-        "row": 54,
-        "col": 302
+        "row": 134,
+        "col": 140
       },
-      "flow_accumulation_cells": 2082.0,
-      "drainage_area_ha": 20.82
+      "flow_accumulation_cells": 17379.0,
+      "drainage_area_ha": 173.79
     },
-    "suitability_score": 100.0,
+    "suitability_score": 96.0,
     "criteria_breakdown": {
       "catchment_score": 100.0,
       "depression_score": 100.0,
-      "slope_stability_score": 100.0,
-      "wetness_index_score": 100.0
+      "slope_stability_score": 79.2,
+      "wetness_index_score": 61.4
     },
     "local_terrain": {
-      "slope_percent": 0.0,
-      "depression_depth_m": 2.98,
-      "topographic_wetness_index": 16.24,
-      "elevation_m": 285.0
+      "slope_percent": 0.62,
+      "depression_depth_m": 11.98,
+      "topographic_wetness_index": 9.68,
+      "elevation_m": 270.01
     },
-    "catchment_area_ha": 20.82,
-    "catchment_area_sq_m": 208200.0,
-    "selection_rationale": "Located in a natural topographic bowl (3.0m depth) reducing excavation; Optimal farm pond micro-catchment (20.8 ha at pour point); ultra-flat bed slope (0.00%) for stable embankment."
+    "catchment_area_ha": 173.79,
+    "catchment_area_sq_m": 1737900.0,
+    "continuous_basin_footprint_ha": 5.59,
+    "continuous_basin_geometry": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            81.295163,
+            21.250863
+          ],
+          [
+            81.295163,
+            21.250953
+          ],
+          [
+            81.295067,
+            21.250953
+          ],
+          [
+            81.295067,
+            21.251134
+          ],
+          [
+            81.294874,
+            21.251225
+          ],
+          [
+            81.294875,
+            21.251586
+          ],
+          [
+            81.294972,
+            21.251586
+          ],
+          [
+            81.294972,
+            21.251676
+          ],
+          [
+            81.295261,
+            21.251676
+          ],
+          [
+            81.295261,
+            21.251585
+          ],
+          [
+            81.295453,
+            21.251585
+          ],
+          [
+            81.295453,
+            21.251495
+          ],
+          [
+            81.295839,
+            21.251494
+          ],
+          [
+            81.29584,
+            21.251946
+          ],
+          [
+            81.295936,
+            21.251946
+          ],
+          [
+            81.295937,
+            21.252397
+          ],
+          [
+            81.295841,
+            21.252397
+          ],
+          [
+            81.295841,
+            21.252669
+          ],
+          [
+            81.296227,
+            21.252668
+          ],
+          [
+            81.296227,
+            21.252758
+          ],
+          [
+            81.29642,
+            21.252848
+          ],
+          [
+            81.29642,
+            21.253119
+          ],
+          [
+            81.296517,
+            21.253119
+          ],
+          [
+            81.296517,
+            21.2533
+          ],
+          [
+            81.29671,
+            21.253209
+          ],
+          [
+            81.296709,
+            21.252938
+          ],
+          [
+            81.296902,
+            21.252847
+          ],
+          [
+            81.296901,
+            21.252667
+          ],
+          [
+            81.296998,
+            21.252666
+          ],
+          [
+            81.296998,
+            21.252576
+          ],
+          [
+            81.29719,
+            21.252485
+          ],
+          [
+            81.29719,
+            21.252305
+          ],
+          [
+            81.297286,
+            21.252305
+          ],
+          [
+            81.297285,
+            21.251582
+          ],
+          [
+            81.297381,
+            21.251582
+          ],
+          [
+            81.297381,
+            21.251491
+          ],
+          [
+            81.297477,
+            21.251491
+          ],
+          [
+            81.297573,
+            21.25131
+          ],
+          [
+            81.297862,
+            21.25131
+          ],
+          [
+            81.297959,
+            21.25149
+          ],
+          [
+            81.298152,
+            21.25149
+          ],
+          [
+            81.298152,
+            21.251399
+          ],
+          [
+            81.298344,
+            21.251309
+          ],
+          [
+            81.298344,
+            21.251128
+          ],
+          [
+            81.29844,
+            21.251128
+          ],
+          [
+            81.29844,
+            21.251038
+          ],
+          [
+            81.298344,
+            21.251038
+          ],
+          [
+            81.298344,
+            21.250947
+          ],
+          [
+            81.298247,
+            21.250948
+          ],
+          [
+            81.29815,
+            21.250767
+          ],
+          [
+            81.297765,
+            21.250768
+          ],
+          [
+            81.297765,
+            21.250677
+          ],
+          [
+            81.297668,
+            21.250678
+          ],
+          [
+            81.297668,
+            21.250497
+          ],
+          [
+            81.297475,
+            21.250407
+          ],
+          [
+            81.297475,
+            21.250226
+          ],
+          [
+            81.297378,
+            21.250226
+          ],
+          [
+            81.297282,
+            21.250046
+          ],
+          [
+            81.297089,
+            21.250046
+          ],
+          [
+            81.297089,
+            21.249956
+          ],
+          [
+            81.296896,
+            21.249956
+          ],
+          [
+            81.296896,
+            21.250046
+          ],
+          [
+            81.296607,
+            21.250047
+          ],
+          [
+            81.296608,
+            21.250499
+          ],
+          [
+            81.296511,
+            21.250499
+          ],
+          [
+            81.296512,
+            21.250589
+          ],
+          [
+            81.296319,
+            21.25068
+          ],
+          [
+            81.296319,
+            21.250861
+          ],
+          [
+            81.295645,
+            21.250862
+          ],
+          [
+            81.295645,
+            21.250771
+          ],
+          [
+            81.295355,
+            21.250772
+          ],
+          [
+            81.295356,
+            21.250862
+          ],
+          [
+            81.295163,
+            21.250863
+          ]
+        ]
+      ]
+    },
+    "compact_pond_footprint_ha": 1.35,
+    "compact_pond_geometry": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            81.296031,
+            21.251403
+          ],
+          [
+            81.296033,
+            21.252036
+          ],
+          [
+            81.296129,
+            21.252036
+          ],
+          [
+            81.296226,
+            21.252397
+          ],
+          [
+            81.296322,
+            21.252397
+          ],
+          [
+            81.296323,
+            21.252487
+          ],
+          [
+            81.296515,
+            21.252487
+          ],
+          [
+            81.296516,
+            21.252577
+          ],
+          [
+            81.296708,
+            21.252577
+          ],
+          [
+            81.296708,
+            21.252486
+          ],
+          [
+            81.296805,
+            21.252486
+          ],
+          [
+            81.296804,
+            21.252396
+          ],
+          [
+            81.296901,
+            21.252396
+          ],
+          [
+            81.296901,
+            21.252305
+          ],
+          [
+            81.297093,
+            21.252215
+          ],
+          [
+            81.297093,
+            21.252034
+          ],
+          [
+            81.297189,
+            21.252034
+          ],
+          [
+            81.297188,
+            21.251672
+          ],
+          [
+            81.297092,
+            21.251672
+          ],
+          [
+            81.297092,
+            21.251401
+          ],
+          [
+            81.296802,
+            21.251402
+          ],
+          [
+            81.296802,
+            21.251312
+          ],
+          [
+            81.296513,
+            21.251312
+          ],
+          [
+            81.296513,
+            21.251222
+          ],
+          [
+            81.296127,
+            21.251222
+          ],
+          [
+            81.296031,
+            21.251403
+          ]
+        ]
+      ]
+    },
+    "estimated_annual_water_yield_m3": 840987.2,
+    "selection_rationale": "Natural topographic storage bowl (12.0m depth) minimizing excavation; Substantial catchment (173.8 ha at pour point, ~840,987 m\u00b3 annual yield); gentle slope (0.6%)."
   },
   "catchment_summary": {
-    "area_sq_meters": 208200.0,
-    "area_hectares": 20.82,
-    "area_acres": 51.447,
-    "perimeter_meters": 3180.0,
-    "min_elevation_m": 284.0,
-    "max_elevation_m": 295.0,
-    "mean_elevation_m": 289.47,
-    "elevation_range_m": 11.0,
-    "average_slope_percent": 4.15,
-    "average_slope_degrees": 2.38,
+    "area_sq_meters": 1737900.0,
+    "area_hectares": 173.79,
+    "area_acres": 429.444,
+    "perimeter_meters": 8480.0,
+    "min_elevation_m": 270.01,
+    "max_elevation_m": 297.82,
+    "mean_elevation_m": 286.49,
+    "elevation_range_m": 27.81,
+    "average_slope_percent": 5.54,
+    "average_slope_degrees": 3.17,
     "centroid_wgs84": {
-      "longitude": 81.309842,
-      "latitude": 21.241756
+      "longitude": 81.302535,
+      "latitude": 21.250533
     },
-    "annual_rainfall_mm": 1000.0,
-    "rainfall_source": "regional_climatology_fallback",
+    "annual_rainfall_mm": 1382.6,
+    "rainfall_source": "open-meteo-archive-api",
     "runoff_coefficient": 0.35,
-    "estimated_annual_runoff_m3": 72870.0,
-    "estimated_annual_runoff_liters": 72870000.0,
-    "estimated_annual_runoff_million_liters": 72.87,
-    "estimated_peak_discharge_m3_per_sec": 1.01
+    "estimated_annual_runoff_m3": 840987.2,
+    "estimated_annual_runoff_liters": 840987189.0,
+    "estimated_annual_runoff_million_liters": 840.99,
+    "estimated_peak_discharge_m3_per_sec": 8.45
   },
   "pond_design_recommendations": {
     "recommended_depth_m": 3.0,
-    "recommended_surface_area_sq_m": 6477.3,
-    "recommended_surface_area_hectares": 0.648,
+    "recommended_surface_area_sq_m": 74754.4,
+    "recommended_surface_area_hectares": 7.475,
     "estimated_dimensions_m": {
-      "length_m": 98.6,
-      "width_m": 65.7,
+      "length_m": 334.9,
+      "width_m": 223.2,
       "side_slope": "1.5:1 (Horizontal:Vertical)"
     },
-    "recommended_storage_capacity_m3": 14574.0,
-    "storage_capacity_liters": 14574000.0,
-    "storage_capacity_million_liters": 14.57,
-    "estimated_excavation_volume_m3": 2429.0,
+    "recommended_storage_capacity_m3": 168197.4,
+    "storage_capacity_liters": 168197440.0,
+    "storage_capacity_million_liters": 168.2,
+    "estimated_excavation_volume_m3": 28032.9,
     "excavation_savings_from_depression_percent": 83.3,
     "recommended_bund_height_m": 1.1,
     "recommended_freeboard_m": 0.6,
     "utilization_potential": {
-      "supplemental_irrigation_ha": 3.64,
-      "family_water_supply_days": 19432,
+      "supplemental_irrigation_ha": 42.05,
+      "family_water_supply_days": 224263,
       "estimated_annual_refill_cycles": 5.0
     },
     "construction_notes": [
@@ -154,276 +578,1919 @@
       "site_id": "pond_site_1",
       "rank": 1,
       "grid_index": {
-        "row": 58,
-        "col": 303
+        "row": 134,
+        "col": 160
       },
-      "candidate_type": "tributary_harvesting",
+      "candidate_type": "natural_depression",
       "coordinates": {
-        "longitude": 81.310427,
-        "latitude": 21.244917,
-        "elevation_m": 285.0
+        "longitude": 81.296659,
+        "latitude": 21.251809,
+        "elevation_m": 270.01,
+        "elevation_api_m": 278.0,
+        "elevation_api_diff_m": 7.99
       },
       "utm_coordinates": {
-        "easting": 532209.5,
-        "northing": 2349285.3,
+        "easting": 530779.5,
+        "northing": 2350045.3,
         "epsg": 32644,
         "zone": 44
       },
       "associated_pour_point": {
         "coordinates": {
-          "longitude": 81.31033,
-          "latitude": 21.244556,
-          "elevation_m": 286.89
+          "longitude": 81.294731,
+          "latitude": 21.251812,
+          "elevation_m": 281.99
         },
         "utm_coordinates": {
-          "easting": 532199.5,
-          "northing": 2349245.3,
+          "easting": 530579.5,
+          "northing": 2350045.3,
           "epsg": 32644,
           "zone": 44
         },
         "grid_index": {
-          "row": 54,
-          "col": 302
+          "row": 134,
+          "col": 140
         },
-        "flow_accumulation_cells": 2082.0,
-        "drainage_area_ha": 20.82
+        "flow_accumulation_cells": 17379.0,
+        "drainage_area_ha": 173.79
       },
-      "suitability_score": 100.0,
+      "suitability_score": 96.0,
       "criteria_breakdown": {
         "catchment_score": 100.0,
         "depression_score": 100.0,
-        "slope_stability_score": 100.0,
-        "wetness_index_score": 100.0
+        "slope_stability_score": 79.2,
+        "wetness_index_score": 61.4
       },
       "local_terrain": {
-        "slope_percent": 0.0,
-        "depression_depth_m": 2.98,
-        "topographic_wetness_index": 16.24,
-        "elevation_m": 285.0
+        "slope_percent": 0.62,
+        "depression_depth_m": 11.98,
+        "topographic_wetness_index": 9.68,
+        "elevation_m": 270.01
       },
-      "catchment_area_ha": 20.82,
-      "catchment_area_sq_m": 208200.0,
-      "selection_rationale": "Located in a natural topographic bowl (3.0m depth) reducing excavation; Optimal farm pond micro-catchment (20.8 ha at pour point); ultra-flat bed slope (0.00%) for stable embankment."
+      "catchment_area_ha": 173.79,
+      "catchment_area_sq_m": 1737900.0,
+      "continuous_basin_footprint_ha": 5.59,
+      "continuous_basin_geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              81.295163,
+              21.250863
+            ],
+            [
+              81.295163,
+              21.250953
+            ],
+            [
+              81.295067,
+              21.250953
+            ],
+            [
+              81.295067,
+              21.251134
+            ],
+            [
+              81.294874,
+              21.251225
+            ],
+            [
+              81.294875,
+              21.251586
+            ],
+            [
+              81.294972,
+              21.251586
+            ],
+            [
+              81.294972,
+              21.251676
+            ],
+            [
+              81.295261,
+              21.251676
+            ],
+            [
+              81.295261,
+              21.251585
+            ],
+            [
+              81.295453,
+              21.251585
+            ],
+            [
+              81.295453,
+              21.251495
+            ],
+            [
+              81.295839,
+              21.251494
+            ],
+            [
+              81.29584,
+              21.251946
+            ],
+            [
+              81.295936,
+              21.251946
+            ],
+            [
+              81.295937,
+              21.252397
+            ],
+            [
+              81.295841,
+              21.252397
+            ],
+            [
+              81.295841,
+              21.252669
+            ],
+            [
+              81.296227,
+              21.252668
+            ],
+            [
+              81.296227,
+              21.252758
+            ],
+            [
+              81.29642,
+              21.252848
+            ],
+            [
+              81.29642,
+              21.253119
+            ],
+            [
+              81.296517,
+              21.253119
+            ],
+            [
+              81.296517,
+              21.2533
+            ],
+            [
+              81.29671,
+              21.253209
+            ],
+            [
+              81.296709,
+              21.252938
+            ],
+            [
+              81.296902,
+              21.252847
+            ],
+            [
+              81.296901,
+              21.252667
+            ],
+            [
+              81.296998,
+              21.252666
+            ],
+            [
+              81.296998,
+              21.252576
+            ],
+            [
+              81.29719,
+              21.252485
+            ],
+            [
+              81.29719,
+              21.252305
+            ],
+            [
+              81.297286,
+              21.252305
+            ],
+            [
+              81.297285,
+              21.251582
+            ],
+            [
+              81.297381,
+              21.251582
+            ],
+            [
+              81.297381,
+              21.251491
+            ],
+            [
+              81.297477,
+              21.251491
+            ],
+            [
+              81.297573,
+              21.25131
+            ],
+            [
+              81.297862,
+              21.25131
+            ],
+            [
+              81.297959,
+              21.25149
+            ],
+            [
+              81.298152,
+              21.25149
+            ],
+            [
+              81.298152,
+              21.251399
+            ],
+            [
+              81.298344,
+              21.251309
+            ],
+            [
+              81.298344,
+              21.251128
+            ],
+            [
+              81.29844,
+              21.251128
+            ],
+            [
+              81.29844,
+              21.251038
+            ],
+            [
+              81.298344,
+              21.251038
+            ],
+            [
+              81.298344,
+              21.250947
+            ],
+            [
+              81.298247,
+              21.250948
+            ],
+            [
+              81.29815,
+              21.250767
+            ],
+            [
+              81.297765,
+              21.250768
+            ],
+            [
+              81.297765,
+              21.250677
+            ],
+            [
+              81.297668,
+              21.250678
+            ],
+            [
+              81.297668,
+              21.250497
+            ],
+            [
+              81.297475,
+              21.250407
+            ],
+            [
+              81.297475,
+              21.250226
+            ],
+            [
+              81.297378,
+              21.250226
+            ],
+            [
+              81.297282,
+              21.250046
+            ],
+            [
+              81.297089,
+              21.250046
+            ],
+            [
+              81.297089,
+              21.249956
+            ],
+            [
+              81.296896,
+              21.249956
+            ],
+            [
+              81.296896,
+              21.250046
+            ],
+            [
+              81.296607,
+              21.250047
+            ],
+            [
+              81.296608,
+              21.250499
+            ],
+            [
+              81.296511,
+              21.250499
+            ],
+            [
+              81.296512,
+              21.250589
+            ],
+            [
+              81.296319,
+              21.25068
+            ],
+            [
+              81.296319,
+              21.250861
+            ],
+            [
+              81.295645,
+              21.250862
+            ],
+            [
+              81.295645,
+              21.250771
+            ],
+            [
+              81.295355,
+              21.250772
+            ],
+            [
+              81.295356,
+              21.250862
+            ],
+            [
+              81.295163,
+              21.250863
+            ]
+          ]
+        ]
+      },
+      "compact_pond_footprint_ha": 1.35,
+      "compact_pond_geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              81.296031,
+              21.251403
+            ],
+            [
+              81.296033,
+              21.252036
+            ],
+            [
+              81.296129,
+              21.252036
+            ],
+            [
+              81.296226,
+              21.252397
+            ],
+            [
+              81.296322,
+              21.252397
+            ],
+            [
+              81.296323,
+              21.252487
+            ],
+            [
+              81.296515,
+              21.252487
+            ],
+            [
+              81.296516,
+              21.252577
+            ],
+            [
+              81.296708,
+              21.252577
+            ],
+            [
+              81.296708,
+              21.252486
+            ],
+            [
+              81.296805,
+              21.252486
+            ],
+            [
+              81.296804,
+              21.252396
+            ],
+            [
+              81.296901,
+              21.252396
+            ],
+            [
+              81.296901,
+              21.252305
+            ],
+            [
+              81.297093,
+              21.252215
+            ],
+            [
+              81.297093,
+              21.252034
+            ],
+            [
+              81.297189,
+              21.252034
+            ],
+            [
+              81.297188,
+              21.251672
+            ],
+            [
+              81.297092,
+              21.251672
+            ],
+            [
+              81.297092,
+              21.251401
+            ],
+            [
+              81.296802,
+              21.251402
+            ],
+            [
+              81.296802,
+              21.251312
+            ],
+            [
+              81.296513,
+              21.251312
+            ],
+            [
+              81.296513,
+              21.251222
+            ],
+            [
+              81.296127,
+              21.251222
+            ],
+            [
+              81.296031,
+              21.251403
+            ]
+          ]
+        ]
+      },
+      "estimated_annual_water_yield_m3": 840987.2,
+      "selection_rationale": "Natural topographic storage bowl (12.0m depth) minimizing excavation; Substantial catchment (173.8 ha at pour point, ~840,987 m\u00b3 annual yield); gentle slope (0.6%)."
     },
     {
       "site_id": "pond_site_2",
       "rank": 2,
       "grid_index": {
-        "row": 187,
-        "col": 63
+        "row": 101,
+        "col": 199
       },
       "candidate_type": "natural_depression",
       "coordinates": {
-        "longitude": 81.287319,
-        "latitude": 21.256614,
-        "elevation_m": 272.0
+        "longitude": 81.300411,
+        "latitude": 21.24882,
+        "elevation_m": 278.01,
+        "elevation_api_m": 278.0,
+        "elevation_api_diff_m": -0.01
       },
       "utm_coordinates": {
-        "easting": 529809.5,
-        "northing": 2350575.3,
+        "easting": 531169.5,
+        "northing": 2349715.3,
         "epsg": 32644,
         "zone": 44
       },
       "associated_pour_point": {
         "coordinates": {
-          "longitude": 81.287318,
-          "latitude": 21.255981,
-          "elevation_m": 274.63
+          "longitude": 81.299061,
+          "latitude": 21.248281,
+          "elevation_m": 284.0
         },
         "utm_coordinates": {
-          "easting": 529809.5,
-          "northing": 2350505.3,
+          "easting": 531029.5,
+          "northing": 2349655.3,
           "epsg": 32644,
           "zone": 44
         },
         "grid_index": {
-          "row": 180,
-          "col": 63
+          "row": 95,
+          "col": 185
         },
-        "flow_accumulation_cells": 1661.0,
-        "drainage_area_ha": 16.61
+        "flow_accumulation_cells": 11146.0,
+        "drainage_area_ha": 111.46
       },
-      "suitability_score": 99.8,
+      "suitability_score": 81.5,
       "criteria_breakdown": {
-        "catchment_score": 100.0,
-        "depression_score": 100.0,
-        "slope_stability_score": 99.7,
-        "wetness_index_score": 98.7
+        "catchment_score": 96.3,
+        "depression_score": 59.9,
+        "slope_stability_score": 84.4,
+        "wetness_index_score": 62.2
       },
       "local_terrain": {
-        "slope_percent": 0.01,
-        "depression_depth_m": 2.63,
-        "topographic_wetness_index": 13.87,
-        "elevation_m": 272.0
+        "slope_percent": 0.47,
+        "depression_depth_m": 5.99,
+        "topographic_wetness_index": 9.75,
+        "elevation_m": 278.01
       },
-      "catchment_area_ha": 16.61,
-      "catchment_area_sq_m": 166100.0,
-      "selection_rationale": "Located in a natural topographic bowl (2.6m depth) reducing excavation; Optimal farm pond micro-catchment (16.6 ha at pour point); ultra-flat bed slope (0.01%) for stable embankment."
+      "catchment_area_ha": 111.46,
+      "catchment_area_sq_m": 1114600.0,
+      "continuous_basin_footprint_ha": 6.75,
+      "continuous_basin_geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              81.299687,
+              21.248054
+            ],
+            [
+              81.299687,
+              21.248144
+            ],
+            [
+              81.299591,
+              21.248144
+            ],
+            [
+              81.299591,
+              21.248235
+            ],
+            [
+              81.299398,
+              21.248325
+            ],
+            [
+              81.299399,
+              21.248596
+            ],
+            [
+              81.299495,
+              21.248596
+            ],
+            [
+              81.299496,
+              21.248777
+            ],
+            [
+              81.299592,
+              21.248777
+            ],
+            [
+              81.299592,
+              21.248867
+            ],
+            [
+              81.299689,
+              21.248867
+            ],
+            [
+              81.299689,
+              21.248957
+            ],
+            [
+              81.299785,
+              21.248957
+            ],
+            [
+              81.299785,
+              21.249047
+            ],
+            [
+              81.299882,
+              21.249047
+            ],
+            [
+              81.299882,
+              21.249138
+            ],
+            [
+              81.299978,
+              21.249137
+            ],
+            [
+              81.300075,
+              21.249318
+            ],
+            [
+              81.300461,
+              21.249317
+            ],
+            [
+              81.300557,
+              21.249136
+            ],
+            [
+              81.300749,
+              21.249136
+            ],
+            [
+              81.300749,
+              21.248955
+            ],
+            [
+              81.300845,
+              21.248955
+            ],
+            [
+              81.300845,
+              21.248774
+            ],
+            [
+              81.300941,
+              21.248774
+            ],
+            [
+              81.300941,
+              21.248684
+            ],
+            [
+              81.30123,
+              21.248683
+            ],
+            [
+              81.301327,
+              21.248864
+            ],
+            [
+              81.301809,
+              21.248863
+            ],
+            [
+              81.301809,
+              21.248953
+            ],
+            [
+              81.301906,
+              21.248953
+            ],
+            [
+              81.301906,
+              21.249044
+            ],
+            [
+              81.302002,
+              21.249043
+            ],
+            [
+              81.302002,
+              21.249134
+            ],
+            [
+              81.302195,
+              21.249224
+            ],
+            [
+              81.302196,
+              21.249495
+            ],
+            [
+              81.302485,
+              21.249494
+            ],
+            [
+              81.302485,
+              21.249404
+            ],
+            [
+              81.302581,
+              21.249404
+            ],
+            [
+              81.302581,
+              21.249313
+            ],
+            [
+              81.302677,
+              21.249313
+            ],
+            [
+              81.302773,
+              21.249132
+            ],
+            [
+              81.303063,
+              21.249132
+            ],
+            [
+              81.303062,
+              21.249042
+            ],
+            [
+              81.303255,
+              21.248951
+            ],
+            [
+              81.303255,
+              21.24877
+            ],
+            [
+              81.303351,
+              21.24877
+            ],
+            [
+              81.303447,
+              21.248408
+            ],
+            [
+              81.303639,
+              21.248318
+            ],
+            [
+              81.303639,
+              21.248137
+            ],
+            [
+              81.303735,
+              21.248137
+            ],
+            [
+              81.303735,
+              21.247956
+            ],
+            [
+              81.303831,
+              21.247956
+            ],
+            [
+              81.303831,
+              21.247685
+            ],
+            [
+              81.303349,
+              21.247686
+            ],
+            [
+              81.303349,
+              21.247595
+            ],
+            [
+              81.303252,
+              21.247596
+            ],
+            [
+              81.303252,
+              21.247415
+            ],
+            [
+              81.303155,
+              21.247415
+            ],
+            [
+              81.303155,
+              21.247325
+            ],
+            [
+              81.303252,
+              21.247325
+            ],
+            [
+              81.303251,
+              21.246963
+            ],
+            [
+              81.303347,
+              21.246963
+            ],
+            [
+              81.303347,
+              21.246873
+            ],
+            [
+              81.303251,
+              21.246873
+            ],
+            [
+              81.30325,
+              21.246782
+            ],
+            [
+              81.302961,
+              21.246783
+            ],
+            [
+              81.302962,
+              21.246873
+            ],
+            [
+              81.302865,
+              21.246873
+            ],
+            [
+              81.302865,
+              21.246964
+            ],
+            [
+              81.302673,
+              21.247055
+            ],
+            [
+              81.302673,
+              21.247235
+            ],
+            [
+              81.302577,
+              21.247235
+            ],
+            [
+              81.302577,
+              21.247416
+            ],
+            [
+              81.302481,
+              21.247416
+            ],
+            [
+              81.302481,
+              21.247597
+            ],
+            [
+              81.302385,
+              21.247597
+            ],
+            [
+              81.302385,
+              21.247778
+            ],
+            [
+              81.302289,
+              21.247778
+            ],
+            [
+              81.302289,
+              21.247868
+            ],
+            [
+              81.302096,
+              21.247869
+            ],
+            [
+              81.302096,
+              21.247778
+            ],
+            [
+              81.302,
+              21.247779
+            ],
+            [
+              81.301999,
+              21.247598
+            ],
+            [
+              81.301903,
+              21.247598
+            ],
+            [
+              81.301902,
+              21.247417
+            ],
+            [
+              81.301806,
+              21.247417
+            ],
+            [
+              81.301805,
+              21.247056
+            ],
+            [
+              81.30142,
+              21.247057
+            ],
+            [
+              81.301421,
+              21.247418
+            ],
+            [
+              81.30065,
+              21.247781
+            ],
+            [
+              81.300651,
+              21.248233
+            ],
+            [
+              81.300555,
+              21.248233
+            ],
+            [
+              81.300555,
+              21.248323
+            ],
+            [
+              81.300169,
+              21.248324
+            ],
+            [
+              81.300169,
+              21.248234
+            ],
+            [
+              81.300073,
+              21.248234
+            ],
+            [
+              81.299976,
+              21.248053
+            ],
+            [
+              81.299687,
+              21.248054
+            ]
+          ]
+        ]
+      },
+      "compact_pond_footprint_ha": 0.57,
+      "compact_pond_geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              81.299977,
+              21.248505
+            ],
+            [
+              81.299978,
+              21.249047
+            ],
+            [
+              81.300075,
+              21.249047
+            ],
+            [
+              81.300171,
+              21.249227
+            ],
+            [
+              81.300557,
+              21.249136
+            ],
+            [
+              81.300556,
+              21.249046
+            ],
+            [
+              81.300653,
+              21.249046
+            ],
+            [
+              81.300652,
+              21.248865
+            ],
+            [
+              81.300749,
+              21.248865
+            ],
+            [
+              81.300748,
+              21.248504
+            ],
+            [
+              81.300555,
+              21.248504
+            ],
+            [
+              81.300555,
+              21.248414
+            ],
+            [
+              81.30017,
+              21.248414
+            ],
+            [
+              81.30017,
+              21.248505
+            ],
+            [
+              81.299977,
+              21.248505
+            ]
+          ]
+        ]
+      },
+      "estimated_annual_water_yield_m3": 539366.1,
+      "selection_rationale": "Natural topographic storage bowl (6.0m depth) minimizing excavation; Substantial catchment (111.5 ha at pour point, ~539,366 m\u00b3 annual yield); ultra-flat bed slope (0.47%) ensuring high embankment stability."
     },
     {
       "site_id": "pond_site_3",
       "rank": 3,
       "grid_index": {
-        "row": 59,
-        "col": 17
+        "row": 190,
+        "col": 221
       },
-      "candidate_type": "tributary_harvesting",
+      "candidate_type": "natural_depression",
       "coordinates": {
-        "longitude": 81.282863,
-        "latitude": 21.245056,
-        "elevation_m": 276.0
+        "longitude": 81.302548,
+        "latitude": 21.256858,
+        "elevation_m": 280.0,
+        "elevation_api_m": 281.0,
+        "elevation_api_diff_m": 1.0
       },
       "utm_coordinates": {
-        "easting": 529349.5,
-        "northing": 2349295.3,
+        "easting": 531389.5,
+        "northing": 2350605.3,
         "epsg": 32644,
         "zone": 44
       },
       "associated_pour_point": {
         "coordinates": {
-          "longitude": 81.282863,
-          "latitude": 21.244695,
-          "elevation_m": 277.81
+          "longitude": 81.301584,
+          "latitude": 21.256589,
+          "elevation_m": 288.98
         },
         "utm_coordinates": {
-          "easting": 529349.5,
-          "northing": 2349255.3,
+          "easting": 531289.5,
+          "northing": 2350575.3,
           "epsg": 32644,
           "zone": 44
         },
         "grid_index": {
-          "row": 55,
-          "col": 17
+          "row": 187,
+          "col": 211
         },
-        "flow_accumulation_cells": 1802.0,
-        "drainage_area_ha": 18.02
+        "flow_accumulation_cells": 1321.0,
+        "drainage_area_ha": 13.21
       },
-      "suitability_score": 99.4,
+      "suitability_score": 80.7,
       "criteria_breakdown": {
-        "catchment_score": 100.0,
-        "depression_score": 100.0,
-        "slope_stability_score": 97.2,
-        "wetness_index_score": 100.0
+        "catchment_score": 46.4,
+        "depression_score": 89.8,
+        "slope_stability_score": 95.6,
+        "wetness_index_score": 75.7
       },
       "local_terrain": {
-        "slope_percent": 0.11,
-        "depression_depth_m": 4.03,
-        "topographic_wetness_index": 15.35,
-        "elevation_m": 276.0
+        "slope_percent": 0.13,
+        "depression_depth_m": 8.98,
+        "topographic_wetness_index": 10.85,
+        "elevation_m": 280.0
       },
-      "catchment_area_ha": 18.02,
-      "catchment_area_sq_m": 180200.0,
-      "selection_rationale": "Located in a natural topographic bowl (4.0m depth) reducing excavation; Optimal farm pond micro-catchment (18.0 ha at pour point); flat bed slope (0.1%) for stable embankment."
+      "catchment_area_ha": 13.21,
+      "catchment_area_sq_m": 132100.0,
+      "continuous_basin_footprint_ha": 2.74,
+      "continuous_basin_geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              81.301824,
+              21.256453
+            ],
+            [
+              81.301826,
+              21.256995
+            ],
+            [
+              81.301922,
+              21.256995
+            ],
+            [
+              81.301923,
+              21.257446
+            ],
+            [
+              81.302019,
+              21.257446
+            ],
+            [
+              81.302116,
+              21.257627
+            ],
+            [
+              81.302598,
+              21.257626
+            ],
+            [
+              81.302694,
+              21.257264
+            ],
+            [
+              81.302886,
+              21.257264
+            ],
+            [
+              81.302886,
+              21.257174
+            ],
+            [
+              81.303272,
+              21.257173
+            ],
+            [
+              81.303272,
+              21.257083
+            ],
+            [
+              81.303657,
+              21.257082
+            ],
+            [
+              81.303657,
+              21.256811
+            ],
+            [
+              81.30356,
+              21.256811
+            ],
+            [
+              81.303559,
+              21.256269
+            ],
+            [
+              81.303655,
+              21.256269
+            ],
+            [
+              81.303655,
+              21.255998
+            ],
+            [
+              81.303751,
+              21.255997
+            ],
+            [
+              81.303751,
+              21.255907
+            ],
+            [
+              81.303558,
+              21.255907
+            ],
+            [
+              81.303558,
+              21.255817
+            ],
+            [
+              81.302883,
+              21.255818
+            ],
+            [
+              81.302884,
+              21.255909
+            ],
+            [
+              81.302691,
+              21.255909
+            ],
+            [
+              81.302691,
+              21.255999
+            ],
+            [
+              81.302402,
+              21.256
+            ],
+            [
+              81.302402,
+              21.25609
+            ],
+            [
+              81.302209,
+              21.256091
+            ],
+            [
+              81.302209,
+              21.256181
+            ],
+            [
+              81.302113,
+              21.256181
+            ],
+            [
+              81.302113,
+              21.256271
+            ],
+            [
+              81.302017,
+              21.256272
+            ],
+            [
+              81.302017,
+              21.256362
+            ],
+            [
+              81.301824,
+              21.256453
+            ]
+          ]
+        ]
+      },
+      "compact_pond_footprint_ha": 1.25,
+      "compact_pond_geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              81.302114,
+              21.256452
+            ],
+            [
+              81.302114,
+              21.256633
+            ],
+            [
+              81.302018,
+              21.256633
+            ],
+            [
+              81.302115,
+              21.257175
+            ],
+            [
+              81.302211,
+              21.257175
+            ],
+            [
+              81.302212,
+              21.257356
+            ],
+            [
+              81.302501,
+              21.257355
+            ],
+            [
+              81.302501,
+              21.257265
+            ],
+            [
+              81.302597,
+              21.257265
+            ],
+            [
+              81.302693,
+              21.257084
+            ],
+            [
+              81.302886,
+              21.257083
+            ],
+            [
+              81.302886,
+              21.256993
+            ],
+            [
+              81.303079,
+              21.256993
+            ],
+            [
+              81.303078,
+              21.256902
+            ],
+            [
+              81.303271,
+              21.256812
+            ],
+            [
+              81.303271,
+              21.256631
+            ],
+            [
+              81.303367,
+              21.256631
+            ],
+            [
+              81.303366,
+              21.25636
+            ],
+            [
+              81.303463,
+              21.256359
+            ],
+            [
+              81.303462,
+              21.256088
+            ],
+            [
+              81.303366,
+              21.256089
+            ],
+            [
+              81.303366,
+              21.255998
+            ],
+            [
+              81.303077,
+              21.255999
+            ],
+            [
+              81.303077,
+              21.256089
+            ],
+            [
+              81.30298,
+              21.256089
+            ],
+            [
+              81.302981,
+              21.25618
+            ],
+            [
+              81.302884,
+              21.25618
+            ],
+            [
+              81.302788,
+              21.256361
+            ],
+            [
+              81.302499,
+              21.256361
+            ],
+            [
+              81.302499,
+              21.256452
+            ],
+            [
+              81.302114,
+              21.256452
+            ]
+          ]
+        ]
+      },
+      "estimated_annual_water_yield_m3": 63924.5,
+      "selection_rationale": "Natural topographic storage bowl (9.0m depth) minimizing excavation; Substantial catchment (13.2 ha at pour point, ~63,925 m\u00b3 annual yield); ultra-flat bed slope (0.13%) ensuring high embankment stability."
     },
     {
       "site_id": "pond_site_4",
       "rank": 4,
       "grid_index": {
-        "row": 44,
-        "col": 74
+        "row": 218,
+        "col": 117
       },
-      "candidate_type": "tributary_harvesting",
+      "candidate_type": "natural_depression",
       "coordinates": {
-        "longitude": 81.288354,
-        "latitude": 21.243691,
-        "elevation_m": 271.0
+        "longitude": 81.292529,
+        "latitude": 21.259406,
+        "elevation_m": 278.0,
+        "elevation_api_m": 277.0,
+        "elevation_api_diff_m": -1.0
       },
       "utm_coordinates": {
-        "easting": 529919.5,
+        "easting": 530349.5,
+        "northing": 2350885.3,
+        "epsg": 32644,
+        "zone": 44
+      },
+      "associated_pour_point": {
+        "coordinates": {
+          "longitude": 81.293597,
+          "latitude": 21.263379,
+          "elevation_m": 281.38
+        },
+        "utm_coordinates": {
+          "easting": 530459.5,
+          "northing": 2351325.3,
+          "epsg": 32644,
+          "zone": 44
+        },
+        "grid_index": {
+          "row": 262,
+          "col": 128
+        },
+        "flow_accumulation_cells": 9624.0,
+        "drainage_area_ha": 96.24
+      },
+      "suitability_score": 71.4,
+      "criteria_breakdown": {
+        "catchment_score": 93.2,
+        "depression_score": 33.8,
+        "slope_stability_score": 96.8,
+        "wetness_index_score": 84.8
+      },
+      "local_terrain": {
+        "slope_percent": 0.1,
+        "depression_depth_m": 3.38,
+        "topographic_wetness_index": 11.6,
+        "elevation_m": 278.0
+      },
+      "catchment_area_ha": 96.24,
+      "catchment_area_sq_m": 962400.0,
+      "continuous_basin_footprint_ha": 1.375,
+      "continuous_basin_geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              81.291805,
+              21.25891
+            ],
+            [
+              81.29171,
+              21.259181
+            ],
+            [
+              81.291613,
+              21.259181
+            ],
+            [
+              81.291614,
+              21.259633
+            ],
+            [
+              81.29171,
+              21.259633
+            ],
+            [
+              81.291711,
+              21.259723
+            ],
+            [
+              81.292289,
+              21.259722
+            ],
+            [
+              81.292289,
+              21.259813
+            ],
+            [
+              81.292482,
+              21.259812
+            ],
+            [
+              81.292482,
+              21.259903
+            ],
+            [
+              81.292675,
+              21.259902
+            ],
+            [
+              81.292675,
+              21.259993
+            ],
+            [
+              81.293061,
+              21.259992
+            ],
+            [
+              81.29306,
+              21.259902
+            ],
+            [
+              81.293157,
+              21.259901
+            ],
+            [
+              81.293156,
+              21.259359
+            ],
+            [
+              81.293059,
+              21.259359
+            ],
+            [
+              81.293059,
+              21.259269
+            ],
+            [
+              81.292963,
+              21.259269
+            ],
+            [
+              81.292866,
+              21.259089
+            ],
+            [
+              81.292577,
+              21.259089
+            ],
+            [
+              81.292577,
+              21.258999
+            ],
+            [
+              81.292191,
+              21.259
+            ],
+            [
+              81.292191,
+              21.258909
+            ],
+            [
+              81.291998,
+              21.25891
+            ],
+            [
+              81.291998,
+              21.258819
+            ],
+            [
+              81.291902,
+              21.258819
+            ],
+            [
+              81.291902,
+              21.25891
+            ],
+            [
+              81.291805,
+              21.25891
+            ]
+          ]
+        ]
+      },
+      "compact_pond_footprint_ha": 0.93,
+      "compact_pond_geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              81.291806,
+              21.259181
+            ],
+            [
+              81.29171,
+              21.259181
+            ],
+            [
+              81.29171,
+              21.259633
+            ],
+            [
+              81.292192,
+              21.259632
+            ],
+            [
+              81.292193,
+              21.259722
+            ],
+            [
+              81.292482,
+              21.259722
+            ],
+            [
+              81.292482,
+              21.259812
+            ],
+            [
+              81.292964,
+              21.259811
+            ],
+            [
+              81.292964,
+              21.259721
+            ],
+            [
+              81.29306,
+              21.259721
+            ],
+            [
+              81.293059,
+              21.259359
+            ],
+            [
+              81.292963,
+              21.25936
+            ],
+            [
+              81.292866,
+              21.259179
+            ],
+            [
+              81.292673,
+              21.259179
+            ],
+            [
+              81.292673,
+              21.259089
+            ],
+            [
+              81.292095,
+              21.25909
+            ],
+            [
+              81.292095,
+              21.259
+            ],
+            [
+              81.291806,
+              21.259
+            ],
+            [
+              81.291806,
+              21.259181
+            ]
+          ]
+        ]
+      },
+      "estimated_annual_water_yield_m3": 465715.0,
+      "selection_rationale": "Natural topographic storage bowl (3.4m depth) minimizing excavation; Substantial catchment (96.2 ha at pour point, ~465,715 m\u00b3 annual yield); ultra-flat bed slope (0.10%) ensuring high embankment stability."
+    },
+    {
+      "site_id": "pond_site_5",
+      "rank": 5,
+      "grid_index": {
+        "row": 44,
+        "col": 283
+      },
+      "candidate_type": "natural_depression",
+      "coordinates": {
+        "longitude": 81.308497,
+        "latitude": 21.243656,
+        "elevation_m": 283.0,
+        "elevation_api_m": 283.0,
+        "elevation_api_diff_m": -0.0
+      },
+      "utm_coordinates": {
+        "easting": 532009.5,
         "northing": 2349145.3,
         "epsg": 32644,
         "zone": 44
       },
       "associated_pour_point": {
         "coordinates": {
-          "longitude": 81.287968,
-          "latitude": 21.243511,
-          "elevation_m": 273.95
+          "longitude": 81.311198,
+          "latitude": 21.244916,
+          "elevation_m": 287.98
         },
         "utm_coordinates": {
-          "easting": 529879.5,
-          "northing": 2349125.3,
+          "easting": 532289.5,
+          "northing": 2349285.3,
           "epsg": 32644,
           "zone": 44
         },
         "grid_index": {
-          "row": 42,
-          "col": 70
+          "row": 58,
+          "col": 311
         },
-        "flow_accumulation_cells": 809.0,
-        "drainage_area_ha": 8.09
+        "flow_accumulation_cells": 4349.0,
+        "drainage_area_ha": 43.49
       },
-      "suitability_score": 98.2,
+      "suitability_score": 71.3,
       "criteria_breakdown": {
-        "catchment_score": 100.0,
-        "depression_score": 100.0,
-        "slope_stability_score": 90.9,
-        "wetness_index_score": 100.0
+        "catchment_score": 82.7,
+        "depression_score": 49.8,
+        "slope_stability_score": 79.0,
+        "wetness_index_score": 70.4
       },
       "local_terrain": {
-        "slope_percent": 0.36,
-        "depression_depth_m": 3.01,
-        "topographic_wetness_index": 16.31,
-        "elevation_m": 271.0
+        "slope_percent": 0.63,
+        "depression_depth_m": 4.98,
+        "topographic_wetness_index": 10.42,
+        "elevation_m": 283.0
       },
-      "catchment_area_ha": 8.09,
-      "catchment_area_sq_m": 80900.0,
-      "selection_rationale": "Located in a natural topographic bowl (3.0m depth) reducing excavation; Optimal farm pond micro-catchment (8.1 ha at pour point); flat bed slope (0.4%) for stable embankment."
-    },
-    {
-      "site_id": "pond_site_5",
-      "rank": 5,
-      "grid_index": {
-        "row": 87,
-        "col": 224
+      "catchment_area_ha": 43.49,
+      "catchment_area_sq_m": 434900.0,
+      "continuous_basin_footprint_ha": 2.27,
+      "continuous_basin_geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              81.307773,
+              21.243341
+            ],
+            [
+              81.307773,
+              21.243431
+            ],
+            [
+              81.30787,
+              21.243431
+            ],
+            [
+              81.30787,
+              21.243702
+            ],
+            [
+              81.307967,
+              21.243702
+            ],
+            [
+              81.307969,
+              21.244786
+            ],
+            [
+              81.307872,
+              21.244786
+            ],
+            [
+              81.307873,
+              21.245148
+            ],
+            [
+              81.30797,
+              21.245148
+            ],
+            [
+              81.30797,
+              21.245238
+            ],
+            [
+              81.308066,
+              21.245238
+            ],
+            [
+              81.308066,
+              21.245328
+            ],
+            [
+              81.308259,
+              21.245418
+            ],
+            [
+              81.308259,
+              21.245328
+            ],
+            [
+              81.308452,
+              21.245237
+            ],
+            [
+              81.30845,
+              21.244605
+            ],
+            [
+              81.308547,
+              21.244604
+            ],
+            [
+              81.308546,
+              21.244424
+            ],
+            [
+              81.308739,
+              21.244423
+            ],
+            [
+              81.308739,
+              21.244333
+            ],
+            [
+              81.308932,
+              21.244333
+            ],
+            [
+              81.308931,
+              21.244242
+            ],
+            [
+              81.309028,
+              21.244242
+            ],
+            [
+              81.309027,
+              21.24379
+            ],
+            [
+              81.309219,
+              21.2437
+            ],
+            [
+              81.309219,
+              21.243338
+            ],
+            [
+              81.309122,
+              21.243338
+            ],
+            [
+              81.309122,
+              21.243248
+            ],
+            [
+              81.309026,
+              21.243248
+            ],
+            [
+              81.308929,
+              21.243068
+            ],
+            [
+              81.308254,
+              21.243069
+            ],
+            [
+              81.308255,
+              21.243159
+            ],
+            [
+              81.308062,
+              21.24316
+            ],
+            [
+              81.308062,
+              21.24325
+            ],
+            [
+              81.307869,
+              21.24325
+            ],
+            [
+              81.307869,
+              21.243341
+            ],
+            [
+              81.307773,
+              21.243341
+            ]
+          ]
+        ]
       },
-      "candidate_type": "tributary_harvesting",
-      "coordinates": {
-        "longitude": 81.302818,
-        "latitude": 21.247551,
-        "elevation_m": 281.0
+      "compact_pond_footprint_ha": 0.79,
+      "compact_pond_geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              81.30893,
+              21.243339
+            ],
+            [
+              81.308062,
+              21.24334
+            ],
+            [
+              81.308063,
+              21.243521
+            ],
+            [
+              81.307966,
+              21.243521
+            ],
+            [
+              81.307966,
+              21.243612
+            ],
+            [
+              81.308063,
+              21.243611
+            ],
+            [
+              81.308063,
+              21.243792
+            ],
+            [
+              81.30816,
+              21.243792
+            ],
+            [
+              81.30816,
+              21.243973
+            ],
+            [
+              81.308256,
+              21.243972
+            ],
+            [
+              81.308257,
+              21.244153
+            ],
+            [
+              81.30816,
+              21.244153
+            ],
+            [
+              81.30816,
+              21.244244
+            ],
+            [
+              81.308353,
+              21.244243
+            ],
+            [
+              81.308353,
+              21.244334
+            ],
+            [
+              81.30845,
+              21.244333
+            ],
+            [
+              81.30845,
+              21.244243
+            ],
+            [
+              81.308739,
+              21.244243
+            ],
+            [
+              81.308739,
+              21.244152
+            ],
+            [
+              81.308835,
+              21.244152
+            ],
+            [
+              81.308834,
+              21.243791
+            ],
+            [
+              81.308931,
+              21.24379
+            ],
+            [
+              81.30893,
+              21.243339
+            ]
+          ]
+        ]
       },
-      "utm_coordinates": {
-        "easting": 531419.5,
-        "northing": 2349575.3,
-        "epsg": 32644,
-        "zone": 44
-      },
-      "associated_pour_point": {
-        "coordinates": {
-          "longitude": 81.302818,
-          "latitude": 21.247551,
-          "elevation_m": 281.0
-        },
-        "utm_coordinates": {
-          "easting": 531419.5,
-          "northing": 2349575.3,
-          "epsg": 32644,
-          "zone": 44
-        },
-        "grid_index": {
-          "row": 87,
-          "col": 224
-        },
-        "flow_accumulation_cells": 772.0,
-        "drainage_area_ha": 7.72
-      },
-      "suitability_score": 98.1,
-      "criteria_breakdown": {
-        "catchment_score": 98.3,
-        "depression_score": 100.0,
-        "slope_stability_score": 93.3,
-        "wetness_index_score": 100.0
-      },
-      "local_terrain": {
-        "slope_percent": 0.27,
-        "depression_depth_m": 3.0,
-        "topographic_wetness_index": 14.87,
-        "elevation_m": 281.0
-      },
-      "catchment_area_ha": 7.72,
-      "catchment_area_sq_m": 77200.0,
-      "selection_rationale": "Located in a natural topographic bowl (3.0m depth) reducing excavation; Optimal farm pond micro-catchment (7.7 ha at pour point); flat bed slope (0.3%) for stable embankment."
+      "estimated_annual_water_yield_m3": 210452.5,
+      "selection_rationale": "Natural topographic storage bowl (5.0m depth) minimizing excavation; Substantial catchment (43.5 ha at pour point, ~210,452 m\u00b3 annual yield); gentle slope (0.6%)."
     }
   ],
   "geojson": {
@@ -432,835 +2499,452 @@
       {
         "type": "Feature",
         "properties": {
-          "name": "Catchment Boundary",
-          "feature_type": "catchment",
-          "perimeter_m": 3180.0
+          "name": "Full Natural Depression Basin (5.59 ha - Max Reservoir Zone)",
+          "feature_type": "full_natural_basin",
+          "site_id": "pond_site_1",
+          "area_hectares": 5.59,
+          "depression_depth_m": 11.98,
+          "elevation_m": 270.01,
+          "fill": "#00E676",
+          "fill-opacity": 0.22,
+          "stroke": "#00B0FF",
+          "stroke-width": 3,
+          "stroke-dasharray": "6 6",
+          "style": {
+            "color": "#00B0FF",
+            "weight": 3,
+            "dashArray": "6, 6",
+            "fillColor": "#00E676",
+            "fillOpacity": 0.22
+          }
         },
         "geometry": {
-          "type": "MultiPolygon",
+          "type": "Polygon",
           "coordinates": [
             [
               [
-                [
-                  81.30935582911059,
-                  21.239768964402742
-                ],
-                [
-                  81.30935564060306,
-                  21.23967861179399
-                ],
-                [
-                  81.30925926761519,
-                  21.23967878849754
-                ],
-                [
-                  81.3092596445138,
-                  21.23985949371571
-                ],
-                [
-                  81.30935601761911,
-                  21.239859317010513
-                ],
-                [
-                  81.30935752572307,
-                  21.24058213783786
-                ],
-                [
-                  81.3094538992972,
-                  21.240581961071022
-                ],
-                [
-                  81.30945427645058,
-                  21.24076266626653
-                ],
-                [
-                  81.30935790275902,
-                  21.240762843035007
-                ],
-                [
-                  81.30935809127848,
-                  21.24085319563213
-                ],
-                [
-                  81.30926171752719,
-                  21.240853372346375
-                ],
-                [
-                  81.30926190598892,
-                  21.240943724943353
-                ],
-                [
-                  81.30916553217791,
-                  21.24094390160337
-                ],
-                [
-                  81.30916572058192,
-                  21.241034254200187
-                ],
-                [
-                  81.30906934671118,
-                  21.241034430805964
-                ],
-                [
-                  81.30906953505745,
-                  21.241124783402654
-                ],
-                [
-                  81.30829854358605,
-                  21.24112619427331
-                ],
-                [
-                  81.30829835570961,
-                  21.24103584167005
-                ],
-                [
-                  81.3081056079493,
-                  21.241036193835487
-                ],
-                [
-                  81.30810504467829,
-                  21.240765136015
-                ],
-                [
-                  81.30800867097284,
-                  21.24076531201267
-                ],
-                [
-                  81.30800848327654,
-                  21.24067495940309
-                ],
-                [
-                  81.30791210962882,
-                  21.240675135344883
-                ],
-                [
-                  81.30791192199223,
-                  21.240584782733503
-                ],
-                [
-                  81.30781554840225,
-                  21.24058495861943
-                ],
-                [
-                  81.30781479810074,
-                  21.240223548160973
-                ],
-                [
-                  81.30771842474466,
-                  21.24022372398856
-                ],
-                [
-                  81.30771823723047,
-                  21.240133371370703
-                ],
-                [
-                  81.30762186393214,
-                  21.240133547142417
-                ],
-                [
-                  81.30762130157171,
-                  21.239862489280586
-                ],
-                [
-                  81.30752492844856,
-                  21.23986266499479
-                ],
-                [
-                  81.30752474105579,
-                  21.239772312371425
-                ],
-                [
-                  81.30742836799035,
-                  21.239772488029754
-                ],
-                [
-                  81.30742818065728,
-                  21.239682135404596
-                ],
-                [
-                  81.30713906163126,
-                  21.2396826620468
-                ],
-                [
-                  81.30713924878816,
-                  21.239773014674405
-                ],
-                [
-                  81.30685012957707,
-                  21.23977354082356
-                ],
-                [
-                  81.3068503165588,
-                  21.23986389345264
-                ],
-                [
-                  81.30675394342774,
-                  21.2398640687264
-                ],
-                [
-                  81.3067541303517,
-                  21.23995442135534
-                ],
-                [
-                  81.30665775716095,
-                  21.239954596574854
-                ],
-                [
-                  81.30665794402717,
-                  21.24004494920363
-                ],
-                [
-                  81.30656157077671,
-                  21.24004512436891
-                ],
-                [
-                  81.30656194439467,
-                  21.240225829625196
-                ],
-                [
-                  81.30646557102577,
-                  21.24022600473705
-                ],
-                [
-                  81.3064657577775,
-                  21.24031635736455
-                ],
-                [
-                  81.30636938434888,
-                  21.24031653242216
-                ],
-                [
-                  81.30636975773788,
-                  21.240497237675896
-                ],
-                [
-                  81.30627338419082,
-                  21.240497412680078
-                ],
-                [
-                  81.30627394410553,
-                  21.240768470555857
-                ],
-                [
-                  81.3061775703813,
-                  21.24076864550743
-                ],
-                [
-                  81.30617775696277,
-                  21.24085899813156
-                ],
-                [
-                  81.30608138317885,
-                  21.24085917302889
-                ],
-                [
-                  81.30608156970257,
-                  21.240949525652876
-                ],
-                [
-                  81.30559970047452,
-                  21.240950399317708
-                ],
-                [
-                  81.3055998867056,
-                  21.241040751944784
-                ],
-                [
-                  81.30579263451722,
-                  21.2410404026424
-                ],
-                [
-                  81.30579282086673,
-                  21.241130755266887
-                ],
-                [
-                  81.3061783167131,
-                  21.241130055998166
-                ],
-                [
-                  81.30617850329851,
-                  21.24122040861842
-                ],
-                [
-                  81.30627487731637,
-                  21.24122023366278
-                ],
-                [
-                  81.3062750639615,
-                  21.241310586281255
-                ],
-                [
-                  81.30685330840033,
-                  21.241309535386254
-                ],
-                [
-                  81.30685349539883,
-                  21.241399887998877
-                ],
-                [
-                  81.30694986952724,
-                  21.241399712656186
-                ],
-                [
-                  81.30695005658544,
-                  21.24149006526702
-                ],
-                [
-                  81.30704643077159,
-                  21.241489889868458
-                ],
-                [
-                  81.30704661788951,
-                  21.241580242477497
-                ],
-                [
-                  81.30714299213341,
-                  21.241580067023055
-                ],
-                [
-                  81.30714317931104,
-                  21.241670419630317
-                ],
-                [
-                  81.30723955361269,
-                  21.241670244119998
-                ],
-                [
-                  81.30723974085004,
-                  21.241760596725467
-                ],
-                [
-                  81.30733611520942,
-                  21.241760421159267
-                ],
-                [
-                  81.3073363025065,
-                  21.241850773762962
-                ],
-                [
-                  81.30743267692361,
-                  21.241850598140886
-                ],
-                [
-                  81.30743286428041,
-                  21.24194095074279
-                ],
-                [
-                  81.30752923875528,
-                  21.24194077506483
-                ],
-                [
-                  81.30752942617178,
-                  21.24203112766494
-                ],
-                [
-                  81.30762580070439,
-                  21.24203095193111
-                ],
-                [
-                  81.30762598818062,
-                  21.24212130452944
-                ],
-                [
-                  81.30772236277097,
-                  21.24212112873973
-                ],
-                [
-                  81.30772255030692,
-                  21.24221148133627
-                ],
-                [
-                  81.30781892495501,
-                  21.24221130549067
-                ],
-                [
-                  81.30781911255067,
-                  21.24230165808543
-                ],
-                [
-                  81.30791548725652,
-                  21.242301482183954
-                ],
-                [
-                  81.30791567491191,
-                  21.242391834776917
-                ],
-                [
-                  81.30801204967548,
-                  21.24239165881956
-                ],
-                [
-                  81.3080122373906,
-                  21.242482011410736
-                ],
-                [
-                  81.30810861221192,
-                  21.2424818353975
-                ],
-                [
-                  81.30810879998675,
-                  21.24257218798689
-                ],
-                [
-                  81.30820517486582,
-                  21.242572011917773
-                ],
-                [
-                  81.30820536270039,
-                  21.242662364505374
-                ],
-                [
-                  81.30830173763718,
-                  21.242662188380365
-                ],
-                [
-                  81.30830192553147,
-                  21.242752540966183
-                ],
-                [
-                  81.30839830052602,
-                  21.24275236478529
-                ],
-                [
-                  81.30839848848002,
-                  21.242842717369314
-                ],
-                [
-                  81.30849486353232,
-                  21.242842541132546
-                ],
-                [
-                  81.30849505154605,
-                  21.24293289371478
-                ],
-                [
-                  81.3085914266561,
-                  21.24293271742212
-                ],
-                [
-                  81.30859161472955,
-                  21.24302307000257
-                ],
-                [
-                  81.30868798989732,
-                  21.24302289365403
-                ],
-                [
-                  81.30868817803051,
-                  21.24311324623268
-                ],
-                [
-                  81.30878455325603,
-                  21.243113069828258
-                ],
-                [
-                  81.30878474144895,
-                  21.243203422405124
-                ],
-                [
-                  81.30888111673221,
-                  21.243203245944812
-                ],
-                [
-                  81.30888130498484,
-                  21.243293598519884
-                ],
-                [
-                  81.30897768032584,
-                  21.243293422003685
-                ],
-                [
-                  81.30897786863822,
-                  21.243383774576973
-                ],
-                [
-                  81.30907424403696,
-                  21.243383598004886
-                ],
-                [
-                  81.30907443240905,
-                  21.24347395057638
-                ],
-                [
-                  81.30917080786554,
-                  21.2434737739484
-                ],
-                [
-                  81.30917099629737,
-                  21.243564126518113
-                ],
-                [
-                  81.3092673718116,
-                  21.24356394983424
-                ],
-                [
-                  81.30926756030316,
-                  21.243654302402163
-                ],
-                [
-                  81.30936393587513,
-                  21.243654125662406
-                ],
-                [
-                  81.30936412442642,
-                  21.24374447822853
-                ],
-                [
-                  81.30946050005615,
-                  21.24374430143289
-                ],
-                [
-                  81.30946068866716,
-                  21.243834653997222
-                ],
-                [
-                  81.30955706435462,
-                  21.243834477145686
-                ],
-                [
-                  81.30955725302536,
-                  21.24392482970823
-                ],
-                [
-                  81.30965362877056,
-                  21.24392465280081
-                ],
-                [
-                  81.30965381750104,
-                  21.244015005361554
-                ],
-                [
-                  81.30975019330398,
-                  21.24401482839824
-                ],
-                [
-                  81.30975038209422,
-                  21.24410518095719
-                ],
-                [
-                  81.30984675795489,
-                  21.244105003937992
-                ],
-                [
-                  81.30984694680484,
-                  21.244195356495155
-                ],
-                [
-                  81.30994332272327,
-                  21.24419517942006
-                ],
-                [
-                  81.30994351163295,
-                  21.24428553197542
-                ],
-                [
-                  81.31003988760912,
-                  21.244285354844433
-                ],
-                [
-                  81.31004007657855,
-                  21.244375707398014
-                ],
-                [
-                  81.31013645261245,
-                  21.244375530211133
-                ],
-                [
-                  81.31013664164162,
-                  21.244465882762913
-                ],
-                [
-                  81.31023301773327,
-                  21.244465705520142
-                ],
-                [
-                  81.31023282864537,
-                  21.24437535296919
-                ],
-                [
-                  81.31032920467727,
-                  21.244375175672175
-                ],
-                [
-                  81.31032901553164,
-                  21.24428482312107
-                ],
-                [
-                  81.31042539150383,
-                  21.244284645769813
-                ],
-                [
-                  81.31042520230044,
-                  21.244194293218577
-                ],
-                [
-                  81.31061795412431,
-                  21.24419393835251
-                ],
-                [
-                  81.31061776480445,
-                  21.244103585801952
-                ],
-                [
-                  81.31090689235656,
-                  21.244103053092328
-                ],
-                [
-                  81.31090708185263,
-                  21.244193405640402
-                ],
-                [
-                  81.3114853372823,
-                  21.244192338729373
-                ],
-                [
-                  81.3114840083638,
-                  21.24355987090724
-                ],
-                [
-                  81.31138763287251,
-                  21.243560048857617
-                ],
-                [
-                  81.311387253308,
-                  21.243379343755205
-                ],
-                [
-                  81.31129087793319,
-                  21.243379521648855
-                ],
-                [
-                  81.31129049849015,
-                  21.24319881654091
-                ],
-                [
-                  81.31148324900383,
-                  21.243198460701855
-                ],
-                [
-                  81.31148305916633,
-                  21.24310810814809
-                ],
-                [
-                  81.31196493513932,
-                  21.24310721759095
-                ],
-                [
-                  81.31196474500916,
-                  21.243016865040357
-                ],
-                [
-                  81.31206112014202,
-                  21.243016686764566
-                ],
-                [
-                  81.31206092995413,
-                  21.242926334213838
-                ],
-                [
-                  81.31215730502724,
-                  21.242926155883815
-                ],
-                [
-                  81.31215711478161,
-                  21.242835803332945
-                ],
-                [
-                  81.312253489795,
-                  21.242835624948686
-                ],
-                [
-                  81.31225329949164,
-                  21.242745272397677
-                ],
-                [
-                  81.31283154919844,
-                  21.24274420094078
-                ],
-                [
-                  81.31283135854368,
-                  21.24265384839379
-                ],
-                [
-                  81.31292773343256,
-                  21.24265366962575
-                ],
-                [
-                  81.31292563565067,
-                  21.241659791554092
-                ],
-                [
-                  81.312732887164,
-                  21.241660149016802
-                ],
-                [
-                  81.3127325059971,
-                  21.241479443896942
-                ],
-                [
-                  81.31263613186972,
-                  21.24147962254404
-                ],
-                [
-                  81.31263594134653,
-                  21.241389269981823
-                ],
-                [
-                  81.31253956727686,
-                  21.241389448573035
-                ],
-                [
-                  81.31253937681339,
-                  21.241299096009016
-                ],
-                [
-                  81.31225025477455,
-                  21.241299631449795
-                ],
-                [
-                  81.31224968391871,
-                  21.241028573744458
-                ],
-                [
-                  81.31234605775647,
-                  21.24102839532175
-                ],
-                [
-                  81.31234453504858,
-                  21.240305574738212
-                ],
-                [
-                  81.31186266819878,
-                  21.24030646626796
-                ],
-                [
-                  81.31186247815843,
-                  21.24021611368651
-                ],
-                [
-                  81.3117661048442,
-                  21.240216291826457
-                ],
-                [
-                  81.31176572488397,
-                  21.240035586658983
-                ],
-                [
-                  81.31166935168618,
-                  21.24003576474222
-                ],
-                [
-                  81.31166878192953,
-                  21.239764706981262
-                ],
-                [
-                  81.31157240890688,
-                  21.23976488500696
-                ],
-                [
-                  81.31157278862621,
-                  21.23994559018356
-                ],
-                [
-                  81.31109092291081,
-                  21.239946479494485
-                ],
-                [
-                  81.31109073334426,
-                  21.23985612690252
-                ],
-                [
-                  81.3109943602569,
-                  21.239856304598714
-                ],
-                [
-                  81.31099417075009,
-                  21.23976595200497
-                ],
-                [
-                  81.31089779772046,
-                  21.23976612964528
-                ],
-                [
-                  81.31089760827335,
-                  21.239675777049726
-                ],
-                [
-                  81.31041574340381,
-                  21.239676664421314
-                ],
-                [
-                  81.3104159325573,
-                  21.23976701702099
-                ],
-                [
-                  81.30993406736918,
-                  21.239767903020343
-                ],
-                [
-                  81.30993425623005,
-                  21.23985825562317
-                ],
-                [
-                  81.30945239072342,
-                  21.23985914025026
-                ],
-                [
-                  81.30945220215617,
-                  21.239768787643314
-                ],
-                [
-                  81.30935582911059,
-                  21.239768964402742
-                ]
+                81.295163,
+                21.250863
+              ],
+              [
+                81.295163,
+                21.250953
+              ],
+              [
+                81.295067,
+                21.250953
+              ],
+              [
+                81.295067,
+                21.251134
+              ],
+              [
+                81.294874,
+                21.251225
+              ],
+              [
+                81.294875,
+                21.251586
+              ],
+              [
+                81.294972,
+                21.251586
+              ],
+              [
+                81.294972,
+                21.251676
+              ],
+              [
+                81.295261,
+                21.251676
+              ],
+              [
+                81.295261,
+                21.251585
+              ],
+              [
+                81.295453,
+                21.251585
+              ],
+              [
+                81.295453,
+                21.251495
+              ],
+              [
+                81.295839,
+                21.251494
+              ],
+              [
+                81.29584,
+                21.251946
+              ],
+              [
+                81.295936,
+                21.251946
+              ],
+              [
+                81.295937,
+                21.252397
+              ],
+              [
+                81.295841,
+                21.252397
+              ],
+              [
+                81.295841,
+                21.252669
+              ],
+              [
+                81.296227,
+                21.252668
+              ],
+              [
+                81.296227,
+                21.252758
+              ],
+              [
+                81.29642,
+                21.252848
+              ],
+              [
+                81.29642,
+                21.253119
+              ],
+              [
+                81.296517,
+                21.253119
+              ],
+              [
+                81.296517,
+                21.2533
+              ],
+              [
+                81.29671,
+                21.253209
+              ],
+              [
+                81.296709,
+                21.252938
+              ],
+              [
+                81.296902,
+                21.252847
+              ],
+              [
+                81.296901,
+                21.252667
+              ],
+              [
+                81.296998,
+                21.252666
+              ],
+              [
+                81.296998,
+                21.252576
+              ],
+              [
+                81.29719,
+                21.252485
+              ],
+              [
+                81.29719,
+                21.252305
+              ],
+              [
+                81.297286,
+                21.252305
+              ],
+              [
+                81.297285,
+                21.251582
+              ],
+              [
+                81.297381,
+                21.251582
+              ],
+              [
+                81.297381,
+                21.251491
+              ],
+              [
+                81.297477,
+                21.251491
+              ],
+              [
+                81.297573,
+                21.25131
+              ],
+              [
+                81.297862,
+                21.25131
+              ],
+              [
+                81.297959,
+                21.25149
+              ],
+              [
+                81.298152,
+                21.25149
+              ],
+              [
+                81.298152,
+                21.251399
+              ],
+              [
+                81.298344,
+                21.251309
+              ],
+              [
+                81.298344,
+                21.251128
+              ],
+              [
+                81.29844,
+                21.251128
+              ],
+              [
+                81.29844,
+                21.251038
+              ],
+              [
+                81.298344,
+                21.251038
+              ],
+              [
+                81.298344,
+                21.250947
+              ],
+              [
+                81.298247,
+                21.250948
+              ],
+              [
+                81.29815,
+                21.250767
+              ],
+              [
+                81.297765,
+                21.250768
+              ],
+              [
+                81.297765,
+                21.250677
+              ],
+              [
+                81.297668,
+                21.250678
+              ],
+              [
+                81.297668,
+                21.250497
+              ],
+              [
+                81.297475,
+                21.250407
+              ],
+              [
+                81.297475,
+                21.250226
+              ],
+              [
+                81.297378,
+                21.250226
+              ],
+              [
+                81.297282,
+                21.250046
+              ],
+              [
+                81.297089,
+                21.250046
+              ],
+              [
+                81.297089,
+                21.249956
+              ],
+              [
+                81.296896,
+                21.249956
+              ],
+              [
+                81.296896,
+                21.250046
+              ],
+              [
+                81.296607,
+                21.250047
+              ],
+              [
+                81.296608,
+                21.250499
+              ],
+              [
+                81.296511,
+                21.250499
+              ],
+              [
+                81.296512,
+                21.250589
+              ],
+              [
+                81.296319,
+                21.25068
+              ],
+              [
+                81.296319,
+                21.250861
+              ],
+              [
+                81.295645,
+                21.250862
+              ],
+              [
+                81.295645,
+                21.250771
+              ],
+              [
+                81.295355,
+                21.250772
+              ],
+              [
+                81.295356,
+                21.250862
+              ],
+              [
+                81.295163,
+                21.250863
               ]
-            ],
+            ]
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "name": "Compact Core Village Farm Pond (1.35 ha - Core Excavation Footprint)",
+          "feature_type": "compact_pond_footprint",
+          "site_id": "pond_site_1",
+          "area_hectares": 1.35,
+          "depression_depth_m": 11.98,
+          "elevation_m": 270.01,
+          "fill": "#00C853",
+          "fill-opacity": 0.85,
+          "stroke": "#FFD600",
+          "stroke-width": 4,
+          "style": {
+            "color": "#FFD600",
+            "weight": 4,
+            "fillColor": "#00C853",
+            "fillOpacity": 0.85
+          }
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
             [
               [
-                [
-                  81.31023320682218,
-                  21.244556058070124
-                ],
-                [
-                  81.31032958297156,
-                  21.244555880771458
-                ],
-                [
-                  81.31032939382392,
-                  21.244465528222296
-                ],
-                [
-                  81.31023301773327,
-                  21.244465705520142
-                ],
-                [
-                  81.31023320682218,
-                  21.244556058070124
-                ]
-              ]
-            ],
-            [
+                81.296031,
+                21.251403
+              ],
               [
-                [
-                  81.31042595911995,
-                  21.244555703417724
-                ],
-                [
-                  81.31032958297156,
-                  21.244555880771458
-                ],
-                [
-                  81.31032977212018,
-                  21.244646233319653
-                ],
-                [
-                  81.31042614832732,
-                  21.2446460559651
-                ],
-                [
-                  81.31042595911995,
-                  21.244555703417724
-                ]
+                81.296033,
+                21.252036
+              ],
+              [
+                81.296129,
+                21.252036
+              ],
+              [
+                81.296226,
+                21.252397
+              ],
+              [
+                81.296322,
+                21.252397
+              ],
+              [
+                81.296323,
+                21.252487
+              ],
+              [
+                81.296515,
+                21.252487
+              ],
+              [
+                81.296516,
+                21.252577
+              ],
+              [
+                81.296708,
+                21.252577
+              ],
+              [
+                81.296708,
+                21.252486
+              ],
+              [
+                81.296805,
+                21.252486
+              ],
+              [
+                81.296804,
+                21.252396
+              ],
+              [
+                81.296901,
+                21.252396
+              ],
+              [
+                81.296901,
+                21.252305
+              ],
+              [
+                81.297093,
+                21.252215
+              ],
+              [
+                81.297093,
+                21.252034
+              ],
+              [
+                81.297189,
+                21.252034
+              ],
+              [
+                81.297188,
+                21.251672
+              ],
+              [
+                81.297092,
+                21.251672
+              ],
+              [
+                81.297092,
+                21.251401
+              ],
+              [
+                81.296802,
+                21.251402
+              ],
+              [
+                81.296802,
+                21.251312
+              ],
+              [
+                81.296513,
+                21.251312
+              ],
+              [
+                81.296513,
+                21.251222
+              ],
+              [
+                81.296127,
+                21.251222
+              ],
+              [
+                81.296031,
+                21.251403
               ]
             ]
           ]
@@ -18716,21 +20400,22 @@
           "name": "Recommended Pond Storage Location (Rank 1)",
           "feature_type": "pond_candidate",
           "site_id": "pond_site_1",
-          "candidate_type": "tributary_harvesting",
-          "suitability_score": 100.0,
-          "elevation_m": 285.0,
-          "local_slope_percent": 0.0,
-          "depression_depth_m": 2.98,
-          "recommended_capacity_m3": 14574.0,
-          "selection_rationale": "Located in a natural topographic bowl (3.0m depth) reducing excavation; Optimal farm pond micro-catchment (20.8 ha at pour point); ultra-flat bed slope (0.00%) for stable embankment.",
+          "candidate_type": "natural_depression",
+          "suitability_score": 96.0,
+          "elevation_m": 270.01,
+          "local_slope_percent": 0.62,
+          "depression_depth_m": 11.98,
+          "recommended_capacity_m3": 168197.4,
+          "selection_rationale": "Natural topographic storage bowl (12.0m depth) minimizing excavation; Substantial catchment (173.8 ha at pour point, ~840,987 m\u00b3 annual yield); gentle slope (0.6%).",
           "marker_color": "#00E676",
-          "is_primary": true
+          "is_primary": true,
+          "elevation_api_m": 278.0
         },
         "geometry": {
           "type": "Point",
           "coordinates": [
-            81.310427,
-            21.244917
+            81.296659,
+            21.251809
           ]
         }
       },
@@ -18740,16 +20425,16 @@
           "name": "Associated Hydrological Pour Point (Rank 1)",
           "feature_type": "pour_point",
           "site_id": "pond_site_1",
-          "elevation_m": 286.89,
-          "catchment_area_ha": 20.82,
-          "drainage_flow_acc_cells": 2082.0,
+          "elevation_m": 281.99,
+          "catchment_area_ha": 173.79,
+          "drainage_flow_acc_cells": 17379.0,
           "marker_color": "#2979FF"
         },
         "geometry": {
           "type": "Point",
           "coordinates": [
-            81.31033,
-            21.244556
+            81.294731,
+            21.251812
           ]
         }
       },
@@ -18761,17 +20446,18 @@
           "site_id": "pond_site_2",
           "rank": 2,
           "candidate_type": "natural_depression",
-          "suitability_score": 99.8,
-          "elevation_m": 272.0,
-          "catchment_area_ha": 16.61,
+          "suitability_score": 81.5,
+          "elevation_m": 278.01,
+          "catchment_area_ha": 111.46,
           "marker_color": "#FF9100",
-          "is_primary": false
+          "is_primary": false,
+          "elevation_api_m": 278.0
         },
         "geometry": {
           "type": "Point",
           "coordinates": [
-            81.287319,
-            21.256614
+            81.300411,
+            21.24882
           ]
         }
       },
@@ -18782,18 +20468,19 @@
           "feature_type": "alternative_candidate",
           "site_id": "pond_site_3",
           "rank": 3,
-          "candidate_type": "tributary_harvesting",
-          "suitability_score": 99.4,
-          "elevation_m": 276.0,
-          "catchment_area_ha": 18.02,
+          "candidate_type": "natural_depression",
+          "suitability_score": 80.7,
+          "elevation_m": 280.0,
+          "catchment_area_ha": 13.21,
           "marker_color": "#FF9100",
-          "is_primary": false
+          "is_primary": false,
+          "elevation_api_m": 281.0
         },
         "geometry": {
           "type": "Point",
           "coordinates": [
-            81.282863,
-            21.245056
+            81.302548,
+            21.256858
           ]
         }
       },
@@ -18804,18 +20491,19 @@
           "feature_type": "alternative_candidate",
           "site_id": "pond_site_4",
           "rank": 4,
-          "candidate_type": "tributary_harvesting",
-          "suitability_score": 98.2,
-          "elevation_m": 271.0,
-          "catchment_area_ha": 8.09,
+          "candidate_type": "natural_depression",
+          "suitability_score": 71.4,
+          "elevation_m": 278.0,
+          "catchment_area_ha": 96.24,
           "marker_color": "#FF9100",
-          "is_primary": false
+          "is_primary": false,
+          "elevation_api_m": 277.0
         },
         "geometry": {
           "type": "Point",
           "coordinates": [
-            81.288354,
-            21.243691
+            81.292529,
+            21.259406
           ]
         }
       },
@@ -18826,18 +20514,19 @@
           "feature_type": "alternative_candidate",
           "site_id": "pond_site_5",
           "rank": 5,
-          "candidate_type": "tributary_harvesting",
-          "suitability_score": 98.1,
-          "elevation_m": 281.0,
-          "catchment_area_ha": 7.72,
+          "candidate_type": "natural_depression",
+          "suitability_score": 71.3,
+          "elevation_m": 283.0,
+          "catchment_area_ha": 43.49,
           "marker_color": "#FF9100",
-          "is_primary": false
+          "is_primary": false,
+          "elevation_api_m": 283.0
         },
         "geometry": {
           "type": "Point",
           "coordinates": [
-            81.302818,
-            21.247551
+            81.308497,
+            21.243656
           ]
         }
       },
