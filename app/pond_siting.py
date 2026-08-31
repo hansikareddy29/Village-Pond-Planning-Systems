@@ -2,8 +2,11 @@
 Pond Siting and Sizing Module
 Implements Multi-Criteria Decision Analysis (MCDA) to evaluate terrain for optimal
 farm/village pond placement and catchment delineation.
-Features Score-First Spatial Deduplication to identify the highest quality
-village agricultural pond locations commanding the complete grand central village dendritic stream network (90 to 130 ha).
+Derives all metrics dynamically from:
+- Uploaded contour survey DEM (catchment area, depression depth, slope, elevation)
+- Open-Meteo Historical Climate API (annual precipitation)
+- Rational Method Hydrology (runoff coefficient & yield)
+Focuses on realistic micro-catchment farm pond scales (5 to 25 ha).
 """
 
 from typing import Dict, Any, List, Tuple, Optional
@@ -19,8 +22,8 @@ class PondSitingEngine:
 
     def __init__(
         self,
-        weight_catchment: float = 0.45,
-        weight_depression: float = 0.25,
+        weight_catchment: float = 0.35,
+        weight_depression: float = 0.35,
         weight_slope: float = 0.20,
         weight_twi: float = 0.10,
     ):
@@ -48,8 +51,12 @@ class PondSitingEngine:
         cell_area = dem.resolution_m ** 2
         area_ha = (flow_acc * cell_area) / 10000.0
 
+        # Total surveyed area from DEM
+        total_survey_area_ha = (rows * cols * cell_area) / 10000.0
+
+        # Dynamic micro-catchment target for farm pond / percolation tank (5 to 25 ha)
         if target_catchment_ha is None or target_catchment_ha <= 0:
-            target_catchment_ha = 110.0
+            target_catchment_ha = max(5.0, min(25.0, total_survey_area_ha * 0.03))
 
         # 1. Mask out outer perimeter cells to avoid boundary edge effects
         valid_mask = np.zeros((rows, cols), dtype=bool)
@@ -63,7 +70,7 @@ class PondSitingEngine:
         raw_candidates: List[Dict[str, Any]] = []
 
         # -------------------------------------------------------------------------
-        # Strategy A: Natural Depressions & Sinks with Viable Catchments
+        # Strategy A: Natural Depressions & Sinks in Agricultural Land
         # -------------------------------------------------------------------------
         for dep in hydro_results.get("depressions", []):
             br, bc = dep["bottom_grid"]
@@ -94,12 +101,11 @@ class PondSitingEngine:
             })
 
         # -------------------------------------------------------------------------
-        # Strategy B: Grand Village Drainage Confluence & Valley Storage
+        # Strategy B: Micro-Catchment Tributary Confluences (5 to 30 ha)
         # -------------------------------------------------------------------------
-        stream_thresh = np.percentile(flow_acc, 96.0)
-        high_acc_idx = np.where((flow_acc >= stream_thresh) & valid_mask)
+        trib_mask = (area_ha >= 4.0) & (area_ha <= 32.0) & valid_mask
 
-        for pr, pc in zip(high_acc_idx[0], high_acc_idx[1]):
+        for pr, pc in zip(np.where(trib_mask)[0], np.where(trib_mask)[1]):
             # Pour point is on the stream channel
             # Search local neighborhood for the gentle storage hollow (within 40m)
             best_pond = (int(pr), int(pc))
@@ -128,7 +134,7 @@ class PondSitingEngine:
                             best_pond = (int(nr), int(nc))
 
             raw_candidates.append({
-                "type": "valley_storage",
+                "type": "tributary_harvesting",
                 "pond_grid": best_pond,
                 "pour_grid": (int(pr), int(pc))
             })
@@ -151,15 +157,17 @@ class PondSitingEngine:
             pond_elev = float(dem.elevation[pond_r, pond_c])
             pour_elev = float(dem.elevation[pour_r, pour_c])
 
-            # Catchment suitability: 90 to 130 ha optimal for the grand central village watershed
-            if catchment_area_ha < 40.0:
-                score_catchment = (catchment_area_ha / 40.0) * 0.70
-            elif catchment_area_ha <= 125.0:
-                score_catchment = 0.85 + 0.15 * ((catchment_area_ha - 40.0) / 85.0)
-            elif catchment_area_ha <= 160.0:
-                score_catchment = max(0.40, 1.0 - 0.30 * ((catchment_area_ha - 125.0) / 35.0))
+            # Catchment suitability curve: optimal 5 to 25 ha for micro-catchment farm pond
+            if catchment_area_ha < 3.0:
+                score_catchment = (catchment_area_ha / 3.0) * 0.40
+            elif catchment_area_ha <= 8.0:
+                score_catchment = 0.70 + 0.30 * ((catchment_area_ha - 3.0) / 5.0)
+            elif catchment_area_ha <= 22.0:
+                score_catchment = 1.0  # OPTIMAL farm pond micro-catchment
+            elif catchment_area_ha <= 35.0:
+                score_catchment = max(0.40, 1.0 - 0.50 * ((catchment_area_ha - 22.0) / 13.0))
             else:
-                score_catchment = 0.05  # Master river channel outlet
+                score_catchment = 0.10  # Oversized for a farm pond
 
             score_depression = min(1.0, dep_d / 2.5)
             score_slope = max(0.0, 1.0 - (slp / 4.0))
@@ -238,11 +246,11 @@ class PondSitingEngine:
                 )
             else:
                 rationale_parts.append(
-                    f"Grand central village valley storage basin at major drainage convergence"
+                    f"Micro-catchment agricultural valley storage basin"
                 )
 
             rationale_parts.append(
-                f"Substantial upstream drainage ({c_ha:.1f} ha at pour point)"
+                f"Optimal farm pond micro-catchment ({c_ha:.1f} ha at pour point)"
             )
 
             if slp < 0.1:
@@ -322,8 +330,9 @@ class PondSitingEngine:
         """
         Computes civil engineering sizing recommendations for the pond structure.
         """
-        target_capacity_m3 = min(50000.0, max(2500.0, annual_runoff_m3 * 0.20))
-        depth_m = max(1.5, min(5.0, target_pond_depth_m))
+        # Farm pond captures 20% of annual runoff (allowing 3-5 seasonal refills)
+        target_capacity_m3 = min(25000.0, max(1500.0, annual_runoff_m3 * 0.20))
+        depth_m = max(1.5, min(4.5, target_pond_depth_m))
 
         required_surface_area_sq_m = target_capacity_m3 / (depth_m * 0.75)
         length_m = np.sqrt(required_surface_area_sq_m * 1.5)
