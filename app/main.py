@@ -140,7 +140,7 @@ def _process_contour_map(
         runoff_coefficient=runoff_coefficient,
     )
 
-    # 8. Sizing & Civil Engineering Recommendations
+    # 8. Sizing Recommendations
     pond_design = pond_siting_engine.compute_design_recommendations(
         catchment_area_sq_m=catchment_info["area_sq_meters"],
         annual_runoff_m3=runoff_info["estimated_annual_runoff_m3"],
@@ -163,6 +163,7 @@ def _process_contour_map(
                 {
                     "type": "Feature",
                     "properties": {
+                        "title": f"Rank {s_rank}: Full Basin",
                         "name": f"Full Natural Basin - Rank {s_rank} ({s_id})",
                         "feature_type": "full_natural_basin",
                         "site_id": s_id,
@@ -196,6 +197,7 @@ def _process_contour_map(
                 {
                     "type": "Feature",
                     "properties": {
+                        "title": f"Rank {s_rank}: Compact Pond",
                         "name": f"Compact Core Farm Pond - Rank {s_rank} ({s_id})",
                         "feature_type": "compact_pond_footprint",
                         "site_id": s_id,
@@ -224,86 +226,56 @@ def _process_contour_map(
     # B. Drainage / Stream Network
     geojson_features.append(hydro_results["streams"])
 
-    # C. Recommended Pond Storage Location Feature
-    pond_feat_props = {
-        "name": "Recommended Pond Storage Location (Rank 1)",
-        "feature_type": "pond_candidate",
-        "site_id": top_site["site_id"],
-        "candidate_type": top_site["candidate_type"],
-        "suitability_score": top_site["suitability_score"],
-        "elevation_m": top_site["coordinates"]["elevation_m"],
-        "local_slope_percent": top_site["local_terrain"]["slope_percent"],
-        "depression_depth_m": top_site["local_terrain"]["depression_depth_m"],
-        "recommended_capacity_m3": pond_design["recommended_storage_capacity_m3"],
-        "selection_rationale": top_site["selection_rationale"],
-        "marker_color": "#00E676",
-        "is_primary": True,
+    # C. Candidate Pond Sites (Point Features with Numbered Pins 1, 2, 3, 4, 5)
+    marker_palette = {
+        1: "#00C853",  # Vibrant Green for Rank 1
+        2: "#E65100",  # Dark Orange for Rank 2
+        3: "#F57C00",  # Amber Orange for Rank 3
+        4: "#FFA000",  # Gold Amber for Rank 4
+        5: "#FFB300",  # Yellow Gold for Rank 5
     }
-    if "elevation_api_m" in top_site["coordinates"]:
-        pond_feat_props["elevation_api_m"] = top_site["coordinates"]["elevation_api_m"]
 
-    geojson_features.append(
-        {
-            "type": "Feature",
-            "properties": pond_feat_props,
-            "geometry": {
-                "type": "Point",
-                "coordinates": [
-                    top_site["coordinates"]["longitude"],
-                    top_site["coordinates"]["latitude"],
-                ],
-            },
-        }
-    )
+    for site in candidate_sites:
+        s_rank = site["rank"]
+        s_id = site["site_id"]
+        is_primary = s_rank == 1
+        m_color = marker_palette.get(s_rank, "#FF9100")
 
-    # D. Associated Hydrological Pour Point Feature (on the drainage stream)
-    geojson_features.append(
-        {
-            "type": "Feature",
-            "properties": {
-                "name": "Associated Hydrological Pour Point (Rank 1)",
-                "feature_type": "pour_point",
-                "site_id": top_site["site_id"],
-                "elevation_m": top_site["associated_pour_point"]["coordinates"][
-                    "elevation_m"
-                ],
-                "catchment_area_ha": catchment_info["area_hectares"],
-                "drainage_flow_acc_cells": top_site["associated_pour_point"][
-                    "flow_accumulation_cells"
-                ],
-                "marker_color": "#2979FF",
-            },
-            "geometry": {
-                "type": "Point",
-                "coordinates": [
-                    top_site["associated_pour_point"]["coordinates"]["longitude"],
-                    top_site["associated_pour_point"]["coordinates"]["latitude"],
-                ],
-            },
-        }
-    )
-
-    # E. Alternative Candidate Sites
-    for site in candidate_sites[1:]:
-        alt_props = {
-            "name": f"Alternative Pond Site ({site['site_id']})",
-            "feature_type": "alternative_candidate",
-            "site_id": site["site_id"],
-            "rank": site["rank"],
+        pond_props = {
+            "title": f"Rank {s_rank}: {s_id}",
+            "name": f"Rank {s_rank}: Optimal Pond Location ({s_id})",
+            "marker-symbol": str(s_rank),
+            "marker-color": m_color,
+            "marker-size": "large",
+            "feature_type": "pond_candidate",
+            "site_id": s_id,
+            "rank": s_rank,
             "candidate_type": site["candidate_type"],
             "suitability_score": site["suitability_score"],
             "elevation_m": site["coordinates"]["elevation_m"],
+            "local_slope_percent": site["local_terrain"]["slope_percent"],
+            "depression_depth_m": site["local_terrain"]["depression_depth_m"],
             "catchment_area_ha": site["catchment_area_ha"],
-            "marker_color": "#FF9100",
-            "is_primary": False,
+            "selection_rationale": site.get("selection_rationale", ""),
+            "marker_color": m_color,
+            "is_primary": is_primary,
+            "description": (
+                f"Rank {s_rank} Pond Location ({s_id})\n"
+                f"• Suitability Score: {site['suitability_score']} / 100\n"
+                f"• Natural Depression Depth: {site['local_terrain']['depression_depth_m']} m\n"
+                f"• Catchment Runoff Area: {site['catchment_area_ha']} ha\n"
+                f"• Ground Bed Slope: {site['local_terrain']['slope_percent']}%\n"
+                f"• Bed Elevation: {site['coordinates']['elevation_m']} m\n"
+                f"• Annual Water Harvest: {site.get('estimated_annual_water_yield_m3', 0):,.0f} m³"
+            ),
         }
         if "elevation_api_m" in site["coordinates"]:
-            alt_props["elevation_api_m"] = site["coordinates"]["elevation_api_m"]
+            pond_props["elevation_api_m"] = site["coordinates"]["elevation_api_m"]
 
         geojson_features.append(
             {
                 "type": "Feature",
-                "properties": alt_props,
+                "properties": pond_props,
                 "geometry": {
                     "type": "Point",
                     "coordinates": [
@@ -313,6 +285,35 @@ def _process_contour_map(
                 },
             }
         )
+
+        # D. Associated Hydrological Pour Point / Spillway Feature
+        if site.get("associated_pour_point"):
+            pp = site["associated_pour_point"]
+            geojson_features.append(
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "title": f"Spillway {s_rank}",
+                        "name": f"Rank {s_rank} Spillway Pour Point",
+                        "marker-symbol": "water",
+                        "marker-color": "#00B0FF",
+                        "marker-size": "small",
+                        "feature_type": "pour_point",
+                        "site_id": s_id,
+                        "rank": s_rank,
+                        "elevation_m": pp["coordinates"]["elevation_m"],
+                        "drainage_flow_acc_cells": pp.get("flow_accumulation_cells"),
+                        "description": f"Natural Spillway Overflow Point for Rank {s_rank} Pond (Crest Elev: {pp['coordinates']['elevation_m']} m)",
+                    },
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [
+                            pp["coordinates"]["longitude"],
+                            pp["coordinates"]["latitude"],
+                        ],
+                    },
+                }
+            )
 
     # F. Survey Boundary Polygon if present in KML
     if parsed_data.get("boundary_polygon"):

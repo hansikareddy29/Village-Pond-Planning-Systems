@@ -79,7 +79,7 @@ class HydrologyEngine:
 
     def fill_depressions(self, dem: DEMGrid) -> Tuple[np.ndarray, np.ndarray]:
         """
-        Priority-Flood depression filling algorithm (Barnes et al., 2014; Wang & Liu, 2006).
+        Priority-Flood depression filling algorithm 
         Fills all internal closed sinks to their spillover saddle elevation without injecting
         arbitrary epsilon gradients, preserving the original terrain while ensuring continuous drainage.
         """
