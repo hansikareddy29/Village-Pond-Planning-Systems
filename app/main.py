@@ -151,65 +151,75 @@ def _process_contour_map(
     # 9. Assemble GeoJSON Feature Collection distinguishing Pond Region vs Pour Point
     geojson_features = []
 
-    # A. Full Natural Depression Basin (5.59 ha - Full Reservoir Zone)
-    if top_site.get("continuous_basin_geometry"):
-        geojson_features.append(
-            {
-                "type": "Feature",
-                "properties": {
-                    "name": "Full Natural Depression Basin (5.59 ha - Max Reservoir Zone)",
-                    "feature_type": "full_natural_basin",
-                    "site_id": top_site["site_id"],
-                    "area_hectares": top_site.get("continuous_basin_footprint_ha"),
-                    "depression_depth_m": top_site["local_terrain"][
-                        "depression_depth_m"
-                    ],
-                    "elevation_m": top_site["coordinates"]["elevation_m"],
-                    "fill": "#00E676",
-                    "fill-opacity": 0.22,
-                    "stroke": "#00B0FF",
-                    "stroke-width": 3,
-                    "stroke-dasharray": "6 6",
-                    "style": {
-                        "color": "#00B0FF",
-                        "weight": 3,
-                        "dashArray": "6, 6",
-                        "fillColor": "#00E676",
-                        "fillOpacity": 0.22,
-                    },
-                },
-                "geometry": top_site["continuous_basin_geometry"],
-            }
-        )
+    # A. Add Full Natural Depression Basins & Compact Farm Ponds for ALL Candidate Sites
+    for site in candidate_sites:
+        s_rank = site["rank"]
+        s_id = site["site_id"]
+        is_primary = s_rank == 1
 
-    # B. Compact Core Village Farm Pond (1.35 ha - Deep Core Construction Area)
-    if top_site.get("compact_pond_geometry"):
-        geojson_features.append(
-            {
-                "type": "Feature",
-                "properties": {
-                    "name": "Compact Core Village Farm Pond (1.35 ha - Core Excavation Footprint)",
-                    "feature_type": "compact_pond_footprint",
-                    "site_id": top_site["site_id"],
-                    "area_hectares": top_site.get("compact_pond_footprint_ha"),
-                    "depression_depth_m": top_site["local_terrain"][
-                        "depression_depth_m"
-                    ],
-                    "elevation_m": top_site["coordinates"]["elevation_m"],
-                    "fill": "#00C853",
-                    "fill-opacity": 0.85,
-                    "stroke": "#FFD600",
-                    "stroke-width": 4,
-                    "style": {
-                        "color": "#FFD600",
-                        "weight": 4,
-                        "fillColor": "#00C853",
-                        "fillOpacity": 0.85,
+        # 1. Full Natural Depression Basin
+        if site.get("continuous_basin_geometry"):
+            geojson_features.append(
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "name": f"Full Natural Basin - Rank {s_rank} ({s_id})",
+                        "feature_type": "full_natural_basin",
+                        "site_id": s_id,
+                        "rank": s_rank,
+                        "area_hectares": site.get("continuous_basin_footprint_ha"),
+                        "depression_depth_m": site["local_terrain"][
+                            "depression_depth_m"
+                        ],
+                        "elevation_m": site["coordinates"]["elevation_m"],
+                        "suitability_score": site["suitability_score"],
+                        "fill": "#00E676" if is_primary else "#4CAF50",
+                        "fill-opacity": 0.22 if is_primary else 0.18,
+                        "stroke": "#00B0FF" if is_primary else "#0288D1",
+                        "stroke-width": 3,
+                        "stroke-dasharray": "6 6",
+                        "style": {
+                            "color": "#00B0FF" if is_primary else "#0288D1",
+                            "weight": 3,
+                            "dashArray": "6, 6",
+                            "fillColor": "#00E676" if is_primary else "#4CAF50",
+                            "fillOpacity": 0.22 if is_primary else 0.18,
+                        },
                     },
-                },
-                "geometry": top_site["compact_pond_geometry"],
-            }
-        )
+                    "geometry": site["continuous_basin_geometry"],
+                }
+            )
+
+        # 2. Compact Core Village Farm Pond
+        if site.get("compact_pond_geometry"):
+            geojson_features.append(
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "name": f"Compact Core Farm Pond - Rank {s_rank} ({s_id})",
+                        "feature_type": "compact_pond_footprint",
+                        "site_id": s_id,
+                        "rank": s_rank,
+                        "area_hectares": site.get("compact_pond_footprint_ha"),
+                        "depression_depth_m": site["local_terrain"][
+                            "depression_depth_m"
+                        ],
+                        "elevation_m": site["coordinates"]["elevation_m"],
+                        "suitability_score": site["suitability_score"],
+                        "fill": "#00C853" if is_primary else "#2E7D32",
+                        "fill-opacity": 0.85 if is_primary else 0.75,
+                        "stroke": "#FFD600" if is_primary else "#FFA000",
+                        "stroke-width": 4 if is_primary else 3,
+                        "style": {
+                            "color": "#FFD600" if is_primary else "#FFA000",
+                            "weight": 4 if is_primary else 3,
+                            "fillColor": "#00C853" if is_primary else "#2E7D32",
+                            "fillOpacity": 0.85 if is_primary else 0.75,
+                        },
+                    },
+                    "geometry": site["compact_pond_geometry"],
+                }
+            )
 
     # B. Drainage / Stream Network
     geojson_features.append(hydro_results["streams"])
