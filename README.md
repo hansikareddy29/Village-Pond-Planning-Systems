@@ -13,14 +13,12 @@ An automated, physics-based backend REST API service for 3D digital terrain mode
 
 ## 🌟 Key Capabilities
 
-- **Zero Hardcoding**: Dynamically parses raw 3D contour lines (KML/KMZ), projects to local metric UTM Zone coordinates, and queries live Open-Meteo climate APIs for local rainfall.
 - **Continuous DEM Surface**: Reconstructs seamless $10\text{m} \times 10\text{m}$ Digital Elevation Models using Delaunay Triangulated Irregular Network (TIN) linear barycentric interpolation.
 - **Priority-Flood Depression Siting**: Detects natural topographic storage sinks and hollows using Barnes' Priority-Flood algorithm, saving over $80\%$ of earthwork excavation costs.
 - **Graph-Based Hydrology**: D8 flow direction with Garbrecht-Martz flat routing and Kahn's topological flow accumulation ($O(N)$ linear time).
 - **Reverse-BFS Catchment Delineation**: Delineates upstream contributing watershed basins via reverse BFS from optimal pour points.
 - **Rational Runoff Yield Modeling**: Computes annual water harvest volume ($V = C \times P \times A$) using live meteorological rainfall data.
 - **Dual-Basin Engineering GeoJSON**: Renders both the **Compact Core Farm Pond ($0.6 - 1.4\text{ ha}$)** and the **Full Natural Depression Basin ($1.4 - 6.8\text{ ha}$)** with distinct symbology for all candidate sites.
-- **Ground-Truth Validated**: Successfully rediscovered the historical Sirsa Khurd village pond (`pond_site_3`) with sub-meter spatial precision from raw contour physics alone.
 
 ---
 
@@ -31,12 +29,6 @@ An automated, physics-based backend REST API service for 3D digital terrain mode
 chmod +x run.sh
 ./run.sh
 ```
-
-### 2. Interactive Documentation
-- **Swagger OpenAPI Portal**: [http://localhost:8000/docs](http://localhost:8000/docs)
-- **ReDoc Interactive Docs**: [http://localhost:8000/redoc](http://localhost:8000/redoc)
-- **Health Check Probe**: [http://localhost:8000/health](http://localhost:8000/health)
-
 ---
 
 ## 📡 API Endpoints
@@ -132,10 +124,6 @@ Village-Pond-Planning-Systems/
 │   ├── pond_siting.py        # MCDA multi-criteria siting & dual-basin BFS extractor
 │   └── external_apis.py      # Open-Meteo ERA5 climate archive & Elevation SRTM services
 ├── requirements.txt          # Production dependencies
-└── run.sh                    # One-command server startup script
+└── run.sh                    # Server startup script
 ```
 
----
-
-## 📜 License
-MIT License. Free for academic, governmental, and commercial water resource planning.
