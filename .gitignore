@@ -1,7 +1,25 @@
+# Virtual Environments
 venv/
 .venv/
+env/
+ENV/
+
+# Python Cache & Bytecode
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
 .pytest_cache/
+
+# SSL Certificates & Private Keys
+cert.pem
+key.pem
+*.pem
+*.key
+*.crt
+*.csr
+
+# Logs & Temporary Files
 *.log
+server.log
+nohup.out
 

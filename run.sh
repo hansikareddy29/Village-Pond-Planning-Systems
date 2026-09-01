@@ -17,11 +17,11 @@ fi
 echo "================================================================="
 echo " Starting Village Pond Planning & Catchment Analysis API Server"
 echo "================================================================="
-echo " API Docs (Swagger): http://localhost:8000/docs"
-echo " API Docs (ReDoc):   http://localhost:8000/redoc"
-echo " Health Check:       http://localhost:8000/health"
-echo " Primary Endpoint:   POST http://localhost:8000/analyzeContour"
+echo " API Docs (Swagger): http://localhost:5000/docs"
+echo " API Docs (ReDoc):   http://localhost:5000/redoc"
+echo " Health Check:       http://localhost:5000/health"
+echo " Primary Endpoint:   POST http://localhost:5000/analyzeContour"
 echo "================================================================="
 
 # Start FastAPI server using Python module invocation
-./venv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+./venv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port 5000 --reload

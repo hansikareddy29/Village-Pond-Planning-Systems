@@ -29,6 +29,10 @@ An automated, physics-based backend REST API service for 3D digital terrain mode
 chmod +x run.sh
 ./run.sh
 ```
+### 2. Interactive Documentation
+* **Swagger OpenAPI Portal**: http://localhost:5000/docs
+* **ReDoc Interactive Docs**: http://localhost:5000/redoc
+* **Health Check Probe**: http://localhost:5000/health
 ---
 
 ## 📡 API Endpoints
@@ -48,14 +52,14 @@ Accepts a 3D contour map (`.kml` or `.kmz`) via `multipart/form-data`.
 
 #### Example cURL Request:
 ```bash
-curl -X POST "http://localhost:8000/analyzeContour?grid_resolution_m=10.0&num_candidate_sites=5" \
+curl -X POST "http://localhost:5000/analyzeContour?grid_resolution_m=10.0&num_candidate_sites=5" \
   -F "file=@contours_1m.kml" \
   -o analysis_output.json
 ```
 
 #### Example Direct GeoJSON Download for `geojson.io`:
 ```bash
-curl -X POST "http://localhost:8000/analyzeContour?format=geojson" \
+curl -X POST "http://localhost:5000/analyzeContour?format=geojson" \
   -F "file=@contours_1m.kml" \
   -o village_pond_map.geojson
 ```
