@@ -33,9 +33,9 @@ chmod +x run.sh
 ```
 
 ### 2. Interactive Documentation
-- **Swagger OpenAPI Portal**: [http://localhost:8000/docs](http://localhost:8000/docs)
-- **ReDoc Interactive Docs**: [http://localhost:8000/redoc](http://localhost:8000/redoc)
-- **Health Check Probe**: [http://localhost:8000/health](http://localhost:8000/health)
+- **Live Evaluator Swagger Portal**: [http://10.1.75.79:5249/docs](http://10.1.75.79:5249/docs)
+- **Live Evaluator Health Check**: [http://10.1.75.79:5249/health](http://10.1.75.79:5249/health)
+- **Internal / Local Container Docs**: [http://localhost:5000/docs](http://localhost:5000/docs)
 
 ---
 
@@ -54,16 +54,16 @@ Accepts a 3D contour map (`.kml` or `.kmz`) via `multipart/form-data`.
 | `num_candidate_sites` | `int` | `5` | Number of top candidate pond locations to return. |
 | `format` | `string` | `"json"` | Output format: `"json"` (full payload) or `"geojson"` (FeatureCollection). |
 
-#### Example cURL Request:
+#### Example cURL Request (Live Evaluator Route):
 ```bash
-curl -X POST "http://localhost:8000/analyzeContour?grid_resolution_m=10.0&num_candidate_sites=5" \
+curl -X POST "http://10.1.75.79:5249/analyzeContour?grid_resolution_m=10.0&num_candidate_sites=5" \
   -F "file=@contours_1m.kml" \
   -o analysis_output.json
 ```
 
 #### Example Direct GeoJSON Download for `geojson.io`:
 ```bash
-curl -X POST "http://localhost:8000/analyzeContour?format=geojson" \
+curl -X POST "http://10.1.75.79:5249/analyzeContour?format=geojson" \
   -F "file=@contours_1m.kml" \
   -o village_pond_map.geojson
 ```

@@ -14,14 +14,18 @@ if [ ! -d "venv" ]; then
     ./venv/bin/pip install -r requirements.txt
 fi
 
+PORT="${PORT:-5000}"
+
 echo "================================================================="
 echo " Starting Village Pond Planning & Catchment Analysis API Server"
 echo "================================================================="
-echo " API Docs (Swagger): http://localhost:8000/docs"
-echo " API Docs (ReDoc):   http://localhost:8000/redoc"
-echo " Health Check:       http://localhost:8000/health"
-echo " Primary Endpoint:   POST http://localhost:8000/analyzeContour"
+echo " Container Port:     $PORT"
+echo " External Host Port: 5249 (Mapped from Container Port 5000)"
+echo " Interactive Docs:   http://localhost:${PORT}/docs"
+echo " Evaluator Docs:     http://10.1.75.79:5249/docs"
+echo " Health Check:       http://10.1.75.79:5249/health"
+echo " Primary Endpoint:   POST http://10.1.75.79:5249/analyzeContour"
 echo "================================================================="
 
 # Start FastAPI server using Python module invocation
-./venv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+./venv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port "$PORT" --reload
