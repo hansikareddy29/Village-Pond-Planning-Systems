@@ -50,7 +50,7 @@ def _process_contour_map(
     file_bytes: bytes,
     filename: Optional[str] = None,
     grid_resolution_m: float = 10.0,
-    rainfall_annual_mm: float = 1000.0,
+    rainfall_annual_mm: Optional[float] = None,
     runoff_coefficient: float = 0.35,
     pond_depth_m: float = 3.0,
     num_candidate_sites: int = 5,
@@ -238,7 +238,7 @@ def _process_contour_map(
     for site in candidate_sites:
         s_rank = site["rank"]
         s_id = site["site_id"]
-        is_primary = (s_rank == 1)
+        is_primary = s_rank == 1
         m_color = marker_palette.get(s_rank, "#FF9100")
 
         pond_props = {
@@ -404,7 +404,7 @@ def _process_contour_map(
 @app.post(
     "/analyzeContour",
     summary="Analyze Contour Map & Delineate Catchment",
-    description="Accepts a KML/KMZ contour map upload. Dynamically queries Open-Meteo Rainfall API for the coordinates and returns structured JSON analysis or direct GeoJSON.",
+    description="Upload a KML or KMZ contour map file. The backend automatically models continuous terrain, queries satellite meteorological rainfall from Open-Meteo API, and returns optimal pond locations with delineated catchments and GIS GeoJSON.",
 )
 async def analyze_contour(
     file: Optional[UploadFile] = File(
@@ -413,52 +413,15 @@ async def analyze_contour(
     ),
     format: str = Form(
         "json",
-        description="Output format: 'json' (complete analysis report) or 'geojson' (pure GeoJSON FeatureCollection file)",
-    ),
-    grid_resolution_m: float = Form(
-        10.0,
-        description="Spatial DEM grid cell resolution in meters (e.g. 5.0 to 25.0)",
-    ),
-    rainfall_annual_mm: float = Form(
-        1000.0,
-        description="Annual precipitation in mm (auto-fetched from Open-Meteo API for file coordinates if left default)",
-    ),
-    runoff_coefficient: float = Form(
-        0.35, description="Catchment runoff coefficient C (0.0 to 1.0]"
-    ),
-    pond_depth_m: float = Form(
-        3.0, description="Target pond excavation depth in meters"
-    ),
-    num_candidate_sites: int = Form(
-        5, description="Number of top candidate pond locations to return"
+        description="Output format: 'json' (complete analysis report) or 'geojson' (GIS FeatureCollection)",
     ),
 ):
-    # Parameter Validations
-    if grid_resolution_m <= 0:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="grid_resolution_m must be strictly greater than 0.",
-        )
-    if not (0 < runoff_coefficient <= 1.0):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="runoff_coefficient must be between 0.0 (exclusive) and 1.0 (inclusive).",
-        )
-    if rainfall_annual_mm < 0:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="rainfall_annual_mm cannot be negative.",
-        )
-    if pond_depth_m <= 0:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="pond_depth_m must be strictly greater than 0.",
-        )
-    if num_candidate_sites < 1:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="num_candidate_sites must be at least 1.",
-        )
+    # Core engineering defaults kept in code (auto-calibrated for village watersheds)
+    grid_resolution_m: float = 10.0
+    rainfall_annual_mm: Optional[float] = None  # Auto-fetched from Open-Meteo API with offline fallback
+    runoff_coefficient: float = 0.35
+    pond_depth_m: float = 3.0
+    num_candidate_sites: int = 5
 
     if file is not None and file.filename:
         contents = await file.read()
