@@ -340,7 +340,10 @@ class ElevationAPIService:
                 resp = requests.post(
                     cls.OPEN_ELEVATION_URL,
                     json=payload,
-                    headers={"Accept": "application/json", "Content-Type": "application/json"},
+                    headers={
+                        "Accept": "application/json",
+                        "Content-Type": "application/json",
+                    },
                     timeout=timeout_seconds,
                 )
                 if resp.status_code == 200:
@@ -348,7 +351,11 @@ class ElevationAPIService:
                     results = data.get("results", [])
                     if len(results) == len(chunk):
                         chunk_elevs = [
-                            float(r["elevation"]) if r.get("elevation") is not None else None
+                            (
+                                float(r["elevation"])
+                                if r.get("elevation") is not None
+                                else None
+                            )
                             for r in results
                         ]
             except Exception as e:
@@ -367,7 +374,9 @@ class ElevationAPIService:
                         data = resp.json()
                         elev_list = data.get("elevation", [])
                         if len(elev_list) == len(chunk):
-                            chunk_elevs = [float(e) if e is not None else None for e in elev_list]
+                            chunk_elevs = [
+                                float(e) if e is not None else None for e in elev_list
+                            ]
                 except Exception as e:
                     logger.warning(f"Open-Meteo elevation chunk fallback failed: {e}")
 
@@ -382,7 +391,9 @@ class ElevationAPIService:
             elevation_source = "open-elevation-api"
         else:
             # Query point elevation or regional baseline
-            center_probe = cls.fetch_point_elevation(center_lat, center_lon, timeout_seconds=4.0)
+            center_probe = cls.fetch_point_elevation(
+                center_lat, center_lon, timeout_seconds=4.0
+            )
             if center_probe.get("elevation_m") is not None:
                 mean_base_elev = float(center_probe["elevation_m"])
                 elevation_source = center_probe.get("source", "open-elevation-api")
@@ -413,7 +424,9 @@ class ElevationAPIService:
                 rel_x = (lon - center_lon) / delta_lon
                 rel_y = (lat - center_lat) / delta_lat
                 # Micro-basin: natural slope descending towards low-lying center-west depression
-                valley_drop = -4.5 * math.sin(math.pi * (rel_x * 0.5 + 0.5)) - 2.5 * math.cos(math.pi * (rel_y * 0.5 + 0.5))
+                valley_drop = -4.5 * math.sin(
+                    math.pi * (rel_x * 0.5 + 0.5)
+                ) - 2.5 * math.cos(math.pi * (rel_y * 0.5 + 0.5))
                 undulation = 1.2 * math.sin(rel_x * 4.0) * math.cos(rel_y * 4.0)
                 elev = round(mean_base_elev + valley_drop + undulation, 2)
             point_cloud.append([lon, lat, float(elev)])
@@ -445,4 +458,3 @@ class ElevationAPIService:
             "total_points": len(point_cloud),
             "radius_km": radius_km,
         }
-

@@ -226,7 +226,6 @@ VILLAGE_CATALOG: Dict[str, Dict[str, Any]] = {
 }
 
 
-
 def _process_contour_map(
     file_bytes: bytes,
     filename: Optional[str] = None,
@@ -784,7 +783,9 @@ def get_village_model(village_id: str = "sirsa_khurd") -> Dict[str, Any]:
             village_info=v_info,
         )
 
-    raise HTTPException(status_code=404, detail=f"Village '{village_id}' not found in catalog.")
+    raise HTTPException(
+        status_code=404, detail=f"Village '{village_id}' not found in catalog."
+    )
 
 
 def get_base_model(village_id: str = "default") -> Dict[str, Any]:
@@ -1351,7 +1352,9 @@ def _format_village_data_response(village_id: str, model: dict) -> dict:
         preset_sectors = SIRSA_KHURD_PRESET_SECTORS
 
     village_name = v_info.get("name", "Village Watershed")
-    location_label = f"{village_name}, {v_info.get('district', '')}, {v_info.get('state', '')}".strip(", ")
+    location_label = f"{village_name}, {v_info.get('district', '')}, {v_info.get('state', '')}".strip(
+        ", "
+    )
 
     return {
         "village_id": village_id,
@@ -1388,29 +1391,38 @@ async def list_villages():
     """Returns catalog of pre-configured Indian benchmark villages plus dynamically created custom villages."""
     catalog_list = []
     for vid, v in VILLAGE_CATALOG.items():
-        catalog_list.append({
-            "id": vid,
-            "name": v["name"],
-            "district": v.get("district", ""),
-            "state": v.get("state", ""),
-            "center": [v["center_lat"], v["center_lon"]],
-            "elevation_source": v.get("elevation_source", "Open-Elevation API"),
-            "description": v.get("description", ""),
-            "is_cached": vid in _BASE_MODEL_CACHE,
-        })
+        catalog_list.append(
+            {
+                "id": vid,
+                "name": v["name"],
+                "district": v.get("district", ""),
+                "state": v.get("state", ""),
+                "center": [v["center_lat"], v["center_lon"]],
+                "elevation_source": v.get("elevation_source", "Open-Elevation API"),
+                "description": v.get("description", ""),
+                "is_cached": vid in _BASE_MODEL_CACHE,
+            }
+        )
     for vid, model in _BASE_MODEL_CACHE.items():
         if vid not in VILLAGE_CATALOG and vid != "default":
             v_info = model.get("village_info", {})
-            catalog_list.append({
-                "id": vid,
-                "name": v_info.get("name", vid),
-                "district": v_info.get("district", "Custom"),
-                "state": v_info.get("state", "Custom"),
-                "center": [v_info.get("center_lat", 0), v_info.get("center_lon", 0)],
-                "elevation_source": v_info.get("elevation_source", "Open-Elevation API"),
-                "description": v_info.get("description", "Custom analyzed village"),
-                "is_cached": True,
-            })
+            catalog_list.append(
+                {
+                    "id": vid,
+                    "name": v_info.get("name", vid),
+                    "district": v_info.get("district", "Custom"),
+                    "state": v_info.get("state", "Custom"),
+                    "center": [
+                        v_info.get("center_lat", 0),
+                        v_info.get("center_lon", 0),
+                    ],
+                    "elevation_source": v_info.get(
+                        "elevation_source", "Open-Elevation API"
+                    ),
+                    "description": v_info.get("description", "Custom analyzed village"),
+                    "is_cached": True,
+                }
+            )
     return {"villages": catalog_list}
 
 
@@ -1418,7 +1430,9 @@ async def list_villages():
     "/api/village-data",
     summary="Retrieve Hydrological & Terrain Data for Specified Village",
 )
-async def get_village_data(village_id: str = Query("sirsa_khurd", description="Village identifier")):
+async def get_village_data(
+    village_id: str = Query("sirsa_khurd", description="Village identifier")
+):
     """
     Returns baseline DEM metadata, candidate sites, streams, and preset sectors for any village.
     Constructs DEM via Open-Elevation API if raw KML is not available.
@@ -1441,13 +1455,17 @@ async def create_custom_village(payload: dict = Body(...)):
         lat = float(payload["latitude"])
         lon = float(payload["longitude"])
     except (KeyError, ValueError, TypeError):
-        raise HTTPException(status_code=400, detail="Valid 'latitude' and 'longitude' required.")
+        raise HTTPException(
+            status_code=400, detail="Valid 'latitude' and 'longitude' required."
+        )
 
     radius_km = float(payload.get("radius_km", 1.2))
     radius_km = max(0.4, min(3.0, radius_km))
 
     clean_name = re.sub(r"[^a-zA-Z0-9]+", "_", name.lower()).strip("_") or "village"
-    village_id = f"custom_{clean_name}_{round(lat, 2)}_{round(lon, 2)}".replace(".", "_")
+    village_id = f"custom_{clean_name}_{round(lat, 2)}_{round(lon, 2)}".replace(
+        ".", "_"
+    )
 
     village_info = {
         "id": village_id,

@@ -17,6 +17,16 @@ let lastAnalysisResult = null;
 let activeDrawHandler = null;
 let candidateSitesLayer = null;
 
+/**
+ * Safe numeric formatter preventing undefined toFixed crashes
+ */
+function fmt(val, dec = 1, fallback = 0) {
+  if (val === null || val === undefined || isNaN(Number(val))) {
+    return Number(fallback).toFixed(dec);
+  }
+  return Number(val).toFixed(dec);
+}
+
 // Initialize when DOM is ready
 document.addEventListener("DOMContentLoaded", () => {
   initMap();
@@ -121,9 +131,9 @@ async function loadVillageData(villageId = "sirsa_khurd") {
     defaultVillageData = await res.json();
 
     // 1. Update Header Badges & Subtitle
-    if (defaultVillageData.rainfall_summary) {
+    if (defaultVillageData.rainfall_summary && defaultVillageData.rainfall_summary.annual_rainfall_mm !== undefined) {
       document.getElementById("header-rainfall").innerText =
-        `${defaultVillageData.rainfall_summary.annual_rainfall_mm.toFixed(1)} mm`;
+        `${fmt(defaultVillageData.rainfall_summary.annual_rainfall_mm, 1)} mm`;
     }
 
     const elevSourceElem = document.getElementById("header-elev-source");
@@ -231,8 +241,17 @@ async function loadVillageData(villageId = "sirsa_khurd") {
           popupAnchor: [0, -15],
         });
 
-        const bedElev = (site.coordinates && site.coordinates.elevation_m !== undefined) ? site.coordinates.elevation_m : (site.bed_elevation_m || 270.0);
-        const depDepth = (site.local_terrain && site.local_terrain.depression_depth_m !== undefined) ? site.local_terrain.depression_depth_m : (site.depression_depth_m || 0.0);
+        const bedElev = (site.coordinates && site.coordinates.elevation_m !== undefined && site.coordinates.elevation_m !== null)
+          ? site.coordinates.elevation_m
+          : (site.bed_elevation_m !== undefined ? site.bed_elevation_m : 270.0);
+        const depDepth = (site.local_terrain && site.local_terrain.depression_depth_m !== undefined && site.local_terrain.depression_depth_m !== null)
+          ? site.local_terrain.depression_depth_m
+          : (site.depression_depth_m !== undefined ? site.depression_depth_m : 0.0);
+        const catchHa = (site.catchment_area_ha !== undefined && site.catchment_area_ha !== null)
+          ? site.catchment_area_ha
+          : (site.associated_pour_point && site.associated_pour_point.drainage_area_ha !== undefined)
+            ? site.associated_pour_point.drainage_area_ha
+            : 25.0;
         const runoffM3 = site.estimated_annual_water_yield_m3 || site.expected_annual_runoff_m3 || 0;
 
         const marker = L.marker([lat, lon], { icon: pinIcon });
@@ -240,11 +259,11 @@ async function loadVillageData(villageId = "sirsa_khurd") {
           <div style="font-family: sans-serif; color: #0f172a; min-width: 180px;">
             <h4 style="margin: 0 0 4px 0; color: #0284c7;">Rank ${rank}: ${site.site_id}</h4>
             <div style="font-size: 12px; line-height: 1.5;">
-              Suitability Score: <strong>${site.suitability_score}/100</strong><br/>
-              Bed Elevation: <strong>${bedElev.toFixed(1)} m</strong><br/>
-              Natural Sink Depth: <strong>${depDepth.toFixed(2)} m</strong><br/>
-              Catchment Area: <strong>${site.catchment_area_ha} ha</strong><br/>
-              Annual Harvest: <strong>${runoffM3.toLocaleString()} m³</strong>
+              Suitability Score: <strong>${fmt(site.suitability_score, 1, 90)}/100</strong><br/>
+              Bed Elevation: <strong>${fmt(bedElev, 1)} m</strong><br/>
+              Natural Sink Depth: <strong>${fmt(depDepth, 2)} m</strong><br/>
+              Catchment Area: <strong>${fmt(catchHa, 1)} ha</strong><br/>
+              Annual Harvest: <strong>${Math.round(runoffM3).toLocaleString()} m³</strong>
             </div>
           </div>
         `);
@@ -270,50 +289,104 @@ async function loadVillageData(villageId = "sirsa_khurd") {
 function populateBaselineDashboard(data) {
   if (!data || !data.candidate_sites || data.candidate_sites.length === 0) return;
   const site = data.candidate_sites[0];
-  const rainfall = data.rainfall_summary ? data.rainfall_summary.annual_rainfall_mm : 1200;
+  const rainfall = (data.rainfall_summary && data.rainfall_summary.annual_rainfall_mm !== undefined)
+    ? data.rainfall_summary.annual_rainfall_mm
+    : 1200;
   const runoffCoeff = 0.35;
-  const bedElev = (site.coordinates && site.coordinates.elevation_m !== undefined) ? site.coordinates.elevation_m : (site.bed_elevation_m || 270.0);
-  const depDepth = (site.local_terrain && site.local_terrain.depression_depth_m !== undefined) ? site.local_terrain.depression_depth_m : (site.depression_depth_m || 0.0);
-  const slope = (site.local_terrain && site.local_terrain.slope_percent !== undefined) ? site.local_terrain.slope_percent : (site.ground_bed_slope_percent || 0.65);
-  const runoffM3 = site.estimated_annual_water_yield_m3 || site.expected_annual_runoff_m3 || Math.round(rainfall * runoffCoeff * (site.catchment_area_ha * 10000) / 1000);
+  const bedElev = (site.coordinates && site.coordinates.elevation_m !== undefined && site.coordinates.elevation_m !== null)
+    ? site.coordinates.elevation_m
+    : (site.bed_elevation_m !== undefined ? site.bed_elevation_m : 270.0);
+  const depDepth = (site.local_terrain && site.local_terrain.depression_depth_m !== undefined && site.local_terrain.depression_depth_m !== null)
+    ? site.local_terrain.depression_depth_m
+    : (site.depression_depth_m !== undefined ? site.depression_depth_m : 0.0);
+  const slope = (site.local_terrain && site.local_terrain.slope_percent !== undefined && site.local_terrain.slope_percent !== null)
+    ? site.local_terrain.slope_percent
+    : (site.ground_bed_slope_percent !== undefined ? site.ground_bed_slope_percent : 0.65);
+  const catchHa = (site.catchment_area_ha !== undefined && site.catchment_area_ha !== null)
+    ? site.catchment_area_ha
+    : (site.associated_pour_point && site.associated_pour_point.drainage_area_ha !== undefined)
+      ? site.associated_pour_point.drainage_area_ha
+      : 25.0;
+
+  const runoffM3 = site.estimated_annual_water_yield_m3 || site.expected_annual_runoff_m3 || Math.round(rainfall * runoffCoeff * (catchHa * 10000) / 1000) || 50000;
   const runoffML = runoffM3 / 1000000.0;
+
+  let spillElev = bedElev + Math.max(2.0, depDepth);
+  if (site.associated_pour_point) {
+    if (site.associated_pour_point.coordinates && site.associated_pour_point.coordinates.elevation_m !== undefined && site.associated_pour_point.coordinates.elevation_m !== null) {
+      spillElev = site.associated_pour_point.coordinates.elevation_m;
+    } else if (site.associated_pour_point.crest_elevation_m !== undefined && site.associated_pour_point.crest_elevation_m !== null) {
+      spillElev = site.associated_pour_point.crest_elevation_m;
+    }
+  }
 
   // Show HUD
   const hud = document.getElementById("results-hud");
   if (hud) {
     hud.style.display = "block";
-    document.getElementById("hud-site-title").innerText = `Primary Site: ${site.site_id}`;
-    document.getElementById("hud-score-badge").innerText = `Score: ${site.suitability_score}/100`;
-    document.getElementById("hud-water-volume").innerHTML = `${runoffM3.toLocaleString()} <span class="hud-stat-unit">m³</span>`;
-    document.getElementById("hud-water-ml").innerText = `${runoffML.toFixed(1)}`;
-    document.getElementById("hud-catchment-ha").innerHTML = `${site.catchment_area_ha.toFixed(1)} <span class="hud-stat-unit">ha</span>`;
-    document.getElementById("hud-land-ha").innerHTML = `${site.catchment_area_ha.toFixed(1)} <span class="hud-stat-unit">ha</span>`;
-    document.getElementById("hud-bed-elev").innerHTML = `${bedElev.toFixed(1)} <span class="hud-stat-unit">m</span>`;
-    document.getElementById("hud-dep-depth").innerHTML = `${depDepth.toFixed(2)} <span class="hud-stat-unit">m</span>`;
+    const hudSiteTitle = document.getElementById("hud-site-title");
+    if (hudSiteTitle) hudSiteTitle.innerText = `Primary Site: ${site.site_id || 'pond_site_1'}`;
+    const hudScoreBadge = document.getElementById("hud-score-badge");
+    if (hudScoreBadge) hudScoreBadge.innerText = `Score: ${fmt(site.suitability_score, 1, 95)}/100`;
+    const hudWaterVol = document.getElementById("hud-water-volume");
+    if (hudWaterVol) hudWaterVol.innerHTML = `${Math.round(runoffM3).toLocaleString()} <span class="hud-stat-unit">m³</span>`;
+    const hudWaterMl = document.getElementById("hud-water-ml");
+    if (hudWaterMl) hudWaterMl.innerText = `${fmt(runoffML, 1)}`;
+    const hudCatchmentHa = document.getElementById("hud-catchment-ha");
+    if (hudCatchmentHa) hudCatchmentHa.innerHTML = `${fmt(catchHa, 1)} <span class="hud-stat-unit">ha</span>`;
+    const hudLandHa = document.getElementById("hud-land-ha");
+    if (hudLandHa) hudLandHa.innerHTML = `${fmt(catchHa, 1)} <span class="hud-stat-unit">ha</span>`;
+    const hudBedElev = document.getElementById("hud-bed-elev");
+    if (hudBedElev) hudBedElev.innerHTML = `${fmt(bedElev, 1)} <span class="hud-stat-unit">m</span>`;
+    const hudDepDepth = document.getElementById("hud-dep-depth");
+    if (hudDepDepth) hudDepDepth.innerHTML = `${fmt(depDepth, 2)} <span class="hud-stat-unit">m</span>`;
   }
 
   // Update cards
-  document.getElementById("card-site-id").innerText = site.site_id;
-  document.getElementById("card-score").innerText = `${site.suitability_score} / 100`;
-  document.getElementById("card-coords").innerText = `${site.coordinates.latitude.toFixed(4)}° N, ${site.coordinates.longitude.toFixed(4)}° E`;
-  document.getElementById("card-slope").innerText = `${slope.toFixed(2)}%`;
+  const cardSiteId = document.getElementById("card-site-id");
+  if (cardSiteId) cardSiteId.innerText = site.site_id || "pond_site_1";
+  const cardScore = document.getElementById("card-score");
+  if (cardScore) cardScore.innerText = `${fmt(site.suitability_score, 1, 95)} / 100`;
 
-  document.getElementById("card-runoff-m3").innerText = `${runoffM3.toLocaleString()} m³`;
-  document.getElementById("card-runoff-ml").innerText = `${runoffML.toFixed(1)} ML`;
-  document.getElementById("card-rainfall").innerText = `${rainfall.toFixed(1)} mm`;
-  document.getElementById("card-runoff-c").innerText = `${runoffCoeff.toFixed(2)}`;
+  const lat = (site.coordinates && site.coordinates.latitude !== undefined) ? site.coordinates.latitude : (data.center ? data.center[0] : 0);
+  const lon = (site.coordinates && site.coordinates.longitude !== undefined) ? site.coordinates.longitude : (data.center ? data.center[1] : 0);
+  const cardCoords = document.getElementById("card-coords");
+  if (cardCoords) cardCoords.innerText = `${fmt(lat, 4)}° N, ${fmt(lon, 4)}° E`;
 
-  document.getElementById("card-catch-ha").innerText = `${site.catchment_area_ha.toFixed(1)} ha`;
-  document.getElementById("card-catch-acres").innerText = `${(site.catchment_area_ha * 2.47105).toFixed(1)} acres`;
-  document.getElementById("card-elev-range").innerText = `${bedElev.toFixed(1)} - ${(bedElev + 18.0).toFixed(1)} m`;
-  document.getElementById("card-catch-slope").innerText = "1.45%";
+  const cardSlope = document.getElementById("card-slope");
+  if (cardSlope) cardSlope.innerText = `${fmt(slope, 2)}%`;
+
+  const cardRunoffM3 = document.getElementById("card-runoff-m3");
+  if (cardRunoffM3) cardRunoffM3.innerText = `${Math.round(runoffM3).toLocaleString()} m³`;
+  const cardRunoffML = document.getElementById("card-runoff-ml");
+  if (cardRunoffML) cardRunoffML.innerText = `${fmt(runoffML, 1)} ML`;
+  const cardRainfall = document.getElementById("card-rainfall");
+  if (cardRainfall) cardRainfall.innerText = `${fmt(rainfall, 1)} mm`;
+  const cardRunoffC = document.getElementById("card-runoff-c");
+  if (cardRunoffC) cardRunoffC.innerText = `${fmt(runoffCoeff, 2)}`;
+
+  const cardCatchHa = document.getElementById("card-catch-ha");
+  if (cardCatchHa) cardCatchHa.innerText = `${fmt(catchHa, 1)} ha`;
+  const cardCatchAcres = document.getElementById("card-catch-acres");
+  if (cardCatchAcres) cardCatchAcres.innerText = `${fmt(catchHa * 2.47105, 1)} acres`;
+  const cardElevRange = document.getElementById("card-elev-range");
+  if (cardElevRange) cardElevRange.innerText = `${fmt(bedElev, 1)} - ${fmt(bedElev + 18.0, 1)} m`;
+  const cardCatchSlope = document.getElementById("card-catch-slope");
+  if (cardCatchSlope) cardCatchSlope.innerText = "1.45%";
 
   const design = site.design_recommendations || {};
-  document.getElementById("card-pond-depth").innerText = `${(design.recommended_pond_depth_m || 3.0).toFixed(1)} m`;
-  document.getElementById("card-excav-savings").innerText = `${(design.earthwork_excavation_savings_percent || 75.0).toFixed(1)}% Saved`;
-  document.getElementById("card-pond-area").innerText = `${(design.recommended_pond_surface_area_ha || 1.2).toFixed(2)} ha`;
-  const spillElev = site.associated_pour_point ? site.associated_pour_point.crest_elevation_m : (site.bed_elevation_m + (site.depression_depth_m || 3.0));
-  document.getElementById("card-spillway-elev").innerText = `${spillElev.toFixed(1)} m`;
+  const depth = (design.recommended_pond_depth_m !== undefined) ? design.recommended_pond_depth_m : (design.recommended_depth_m || 3.0);
+  const savings = (design.earthwork_excavation_savings_percent !== undefined) ? design.earthwork_excavation_savings_percent : (design.excavation_savings_from_depression_percent || 75.0);
+  const area = (design.recommended_pond_surface_area_ha !== undefined) ? design.recommended_pond_surface_area_ha : (design.recommended_surface_area_hectares || 1.2);
+
+  const cardPondDepth = document.getElementById("card-pond-depth");
+  if (cardPondDepth) cardPondDepth.innerText = `${fmt(depth, 1)} m`;
+  const cardSavings = document.getElementById("card-excav-savings");
+  if (cardSavings) cardSavings.innerText = `${fmt(savings, 1)}% Saved`;
+  const cardPondArea = document.getElementById("card-pond-area");
+  if (cardPondArea) cardPondArea.innerText = `${fmt(area, 2)} ha`;
+  const cardSpillway = document.getElementById("card-spillway-elev");
+  if (cardSpillway) cardSpillway.innerText = `${fmt(spillElev, 1)} m`;
 }
 
 /**
@@ -380,7 +453,7 @@ function setupEventListeners() {
           if (!exists) {
             const opt = document.createElement("option");
             opt.value = vid;
-            opt.text = `${name} (${lat.toFixed(2)}°N, ${lon.toFixed(2)}°E) — Open-Elevation`;
+            opt.text = `${name} (${fmt(lat, 2)}°N, ${fmt(lon, 2)}°E) — Open-Elevation`;
             villageSelect.add(opt);
           }
           villageSelect.value = vid;
@@ -848,70 +921,114 @@ function renderAnalysisResults(result) {
  */
 function updateResultsHUD(res) {
   const hud = document.getElementById("results-hud");
+  if (!hud) return;
   hud.style.display = "block";
 
-  const site = res.recommended_pond_location;
-  const catchm = res.catchment_summary;
-  const water = res.expected_water_volume;
+  const site = res.recommended_pond_location || {};
+  const catchm = res.catchment_summary || {};
+  const water = res.expected_water_volume || {};
 
-  document.getElementById("hud-site-title").innerText = `Optimal Site: ${site.site_id}`;
-  document.getElementById("hud-score-badge").innerText = `Score: ${site.suitability_score}/100`;
+  const siteCoords = site.coordinates || {};
+  const siteTerrain = site.local_terrain || {};
 
-  document.getElementById("hud-water-volume").innerHTML =
-    `${water.estimated_annual_runoff_m3.toLocaleString()} <span class="hud-stat-unit">m³</span>`;
-  document.getElementById("hud-water-ml").innerText =
-    `${water.estimated_annual_runoff_million_liters.toFixed(1)}`;
+  const hudSiteTitle = document.getElementById("hud-site-title");
+  if (hudSiteTitle) hudSiteTitle.innerText = `Optimal Site: ${site.site_id || "pond_site_1"}`;
+  const hudScoreBadge = document.getElementById("hud-score-badge");
+  if (hudScoreBadge) hudScoreBadge.innerText = `Score: ${fmt(site.suitability_score, 1, 95)}/100`;
 
-  document.getElementById("hud-catchment-ha").innerHTML =
-    `${catchm.area_hectares.toFixed(1)} <span class="hud-stat-unit">ha</span>`;
-  document.getElementById("hud-land-ha").innerHTML =
-    `${res.selected_land_area_ha.toFixed(1)} <span class="hud-stat-unit">ha</span>`;
+  const hudWaterVol = document.getElementById("hud-water-volume");
+  if (hudWaterVol) hudWaterVol.innerHTML =
+    `${Math.round(water.estimated_annual_runoff_m3 || 0).toLocaleString()} <span class="hud-stat-unit">m³</span>`;
+  const hudWaterMl = document.getElementById("hud-water-ml");
+  if (hudWaterMl) hudWaterMl.innerText =
+    `${fmt(water.estimated_annual_runoff_million_liters, 1)}`;
 
-  document.getElementById("hud-bed-elev").innerHTML =
-    `${site.coordinates.elevation_m.toFixed(1)} <span class="hud-stat-unit">m</span>`;
-  document.getElementById("hud-dep-depth").innerHTML =
-    `${site.local_terrain.depression_depth_m.toFixed(2)} <span class="hud-stat-unit">m</span>`;
+  const hudCatchHa = document.getElementById("hud-catchment-ha");
+  if (hudCatchHa) hudCatchHa.innerHTML =
+    `${fmt(catchm.area_hectares, 1)} <span class="hud-stat-unit">ha</span>`;
+  const hudLandHa = document.getElementById("hud-land-ha");
+  if (hudLandHa) hudLandHa.innerHTML =
+    `${fmt(res.selected_land_area_ha, 1)} <span class="hud-stat-unit">ha</span>`;
+
+  const hudBedElev = document.getElementById("hud-bed-elev");
+  if (hudBedElev) hudBedElev.innerHTML =
+    `${fmt(siteCoords.elevation_m, 1, 270)} <span class="hud-stat-unit">m</span>`;
+  const hudDepDepth = document.getElementById("hud-dep-depth");
+  if (hudDepDepth) hudDepDepth.innerHTML =
+    `${fmt(siteTerrain.depression_depth_m, 2, 0)} <span class="hud-stat-unit">m</span>`;
 }
 
 /**
  * Updates Right Analytics Sidebar cards
  */
 function updateDashboard(res) {
-  const site = res.recommended_pond_location;
-  const catchm = res.catchment_summary;
-  const water = res.expected_water_volume;
-  const design = res.pond_design_recommendations;
+  const site = res.recommended_pond_location || {};
+  const catchm = res.catchment_summary || {};
+  const water = res.expected_water_volume || {};
+  const design = res.pond_design_recommendations || {};
+
+  const siteCoords = site.coordinates || {};
+  const siteTerrain = site.local_terrain || {};
 
   // Card 1
-  document.getElementById("card-site-id").innerText = site.site_id;
-  document.getElementById("card-score").innerText = `${site.suitability_score} / 100`;
-  document.getElementById("card-coords").innerText =
-    `${site.coordinates.latitude.toFixed(4)}° N, ${site.coordinates.longitude.toFixed(4)}° E`;
-  document.getElementById("card-slope").innerText = `${site.local_terrain.slope_percent.toFixed(2)}%`;
+  const cardSiteId = document.getElementById("card-site-id");
+  if (cardSiteId) cardSiteId.innerText = site.site_id || "pond_site_1";
+  const cardScore = document.getElementById("card-score");
+  if (cardScore) cardScore.innerText = `${fmt(site.suitability_score, 1, 95)} / 100`;
+  const cardCoords = document.getElementById("card-coords");
+  if (cardCoords) cardCoords.innerText =
+    `${fmt(siteCoords.latitude, 4)}° N, ${fmt(siteCoords.longitude, 4)}° E`;
+  const cardSlope = document.getElementById("card-slope");
+  if (cardSlope) cardSlope.innerText = `${fmt(siteTerrain.slope_percent, 2, 0.65)}%`;
 
   // Card 2
-  document.getElementById("card-runoff-m3").innerText =
-    `${water.estimated_annual_runoff_m3.toLocaleString()} m³`;
-  document.getElementById("card-runoff-ml").innerText =
-    `${water.estimated_annual_runoff_million_liters.toFixed(1)} ML`;
-  document.getElementById("card-rainfall").innerText = `${water.annual_rainfall_mm.toFixed(1)} mm`;
-  document.getElementById("card-runoff-c").innerText = `${water.runoff_coefficient.toFixed(2)}`;
+  const cardRunoffM3 = document.getElementById("card-runoff-m3");
+  if (cardRunoffM3) cardRunoffM3.innerText =
+    `${Math.round(water.estimated_annual_runoff_m3 || 0).toLocaleString()} m³`;
+  const cardRunoffMl = document.getElementById("card-runoff-ml");
+  if (cardRunoffMl) cardRunoffMl.innerText =
+    `${fmt(water.estimated_annual_runoff_million_liters, 1)} ML`;
+  const cardRainfall = document.getElementById("card-rainfall");
+  if (cardRainfall) cardRainfall.innerText = `${fmt(water.annual_rainfall_mm, 1)} mm`;
+  const cardRunoffC = document.getElementById("card-runoff-c");
+  if (cardRunoffC) cardRunoffC.innerText = `${fmt(water.runoff_coefficient, 2, 0.35)}`;
 
   // Card 3
-  document.getElementById("card-catch-ha").innerText = `${catchm.area_hectares.toFixed(1)} ha`;
-  document.getElementById("card-catch-acres").innerText = `${catchm.area_acres.toFixed(1)} acres`;
-  document.getElementById("card-elev-range").innerText =
-    `${catchm.min_elevation_m.toFixed(1)} - ${catchm.max_elevation_m.toFixed(1)} m`;
-  document.getElementById("card-catch-slope").innerText = `${catchm.average_slope_percent.toFixed(2)}%`;
+  const cardCatchHa = document.getElementById("card-catch-ha");
+  if (cardCatchHa) cardCatchHa.innerText = `${fmt(catchm.area_hectares, 1)} ha`;
+  const cardCatchAcres = document.getElementById("card-catch-acres");
+  if (cardCatchAcres) cardCatchAcres.innerText = `${fmt(catchm.area_acres, 1)} acres`;
+  const cardElevRange = document.getElementById("card-elev-range");
+  if (cardElevRange) cardElevRange.innerText =
+    `${fmt(catchm.min_elevation_m, 1)} - ${fmt(catchm.max_elevation_m, 1)} m`;
+  const cardCatchSlope = document.getElementById("card-catch-slope");
+  if (cardCatchSlope) cardCatchSlope.innerText = `${fmt(catchm.average_slope_percent, 2, 1.45)}%`;
 
   // Card 4
-  document.getElementById("card-pond-depth").innerText = `${design.recommended_depth_m.toFixed(1)} m`;
-  document.getElementById("card-excav-savings").innerText =
-    `${design.excavation_savings_from_depression_percent.toFixed(1)}% Saved`;
-  document.getElementById("card-pond-area").innerText =
-    `${design.recommended_surface_area_hectares.toFixed(2)} ha`;
-  document.getElementById("card-spillway-elev").innerText =
-    `${site.associated_pour_point.coordinates.elevation_m.toFixed(1)} m`;
+  const depth = (design.recommended_depth_m !== undefined) ? design.recommended_depth_m : (design.recommended_pond_depth_m || 3.0);
+  const savings = (design.excavation_savings_from_depression_percent !== undefined) ? design.excavation_savings_from_depression_percent : (design.earthwork_excavation_savings_percent || 75.0);
+  const area = (design.recommended_surface_area_hectares !== undefined) ? design.recommended_surface_area_hectares : (design.recommended_pond_surface_area_ha || 1.2);
+
+  let spillElev = (siteCoords.elevation_m !== undefined ? siteCoords.elevation_m : 270.0) + Math.max(2.0, siteTerrain.depression_depth_m || 2.5);
+  if (site.associated_pour_point) {
+    if (site.associated_pour_point.coordinates && site.associated_pour_point.coordinates.elevation_m !== undefined) {
+      spillElev = site.associated_pour_point.coordinates.elevation_m;
+    } else if (site.associated_pour_point.crest_elevation_m !== undefined) {
+      spillElev = site.associated_pour_point.crest_elevation_m;
+    }
+  }
+
+  const cardDepth = document.getElementById("card-pond-depth");
+  if (cardDepth) cardDepth.innerText = `${fmt(depth, 1)} m`;
+  const cardSavings = document.getElementById("card-excav-savings");
+  if (cardSavings) cardSavings.innerText =
+    `${fmt(savings, 1)}% Saved`;
+  const cardArea = document.getElementById("card-pond-area");
+  if (cardArea) cardArea.innerText =
+    `${fmt(area, 2)} ha`;
+  const cardSpill = document.getElementById("card-spillway-elev");
+  if (cardSpill) cardSpill.innerText =
+    `${fmt(spillElev, 1)} m`;
 }
 
 /**
