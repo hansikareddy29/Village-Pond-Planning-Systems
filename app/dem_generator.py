@@ -129,6 +129,23 @@ class DEMGenerator:
     def __init__(self, default_resolution_m: float = 10.0):
         self.default_resolution_m = default_resolution_m
 
+    def generate_dem_from_points(
+        self,
+        point_cloud: np.ndarray,
+        bounds: Dict[str, Any],
+        resolution_m: Optional[float] = None,
+        smooth_sigma: float = 0.5,
+    ) -> DEMGrid:
+        """
+        Builds a georeferenced DEMGrid directly from point cloud and bounds
+        (e.g., from Open-Elevation API) without requiring a KML file.
+        """
+        return self.generate_dem(
+            {"point_cloud": point_cloud, "bounds": bounds},
+            resolution_m=resolution_m,
+            smooth_sigma=smooth_sigma,
+        )
+
     def generate_dem(
         self,
         parsed_data: Dict[str, Any],

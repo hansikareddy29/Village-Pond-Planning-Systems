@@ -26,19 +26,36 @@
       </div>
       <div>
         <div class="brand-title">Village Pond Planning & Catchment GIS</div>
-        <div class="brand-subtitle">Sirsa Khurd, Durg (Chhattisgarh) — 519.4 ha Watershed Analysis</div>
+        <div class="brand-subtitle" id="brand-subtitle">Sirsa Khurd, Durg (Chhattisgarh) — 519.4 ha Watershed Analysis</div>
       </div>
     </div>
 
+    <!-- Dynamic Village Selector Control -->
+    <div class="village-selector-wrapper">
+      <label for="village-select" class="village-select-label">Village:</label>
+      <select id="village-select" class="village-select-dropdown" title="Select a village watershed to analyze">
+        <option value="sirsa_khurd">Sirsa Khurd (Chhattisgarh) — 1m Survey</option>
+        <option value="hiware_bazar">Hiware Bazar (Maharashtra) — Open-Elevation</option>
+        <option value="ralegan_siddhi">Ralegan Siddhi (Maharashtra) — Open-Elevation</option>
+        <option value="kothapally">Kothapally (Telangana) — Open-Elevation</option>
+        <option value="piplantri">Piplantri (Rajasthan) — Open-Elevation</option>
+        <option value="sukhomajri">Sukhomajri (Haryana) — Open-Elevation</option>
+        <option value="pothanikkad">Pothanikkad (Kerala) — Open-Elevation</option>
+      </select>
+      <button id="btn-custom-village-modal" class="custom-village-btn" title="Analyze any other village in India or the world via Open-Elevation API">
+        + Custom Village
+      </button>
+    </div>
+
     <div class="header-badges">
-      <div class="badge pulse">
-        <span style="font-size: 8px;">●</span> System Online
+      <div class="badge" id="header-elev-badge">
+        Elevation: <strong id="header-elev-source" style="margin-left: 4px; color: #00E5FF;">1m Survey (KML)</strong>
       </div>
       <div class="badge rainfall">
         ERA5 Rainfall: <strong id="header-rainfall" style="margin-left: 4px;">1,382.6 mm</strong>
       </div>
-      <div class="badge">
-        DEM Grid: <strong>10m TIN</strong>
+      <div class="badge pulse">
+        <span style="font-size: 8px;">●</span> System Online
       </div>
     </div>
   </header>
@@ -263,6 +280,42 @@
       </div>
     </aside>
 
+  <!-- Custom Village Dialog Modal -->
+  <div id="custom-village-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">Analyze Any Village via Open-Elevation API</div>
+        <button id="modal-close-btn" class="modal-close-btn" title="Close dialog">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc">
+          Enter any village name and coordinates in India or globally. The system queries the <strong>Open-Elevation API</strong>, constructs a 10m continuous DEM, simulates flow routing, and delineates harvestable catchments.
+        </p>
+        <div class="form-group">
+          <label class="form-label" for="custom-village-name">Village Name:</label>
+          <input type="text" id="custom-village-name" class="modal-input" placeholder="e.g. Mendha Lekha" value="Mendha Lekha" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="custom-village-lat">Latitude (°N):</label>
+            <input type="number" step="0.0001" id="custom-village-lat" class="modal-input" placeholder="e.g. 20.25" value="20.2500" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="custom-village-lon">Longitude (°E):</label>
+            <input type="number" step="0.0001" id="custom-village-lon" class="modal-input" placeholder="e.g. 80.20" value="80.2000" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="custom-village-radius">Watershed Radius (km):</label>
+          <input type="number" step="0.1" min="0.5" max="3.0" id="custom-village-radius" class="modal-input" value="1.2" />
+          <small class="modal-hint">1.2 km covers ~450 hectares of rural agricultural watershed.</small>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-cancel-custom-village" class="tool-btn">Cancel</button>
+        <button id="btn-submit-custom-village" class="tool-btn primary">Fetch Elevation & Analyze</button>
+      </div>
+    </div>
   </div>
 
   <!-- Loading Spinner Overlay -->

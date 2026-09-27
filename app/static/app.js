@@ -11,14 +11,17 @@ let activeGeoJsonLayer = null;
 let streamsLayer = null;
 let surveyBoundaryLayer = null;
 let defaultVillageData = null;
+let currentVillageId = "sirsa_khurd";
 let currentSelectedGeometry = null;
 let lastAnalysisResult = null;
 let activeDrawHandler = null;
+let candidateSitesLayer = null;
 
 // Initialize when DOM is ready
 document.addEventListener("DOMContentLoaded", () => {
   initMap();
-  loadDefaultVillageData();
+  syncVillagesCatalog();
+  loadVillageData("sirsa_khurd");
   setupEventListeners();
 });
 
@@ -73,59 +76,112 @@ function initMap() {
 }
 
 /**
- * Loads baseline village terrain data and initializes candidate sites
+ * Synchronizes available villages from backend catalog into dropdown
  */
-async function loadDefaultVillageData() {
-  showSpinner("Loading village terrain and hydrological baseline...");
+async function syncVillagesCatalog() {
   try {
-    const res = await fetch("/api/default-data");
-    if (!res.ok) throw new Error("Failed to load baseline data");
+    const res = await fetch("/api/villages");
+    if (!res.ok) return;
+    const data = await res.json();
+    const selectElem = document.getElementById("village-select");
+    if (!selectElem || !data.villages) return;
+
+    selectElem.innerHTML = "";
+    data.villages.forEach((v) => {
+      const opt = document.createElement("option");
+      opt.value = v.id;
+      const srcBadge = v.elevation_source.includes("KML") ? "1m Survey" : "Open-Elevation";
+      opt.text = `${v.name} (${v.district}, ${v.state}) — ${srcBadge}`;
+      selectElem.appendChild(opt);
+    });
+    selectElem.value = currentVillageId;
+  } catch (e) {
+    console.warn("Could not sync villages catalog:", e);
+  }
+}
+
+/**
+ * Loads village terrain & hydrology data via Open-Elevation API or KML
+ */
+async function loadVillageData(villageId = "sirsa_khurd") {
+  currentVillageId = villageId;
+  const selectElem = document.getElementById("village-select");
+  if (selectElem && selectElem.value !== villageId) {
+    selectElem.value = villageId;
+  }
+
+  showSpinner(`Loading ${villageId.replace(/_/g, " ")} terrain & hydrology via Open-Elevation API...`);
+
+  try {
+    const res = await fetch(`/api/village-data?village_id=${encodeURIComponent(villageId)}`);
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || "Failed to load village data");
+    }
     defaultVillageData = await res.json();
 
-    // Populate header rainfall badge
+    // 1. Update Header Badges & Subtitle
     if (defaultVillageData.rainfall_summary) {
       document.getElementById("header-rainfall").innerText =
         `${defaultVillageData.rainfall_summary.annual_rainfall_mm.toFixed(1)} mm`;
     }
 
-    // Render surveyed village boundary (Golden outline)
-    if (defaultVillageData.boundary_polygon || defaultVillageData.bounds) {
-      let boundaryLatLngs = [];
-      if (defaultVillageData.boundary_polygon && defaultVillageData.boundary_polygon.length >= 3) {
-        boundaryLatLngs = defaultVillageData.boundary_polygon.map((pt) => [pt[1], pt[0]]);
-      } else if (defaultVillageData.bounds) {
-        const b = defaultVillageData.bounds;
-        boundaryLatLngs = [
-          [b.min_lat, b.min_lon],
-          [b.max_lat, b.min_lon],
-          [b.max_lat, b.max_lon],
-          [b.min_lat, b.max_lon],
-        ];
-      }
-
-      if (boundaryLatLngs.length > 0) {
-        if (surveyBoundaryLayer) map.removeLayer(surveyBoundaryLayer);
-        surveyBoundaryLayer = L.polygon(boundaryLatLngs, {
-          color: "#FFB300",
-          weight: 2.5,
-          dashArray: "6, 6",
-          fillColor: "#FFB300",
-          fillOpacity: 0.08,
-          interactive: true,
-        }).addTo(map);
-
-        surveyBoundaryLayer.bindTooltip(
-          "<b>Surveyed Village Boundary (Sirsa Khurd - 519.4 ha)</b><br>Draw your land parcel inside this area for elevation & runoff calculations.",
-          { sticky: true, opacity: 0.95 }
-        );
-
-        // Auto-fit to the surveyed boundary so the user is directly viewing the valid area
-        map.fitBounds(surveyBoundaryLayer.getBounds(), { padding: [35, 35] });
-      }
+    const elevSourceElem = document.getElementById("header-elev-source");
+    if (elevSourceElem) {
+      elevSourceElem.innerText = defaultVillageData.elevation_source || "Open-Elevation API";
     }
 
-    // Render stream network
-    if (defaultVillageData.streams) {
+    const subTitleElem = document.getElementById("brand-subtitle");
+    if (subTitleElem) {
+      subTitleElem.innerText = `${defaultVillageData.village_name} — ${defaultVillageData.total_area_hectares} ha Watershed Analysis`;
+    }
+
+    // 2. Clear previous active drawings & analysis overlays
+    if (activeGeoJsonLayer) {
+      map.removeLayer(activeGeoJsonLayer);
+      activeGeoJsonLayer = null;
+    }
+    drawnItems.clearLayers();
+    currentSelectedGeometry = null;
+
+    // 3. Render Surveyed Village Boundary (Golden outline)
+    if (surveyBoundaryLayer) map.removeLayer(surveyBoundaryLayer);
+    let boundaryLatLngs = [];
+    if (defaultVillageData.boundary_polygon && defaultVillageData.boundary_polygon.length >= 3) {
+      boundaryLatLngs = defaultVillageData.boundary_polygon.map((pt) => [pt[1], pt[0]]);
+    } else if (defaultVillageData.bounds) {
+      const b = defaultVillageData.bounds;
+      boundaryLatLngs = [
+        [b.min_lat, b.min_lon],
+        [b.max_lat, b.min_lon],
+        [b.max_lat, b.max_lon],
+        [b.min_lat, b.max_lon],
+      ];
+    }
+
+    if (boundaryLatLngs.length > 0) {
+      surveyBoundaryLayer = L.polygon(boundaryLatLngs, {
+        color: "#FFB300",
+        weight: 2.5,
+        dashArray: "6, 6",
+        fillColor: "#FFB300",
+        fillOpacity: 0.08,
+        interactive: true,
+      }).addTo(map);
+
+      const vName = defaultVillageData.village_info ? defaultVillageData.village_info.name : defaultVillageData.village_name;
+      surveyBoundaryLayer.bindTooltip(
+        `<b>${vName} Watershed Boundary (${defaultVillageData.total_area_hectares} ha)</b><br>Draw your land parcel inside this area for elevation & runoff calculations.`,
+        { sticky: true, opacity: 0.95 }
+      );
+
+      // Smooth camera transition to the selected village
+      map.flyToBounds(surveyBoundaryLayer.getBounds(), { padding: [40, 40], duration: 1.2 });
+    }
+
+    // 4. Render Drainage Stream Network
+    if (streamsLayer) map.removeLayer(streamsLayer);
+    if (defaultVillageData.streams && defaultVillageData.streams.features && defaultVillageData.streams.features.length > 0) {
       streamsLayer = L.geoJSON(defaultVillageData.streams, {
         style: {
           color: "#1A237E",
@@ -134,17 +190,211 @@ async function loadDefaultVillageData() {
         },
       }).addTo(map);
     }
+
+    // 5. Render Candidate Site Pins
+    if (candidateSitesLayer) map.removeLayer(candidateSitesLayer);
+    candidateSitesLayer = L.featureGroup();
+
+    if (defaultVillageData.candidate_sites && defaultVillageData.candidate_sites.length > 0) {
+      defaultVillageData.candidate_sites.forEach((site) => {
+        const lat = site.coordinates.latitude;
+        const lon = site.coordinates.longitude;
+        const rank = site.rank || 1;
+        const isPrimary = rank === 1;
+
+        const pinHtml = `
+          <div style="
+            background: ${isPrimary ? "#00C853" : "#0284c7"};
+            color: #ffffff;
+            font-weight: 800;
+            font-size: 13px;
+            font-family: sans-serif;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid ${isPrimary ? "#FFD600" : "#ffffff"};
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+          ">
+            ${rank}
+          </div>
+        `;
+
+        const pinIcon = L.divIcon({
+          className: "custom-site-pin",
+          html: pinHtml,
+          iconSize: [30, 30],
+          iconAnchor: [15, 15],
+          popupAnchor: [0, -15],
+        });
+
+        const bedElev = (site.coordinates && site.coordinates.elevation_m !== undefined) ? site.coordinates.elevation_m : (site.bed_elevation_m || 270.0);
+        const depDepth = (site.local_terrain && site.local_terrain.depression_depth_m !== undefined) ? site.local_terrain.depression_depth_m : (site.depression_depth_m || 0.0);
+        const runoffM3 = site.estimated_annual_water_yield_m3 || site.expected_annual_runoff_m3 || 0;
+
+        const marker = L.marker([lat, lon], { icon: pinIcon });
+        marker.bindPopup(`
+          <div style="font-family: sans-serif; color: #0f172a; min-width: 180px;">
+            <h4 style="margin: 0 0 4px 0; color: #0284c7;">Rank ${rank}: ${site.site_id}</h4>
+            <div style="font-size: 12px; line-height: 1.5;">
+              Suitability Score: <strong>${site.suitability_score}/100</strong><br/>
+              Bed Elevation: <strong>${bedElev.toFixed(1)} m</strong><br/>
+              Natural Sink Depth: <strong>${depDepth.toFixed(2)} m</strong><br/>
+              Catchment Area: <strong>${site.catchment_area_ha} ha</strong><br/>
+              Annual Harvest: <strong>${runoffM3.toLocaleString()} m³</strong>
+            </div>
+          </div>
+        `);
+        candidateSitesLayer.addLayer(marker);
+      });
+      candidateSitesLayer.addTo(map);
+
+      // Populate dashboard with Top Site #1 baseline
+      populateBaselineDashboard(defaultVillageData);
+    }
+
   } catch (err) {
     console.error("Error loading village data:", err);
+    alert(`Could not load data for ${villageId}: ${err.message}`);
   } finally {
     hideSpinner();
   }
 }
 
 /**
+ * Populates HUD and Dossier Cards with top baseline candidate site
+ */
+function populateBaselineDashboard(data) {
+  if (!data || !data.candidate_sites || data.candidate_sites.length === 0) return;
+  const site = data.candidate_sites[0];
+  const rainfall = data.rainfall_summary ? data.rainfall_summary.annual_rainfall_mm : 1200;
+  const runoffCoeff = 0.35;
+  const bedElev = (site.coordinates && site.coordinates.elevation_m !== undefined) ? site.coordinates.elevation_m : (site.bed_elevation_m || 270.0);
+  const depDepth = (site.local_terrain && site.local_terrain.depression_depth_m !== undefined) ? site.local_terrain.depression_depth_m : (site.depression_depth_m || 0.0);
+  const slope = (site.local_terrain && site.local_terrain.slope_percent !== undefined) ? site.local_terrain.slope_percent : (site.ground_bed_slope_percent || 0.65);
+  const runoffM3 = site.estimated_annual_water_yield_m3 || site.expected_annual_runoff_m3 || Math.round(rainfall * runoffCoeff * (site.catchment_area_ha * 10000) / 1000);
+  const runoffML = runoffM3 / 1000000.0;
+
+  // Show HUD
+  const hud = document.getElementById("results-hud");
+  if (hud) {
+    hud.style.display = "block";
+    document.getElementById("hud-site-title").innerText = `Primary Site: ${site.site_id}`;
+    document.getElementById("hud-score-badge").innerText = `Score: ${site.suitability_score}/100`;
+    document.getElementById("hud-water-volume").innerHTML = `${runoffM3.toLocaleString()} <span class="hud-stat-unit">m³</span>`;
+    document.getElementById("hud-water-ml").innerText = `${runoffML.toFixed(1)}`;
+    document.getElementById("hud-catchment-ha").innerHTML = `${site.catchment_area_ha.toFixed(1)} <span class="hud-stat-unit">ha</span>`;
+    document.getElementById("hud-land-ha").innerHTML = `${site.catchment_area_ha.toFixed(1)} <span class="hud-stat-unit">ha</span>`;
+    document.getElementById("hud-bed-elev").innerHTML = `${bedElev.toFixed(1)} <span class="hud-stat-unit">m</span>`;
+    document.getElementById("hud-dep-depth").innerHTML = `${depDepth.toFixed(2)} <span class="hud-stat-unit">m</span>`;
+  }
+
+  // Update cards
+  document.getElementById("card-site-id").innerText = site.site_id;
+  document.getElementById("card-score").innerText = `${site.suitability_score} / 100`;
+  document.getElementById("card-coords").innerText = `${site.coordinates.latitude.toFixed(4)}° N, ${site.coordinates.longitude.toFixed(4)}° E`;
+  document.getElementById("card-slope").innerText = `${slope.toFixed(2)}%`;
+
+  document.getElementById("card-runoff-m3").innerText = `${runoffM3.toLocaleString()} m³`;
+  document.getElementById("card-runoff-ml").innerText = `${runoffML.toFixed(1)} ML`;
+  document.getElementById("card-rainfall").innerText = `${rainfall.toFixed(1)} mm`;
+  document.getElementById("card-runoff-c").innerText = `${runoffCoeff.toFixed(2)}`;
+
+  document.getElementById("card-catch-ha").innerText = `${site.catchment_area_ha.toFixed(1)} ha`;
+  document.getElementById("card-catch-acres").innerText = `${(site.catchment_area_ha * 2.47105).toFixed(1)} acres`;
+  document.getElementById("card-elev-range").innerText = `${bedElev.toFixed(1)} - ${(bedElev + 18.0).toFixed(1)} m`;
+  document.getElementById("card-catch-slope").innerText = "1.45%";
+
+  const design = site.design_recommendations || {};
+  document.getElementById("card-pond-depth").innerText = `${(design.recommended_pond_depth_m || 3.0).toFixed(1)} m`;
+  document.getElementById("card-excav-savings").innerText = `${(design.earthwork_excavation_savings_percent || 75.0).toFixed(1)}% Saved`;
+  document.getElementById("card-pond-area").innerText = `${(design.recommended_pond_surface_area_ha || 1.2).toFixed(2)} ha`;
+  const spillElev = site.associated_pour_point ? site.associated_pour_point.crest_elevation_m : (site.bed_elevation_m + (site.depression_depth_m || 3.0));
+  document.getElementById("card-spillway-elev").innerText = `${spillElev.toFixed(1)} m`;
+}
+
+/**
  * Sets up button controls and map interaction handlers
  */
 function setupEventListeners() {
+  // Village Dropdown Change
+  const villageSelect = document.getElementById("village-select");
+  if (villageSelect) {
+    villageSelect.addEventListener("change", (e) => {
+      loadVillageData(e.target.value);
+    });
+  }
+
+  // Custom Village Modal Controls
+  const modal = document.getElementById("custom-village-modal");
+  const openModalBtn = document.getElementById("btn-custom-village-modal");
+  const closeModalBtn = document.getElementById("modal-close-btn");
+  const cancelModalBtn = document.getElementById("btn-cancel-custom-village");
+  const submitCustomBtn = document.getElementById("btn-submit-custom-village");
+
+  if (openModalBtn && modal) {
+    openModalBtn.addEventListener("click", () => {
+      modal.style.display = "flex";
+    });
+  }
+  const hideModal = () => { if (modal) modal.style.display = "none"; };
+  if (closeModalBtn) closeModalBtn.addEventListener("click", hideModal);
+  if (cancelModalBtn) cancelModalBtn.addEventListener("click", hideModal);
+
+  if (submitCustomBtn && modal) {
+    submitCustomBtn.addEventListener("click", async () => {
+      const name = document.getElementById("custom-village-name").value.trim() || "Custom Village";
+      const lat = parseFloat(document.getElementById("custom-village-lat").value);
+      const lon = parseFloat(document.getElementById("custom-village-lon").value);
+      const radius = parseFloat(document.getElementById("custom-village-radius").value) || 1.2;
+
+      if (isNaN(lat) || isNaN(lon)) {
+        alert("Please enter valid Latitude and Longitude coordinates.");
+        return;
+      }
+      hideModal();
+      showSpinner(`Querying Open-Elevation API & generating 10m DEM for ${name}...`);
+
+      try {
+        const resp = await fetch("/api/custom-village", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: name, latitude: lat, longitude: lon, radius_km: radius }),
+        });
+        if (!resp.ok) {
+          const err = await resp.json();
+          throw new Error(err.detail || "Failed to process custom village");
+        }
+        const data = await resp.json();
+        const vid = data.village_id;
+
+        // Add option to select dropdown if not already present
+        if (villageSelect) {
+          let exists = false;
+          for (let i = 0; i < villageSelect.options.length; i++) {
+            if (villageSelect.options[i].value === vid) { exists = true; break; }
+          }
+          if (!exists) {
+            const opt = document.createElement("option");
+            opt.value = vid;
+            opt.text = `${name} (${lat.toFixed(2)}°N, ${lon.toFixed(2)}°E) — Open-Elevation`;
+            villageSelect.add(opt);
+          }
+          villageSelect.value = vid;
+        }
+        loadVillageData(vid);
+      } catch (err) {
+        console.error("Custom village creation error:", err);
+        alert(`Error: ${err.message}`);
+      } finally {
+        hideSpinner();
+      }
+    });
+  }
+
   document.getElementById("btn-draw-poly").addEventListener("click", () => {
     startCustomPolygonDraw();
   });
@@ -385,6 +635,7 @@ async function executeLandAnalysis(geometry) {
   try {
     const payload = {
       geometry: geometry,
+      village_id: currentVillageId,
       rainfall_annual_mm: null,
       runoff_coefficient: 0.35,
       pond_depth_m: 3.0,
