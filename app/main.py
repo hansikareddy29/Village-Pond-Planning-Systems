@@ -165,7 +165,7 @@ def _process_contour_map(
         runoff_coefficient=runoff_coefficient,
     )
 
-    # 8. Sizing & Civil Engineering Recommendations
+    # 8. Sizing Recommendations
     pond_design = pond_siting_engine.compute_design_recommendations(
         catchment_area_sq_m=catchment_info["area_sq_meters"],
         annual_runoff_m3=runoff_info["estimated_annual_runoff_m3"],

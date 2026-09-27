@@ -38,7 +38,6 @@ class RainfallAPIService:
         Otherwise queries Open-Meteo Historical Archive API for the most recent full year.
         Falls back gracefully if offline.
         """
-        # If user explicitly specified rainfall in request form (and not a default placeholder like 1000.0 or 0.0)
         if (
             user_override_mm is not None
             and user_override_mm > 0
@@ -241,7 +240,7 @@ class ElevationAPIService:
         if not points:
             return []
 
-        # 1. Try Open-Meteo Elevation (supports comma-separated queries)
+        # 1. Try Open-Meteo Elevation
         try:
             lat_str = ",".join(str(round(p[0], 6)) for p in points)
             lon_str = ",".join(str(round(p[1], 6)) for p in points)
