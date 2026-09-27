@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Village Pond Planning & Catchment GIS System</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <!-- Leaflet Draw CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
+
+  <!-- App Custom CSS -->
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+
+<body>
+
+  <!-- Top Header Navigation -->
+  <header class="app-header">
+    <div class="brand-wrapper">
+      <div class="brand-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #00E5FF;"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+      </div>
+      <div>
+        <div class="brand-title">Village Pond Planning & Catchment GIS</div>
+        <div class="brand-subtitle">Sirsa Khurd, Durg (Chhattisgarh) — 519.4 ha Watershed Analysis</div>
+      </div>
+    </div>
+
+    <div class="header-badges">
+      <div class="badge pulse">
+        <span style="font-size: 8px;">●</span> System Online
+      </div>
+      <div class="badge rainfall">
+        ERA5 Rainfall: <strong id="header-rainfall" style="margin-left: 4px;">1,382.6 mm</strong>
+      </div>
+      <div class="badge">
+        DEM Grid: <strong>10m TIN</strong>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Workspace Body -->
+  <div class="app-body">
+
+    <!-- Leaflet GIS Map Canvas -->
+    <div id="map"></div>
+
+    <!-- Floating Map Control Toolbar -->
+    <div class="floating-toolbar">
+      <div class="tool-group">
+        <button id="btn-draw-poly" class="tool-btn" title="Draw arbitrary land parcel polygon">
+          Draw Land Area
+        </button>
+        <button id="btn-draw-rect" class="tool-btn" title="Draw bounding box rectangle">
+          Draw Rectangle
+        </button>
+      </div>
+
+      <div class="tool-group">
+        <button id="btn-analyze" class="tool-btn primary"
+          title="Run hydrological catchment delineation & pond siting for selected land">
+          Analyze Land Area
+        </button>
+        <button id="btn-focus-boundary" class="tool-btn" title="Focus map on the surveyed village boundary">
+          Focus Village
+        </button>
+        <button id="btn-clear" class="tool-btn" title="Reset drawings and restore view">
+          Reset
+        </button>
+      </div>
+    </div>
+
+    <!-- Floating Real-Time HUD (Overlaid on Map) -->
+    <div id="results-hud" class="results-hud" style="display: none;">
+      <div class="hud-header">
+        <div class="hud-title">
+          <span id="hud-site-title">Pond Analysis Results</span>
+        </div>
+        <div class="hud-badge" id="hud-score-badge">Score: 96.0/100</div>
+      </div>
+
+      <div class="hud-metrics-grid">
+        <div class="hud-stat-box full-width">
+          <div class="hud-stat-label">Expected Annual Water Volume Harvested</div>
+          <div class="hud-stat-value highlight" id="hud-water-volume">840,987 <span class="hud-stat-unit">m³</span>
+          </div>
+          <div style="font-size: 11px; color: var(--accent-cyan); margin-top: 2px;">
+            ≈ <span id="hud-water-ml">841.0</span> Million Liters
+          </div>
+        </div>
+
+        <div class="hud-stat-box">
+          <div class="hud-stat-label">Catchment Area</div>
+          <div class="hud-stat-value" id="hud-catchment-ha">173.8 <span class="hud-stat-unit">ha</span></div>
+        </div>
+
+        <div class="hud-stat-box">
+          <div class="hud-stat-label">Selected Land</div>
+          <div class="hud-stat-value" id="hud-land-ha">55.0 <span class="hud-stat-unit">ha</span></div>
+        </div>
+
+        <div class="hud-stat-box">
+          <div class="hud-stat-label">Bed Elevation</div>
+          <div class="hud-stat-value" id="hud-bed-elev">270.0 <span class="hud-stat-unit">m</span></div>
+        </div>
+
+        <div class="hud-stat-box">
+          <div class="hud-stat-label">Natural Sink Depth</div>
+          <div class="hud-stat-value" id="hud-dep-depth">11.98 <span class="hud-stat-unit">m</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Map Symbology Legend -->
+    <div class="map-legend">
+      <div class="legend-title">Map Symbology</div>
+      <div class="legend-item">
+        <div class="legend-swatch" style="border: 2px dashed #FFB300; background: rgba(255, 179, 0, 0.12);"></div>
+        <span>Surveyed Village Area</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-swatch" style="border: 2px dashed #D81B60; background: rgba(233, 30, 99, 0.2);"></div>
+        <span>Selected Land Area</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-swatch" style="border: 2px solid #FFD600; background: #00C853;"></div>
+        <span>Compact Farm Pond Footprint</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-swatch" style="border: 2px dashed #00B0FF; background: rgba(0, 229, 255, 0.25);"></div>
+        <span>Delineated Catchment Basin</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-swatch" style="height: 3px; background: #1A237E; width: 14px;"></div>
+        <span>Drainage Streams</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-swatch" style="border-radius: 50%; background: #00C853; border: 1px solid white;"></div>
+        <span>Suggested Pond Location</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-swatch" style="border-radius: 50%; background: #00B0FF; border: 1px solid white;"></div>
+        <span>Spillway / Pour Point</span>
+      </div>
+    </div>
+
+    <!-- Right Side Analytics Dashboard -->
+    <aside class="analytics-panel">
+      <div class="panel-header">
+        <div class="panel-title">Hydrological & Siting Dossier</div>
+        <a href="/docs" target="_blank" style="font-size: 12px; color: var(--accent-cyan); text-decoration: none;">API
+          Docs ↗</a>
+      </div>
+
+      <div class="panel-content">
+        <!-- Card 1: Selected Location Overview -->
+        <div class="card">
+          <div class="card-title">Suggested Pond Location</div>
+          <div class="card-grid">
+            <div class="metric-item">
+              <span class="metric-label">Site Identifier</span>
+              <span class="metric-value" id="card-site-id">pond_site_1</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">Suitability Score</span>
+              <span class="metric-value" style="color: #34d399;" id="card-score">96.0 / 100</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">Coordinates</span>
+              <span class="metric-value" style="font-size: 13px;" id="card-coords">21.2518° N, 81.2967° E</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">Ground Bed Slope</span>
+              <span class="metric-value" id="card-slope">0.62%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: Water Volume & Yield -->
+        <div class="card"
+          style="border-color: rgba(0, 229, 255, 0.4); background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(2, 132, 199, 0.15));">
+          <div class="card-title">Expected Harvestable Water Volume</div>
+          <div class="card-grid">
+            <div class="metric-item">
+              <span class="metric-label">Annual Runoff Harvest</span>
+              <span class="metric-value" style="color: var(--accent-cyan); font-size: 18px;" id="card-runoff-m3">840,987
+                m³</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">In Million Liters</span>
+              <span class="metric-value" style="color: var(--accent-cyan);" id="card-runoff-ml">841.0 ML</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">Annual Rainfall</span>
+              <span class="metric-value" id="card-rainfall">1,382.6 mm</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">Runoff Factor (C)</span>
+              <span class="metric-value" id="card-runoff-c">0.35</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: Catchment Watershed -->
+        <div class="card">
+          <div class="card-title">Contributing Catchment Area</div>
+          <div class="card-grid">
+            <div class="metric-item">
+              <span class="metric-label">Catchment (Hectares)</span>
+              <span class="metric-value" id="card-catch-ha">173.8 ha</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">Catchment (Acres)</span>
+              <span class="metric-value" id="card-catch-acres">429.4 acres</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">Elevation Range</span>
+              <span class="metric-value" id="card-elev-range">270.0 - 289.0 m</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">Mean Catchment Slope</span>
+              <span class="metric-value" id="card-catch-slope">1.45%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 4: Civil Engineering & Excavation Savings -->
+        <div class="card">
+          <div class="card-title">Civil Engineering Sizing</div>
+          <div class="card-grid">
+            <div class="metric-item">
+              <span class="metric-label">Recommended Depth</span>
+              <span class="metric-value" id="card-pond-depth">3.0 m</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">Earthwork Savings</span>
+              <span class="metric-value" style="color: #34d399;" id="card-excav-savings">83.3% Saved</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">Recommended Area</span>
+              <span class="metric-value" id="card-pond-area">1.35 ha</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">Spillway Crest Level</span>
+              <span class="metric-value" id="card-spillway-elev">282.0 m</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 6: Export Actions -->
+        <div class="action-buttons">
+          <button id="btn-export-geojson" class="action-btn">
+            Export GeoJSON
+          </button>
+          <button id="btn-export-json" class="action-btn">
+            Export JSON Report
+          </button>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- Loading Spinner Overlay -->
+  <div id="loading-spinner" class="spinner-overlay" style="display: none;">
+    <div class="spinner"></div>
+    <div class="spinner-text" id="spinner-status-text">Processing Terrain & Hydrological Routing...</div>
+  </div>
+
+  <!-- Leaflet & Leaflet-Draw JS from CDN -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+
+  <!-- App Frontend Script -->
+  <script src="/static/app.js"></script>
+</body>
+
+</html>

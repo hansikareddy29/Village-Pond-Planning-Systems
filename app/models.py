@@ -206,3 +206,26 @@ class AnalysisResponse(BaseModel):
     pond_design_recommendations: PondDesignRecommendations
     candidate_pond_sites: List[CandidateSite]
     geojson: Dict[str, Any]
+
+
+class LandAreaAnalysisRequest(BaseModel):
+    geometry: Dict[str, Any] = Field(
+        ...,
+        description="GeoJSON Geometry (Polygon or MultiPolygon) representing the selected land area",
+    )
+    rainfall_annual_mm: Optional[float] = Field(
+        None,
+        description="Optional annual rainfall in mm (defaults to live Open-Meteo ERA5 API)",
+    )
+    runoff_coefficient: float = Field(
+        0.35,
+        description="Rational runoff coefficient (typical 0.25 - 0.45 for agricultural loams)",
+    )
+    pond_depth_m: float = Field(
+        3.0, description="Target design excavation depth in meters"
+    )
+    format: str = Field(
+        "json",
+        description="Output format: 'json' (complete report) or 'geojson' (FeatureCollection)",
+    )
+
