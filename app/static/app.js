@@ -510,6 +510,51 @@ function setupEventListeners() {
   document.getElementById("btn-export-json").addEventListener("click", () => {
     exportJSON();
   });
+
+  // Single-click on map to inspect / analyze land at any location
+  map.on("click", (e) => {
+    const isDrawingPoly = document.getElementById("btn-draw-poly").classList.contains("active");
+    const isDrawingRect = document.getElementById("btn-draw-rect").classList.contains("active");
+    if (activeDrawHandler || isDrawingPoly || isDrawingRect) {
+      return;
+    }
+    if (e.originalEvent && (e.originalEvent._stopped || e.originalEvent.defaultPrevented)) {
+      return;
+    }
+
+    // Generate a ~4-hectare square parcel around clicked point (approx 200m x 200m)
+    const lat = e.latlng.lat;
+    const lng = e.latlng.lng;
+    const dLat = 0.0009; // ~100m north & south
+    const cosLat = Math.max(0.2, Math.cos((lat * Math.PI) / 180));
+    const dLng = 0.0009 / cosLat; // ~100m east & west
+
+    const parcelCoords = [
+      [lng - dLng, lat - dLat],
+      [lng + dLng, lat - dLat],
+      [lng + dLng, lat + dLat],
+      [lng - dLng, lat + dLat],
+      [lng - dLng, lat - dLat],
+    ];
+
+    drawnItems.clearLayers();
+    const poly = L.polygon(
+      parcelCoords.map((p) => [p[1], p[0]]),
+      {
+        color: "#D81B60",
+        weight: 3,
+        dashArray: "6, 4",
+        fillColor: "#E91E63",
+        fillOpacity: 0.18,
+      }
+    );
+    drawnItems.addLayer(poly);
+    currentSelectedGeometry = {
+      type: "Polygon",
+      coordinates: [parcelCoords],
+    };
+    executeLandAnalysis(currentSelectedGeometry);
+  });
 }
 
 /**
@@ -703,7 +748,7 @@ function selectSector(sectorId, shouldAnalyze = true) {
  * Sends POST /analyzeArea query to backend and updates map overlays & dashboard
  */
 async function executeLandAnalysis(geometry) {
-  showSpinner("Running priority-flood routing & catchment delineation for land area...");
+  showSpinner("Analyzing terrain elevation, runoff & optimal pond location for land area...");
 
   try {
     const payload = {
@@ -914,6 +959,71 @@ function renderAnalysisResults(result) {
 
   // Update Right Analytics Dashboard
   updateDashboard(result);
+
+  // Synchronize dynamic location metadata with header, dropdown, and boundary
+  if (result.village_info) {
+    const subTitleElem = document.getElementById("brand-subtitle");
+    if (subTitleElem) {
+      subTitleElem.innerText = `${result.village_info.name} — ${result.selected_land_area_ha} ha Land Area Analysis`;
+    }
+
+    const rainElem = document.getElementById("header-rainfall");
+    if (rainElem && result.expected_water_volume && result.expected_water_volume.annual_rainfall_mm !== undefined) {
+      rainElem.innerText = `${fmt(result.expected_water_volume.annual_rainfall_mm, 1)} mm`;
+    }
+
+    const elevElem = document.getElementById("header-elev-source");
+    if (elevElem) {
+      elevElem.innerText = result.village_info.elevation_source || "Open-Elevation API";
+    }
+
+    if (result.village_id) {
+      currentVillageId = result.village_id;
+      const selectElem = document.getElementById("village-select");
+      if (selectElem) {
+        let exists = false;
+        for (let i = 0; i < selectElem.options.length; i++) {
+          if (selectElem.options[i].value === result.village_id) {
+            exists = true;
+            break;
+          }
+        }
+        if (!exists) {
+          const opt = document.createElement("option");
+          opt.value = result.village_id;
+          opt.text = `${result.village_info.name} — Dynamic Land`;
+          selectElem.appendChild(opt);
+        }
+        selectElem.value = result.village_id;
+      }
+    }
+
+    if (result.dynamic_location) {
+      if (surveyBoundaryLayer) map.removeLayer(surveyBoundaryLayer);
+      let boundaryLatLngs = [];
+      if (result.boundary_polygon && result.boundary_polygon.length >= 3) {
+        boundaryLatLngs = result.boundary_polygon.map((pt) => [pt[1], pt[0]]);
+      } else if (result.bounds) {
+        const b = result.bounds;
+        boundaryLatLngs = [
+          [b.min_lat, b.min_lon],
+          [b.max_lat, b.min_lon],
+          [b.max_lat, b.max_lon],
+          [b.min_lat, b.max_lon],
+        ];
+      }
+      if (boundaryLatLngs.length > 0) {
+        surveyBoundaryLayer = L.polygon(boundaryLatLngs, {
+          color: "#FFB300",
+          weight: 2,
+          dashArray: "6, 6",
+          fillColor: "#FFB300",
+          fillOpacity: 0.05,
+          interactive: false,
+        }).addTo(map);
+      }
+    }
+  }
 }
 
 /**

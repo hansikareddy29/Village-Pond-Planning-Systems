@@ -21,6 +21,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse, Response, FileResponse
 from fastapi.staticfiles import StaticFiles
 
+import math
 import numpy as np
 import shapely.geometry as sg
 import shapely.ops
@@ -825,7 +826,7 @@ def _process_land_area(
             detail=f"Invalid land area polygon geometry: {str(e)}",
         )
 
-    # Validate that selected land intersects the surveyed contour elevation area
+    # Base boundary of active village
     b = model["parsed_data"]["bounds"]
     bp = model["parsed_data"].get("boundary_polygon")
     if bp and len(bp) >= 3:
@@ -833,22 +834,72 @@ def _process_land_area(
     else:
         survey_poly = sg.box(b["min_lon"], b["min_lat"], b["max_lon"], b["max_lat"])
 
-    if not user_poly.intersects(survey_poly):
-        raise HTTPException(
-            status_code=400,
-            detail=(
-                f"The selected land area lies outside the elevation area for {village_name}. "
-                f"Elevation and runoff data are only available within the active village boundary. "
-                f"Please draw or select a parcel within the highlighted village perimeter."
-            ),
+    # Check whether the selected land lies within the active surveyed village terrain
+    user_area = user_poly.area
+    intersects = user_poly.intersects(survey_poly)
+    overlap_ratio = (
+        (user_poly.intersection(survey_poly).area / max(1e-12, user_area))
+        if intersects
+        else 0.0
+    )
+
+    is_dynamic = False
+    # If the user selected land outside the current village, dynamically model that land location
+    if not intersects or overlap_ratio < 0.25:
+        is_dynamic = True
+        center_lat = float(user_poly.centroid.y)
+        center_lon = float(user_poly.centroid.x)
+        minx, miny, maxx, maxy = user_poly.bounds
+        lat_span_km = (maxy - miny) * 111.0
+        lon_span_km = (maxx - minx) * (
+            111.0 * max(0.2, math.cos(math.radians(center_lat)))
         )
+        # Determine radius ensuring adequate surrounding terrain for catchment delineation
+        radius_km = max(1.2, max(lat_span_km, lon_span_km) * 1.5)
+        radius_km = min(8.0, radius_km)
+
+        dynamic_id = f"custom_land_{round(center_lat, 3)}_{round(center_lon, 3)}".replace(
+            ".", "_"
+        ).replace("-", "m")
+        if dynamic_id not in _BASE_MODEL_CACHE:
+            dynamic_info = {
+                "id": dynamic_id,
+                "name": f"Land Parcel ({center_lat:.4f}° N, {center_lon:.4f}° E)",
+                "district": f"{center_lat:.2f}N, {center_lon:.2f}E",
+                "state": "Selected Location",
+                "center_lat": center_lat,
+                "center_lon": center_lon,
+                "elevation_source": "Open-Elevation API",
+                "description": f"Watershed and land analysis for parcel at {center_lat:.4f}° N, {center_lon:.4f}° E.",
+                "use_kml": False,
+                "radius_km": radius_km,
+            }
+            VILLAGE_CATALOG[dynamic_id] = dynamic_info
+            model = _build_model_for_coordinates(
+                village_id=dynamic_id,
+                name=dynamic_info["name"],
+                center_lat=center_lat,
+                center_lon=center_lon,
+                radius_km=radius_km,
+                village_info=dynamic_info,
+            )
+        else:
+            model = _BASE_MODEL_CACHE[dynamic_id]
+
+        dem = model["dem"]
+        hydro_results = model["hydro_results"]
+        candidate_sites = model["candidate_sites"]
+        if rainfall_annual_mm is None or rainfall_annual_mm <= 0:
+            effective_rainfall_mm = model["rainfall_api_data"]["annual_rainfall_mm"]
+        v_info = model.get("village_info", dynamic_info)
+        village_name = v_info.get("name", "Custom Land Area")
+        b = model["parsed_data"]["bounds"]
+        survey_poly = sg.box(b["min_lon"], b["min_lat"], b["max_lon"], b["max_lat"])
+        village_id = dynamic_id
 
     overlap_poly = user_poly.intersection(survey_poly)
-    if overlap_poly.is_empty or overlap_poly.area < 1e-10:
-        raise HTTPException(
-            status_code=400,
-            detail="The selected land area has no valid overlap with the surveyed elevation contour area.",
-        )
+    if overlap_poly.is_empty or overlap_poly.area < 1e-12:
+        overlap_poly = user_poly
 
     # Compute metric area of selected land polygon
     poly_utm = shapely.ops.transform(dem.transformer_to_utm.transform, user_poly)
@@ -870,6 +921,13 @@ def _process_land_area(
             chosen_site["associated_pour_point"]["grid_index"]["row"],
             chosen_site["associated_pour_point"]["grid_index"]["col"],
         )
+        if "local_terrain" not in chosen_site:
+            chosen_site["local_terrain"] = {
+                "depression_depth_m": chosen_site.get("depression_depth_m", 2.5),
+                "slope_percent": chosen_site.get("ground_bed_slope_percent", chosen_site.get("slope_percent", 1.0)),
+                "elevation_m": chosen_site.get("bed_elevation_m", chosen_site.get("coordinates", {}).get("elevation_m", 250.0)),
+                "topographic_wetness_index": chosen_site.get("twi", 10.0),
+            }
     else:
         # User selected a custom parcel without pre-computed candidate
         minx, miny, maxx, maxy = overlap_poly.bounds
@@ -1269,6 +1327,11 @@ def _process_land_area(
             "type": "FeatureCollection",
             "features": geojson_features,
         },
+        "village_id": village_id,
+        "village_info": v_info,
+        "bounds": model["parsed_data"].get("bounds"),
+        "boundary_polygon": model["parsed_data"].get("boundary_polygon"),
+        "dynamic_location": is_dynamic,
     }
 
 
