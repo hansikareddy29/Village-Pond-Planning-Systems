@@ -794,6 +794,15 @@ def get_base_model(village_id: str = "default") -> Dict[str, Any]:
     return get_village_model(village_id)
 
 
+@app.on_event("startup")
+async def startup_event():
+    """Pre-warm baseline village terrain model so initial web GIS load is instantaneous."""
+    try:
+        get_village_model("sirsa_khurd")
+    except Exception:
+        pass
+
+
 def _process_land_area(
     geometry: dict,
     rainfall_annual_mm: Optional[float] = None,

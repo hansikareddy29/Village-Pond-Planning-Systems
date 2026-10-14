@@ -30,7 +30,7 @@ class RainfallAPIService:
         latitude: float,
         longitude: float,
         user_override_mm: Optional[float] = None,
-        timeout_seconds: float = 8.0,
+        timeout_seconds: float = 2.5,
     ) -> Dict[str, Any]:
         """
         Fetches annual rainfall for the specified latitude/longitude coordinate.
@@ -161,7 +161,7 @@ class ElevationAPIService:
 
     @classmethod
     def fetch_point_elevation(
-        cls, latitude: float, longitude: float, timeout_seconds: float = 6.0
+        cls, latitude: float, longitude: float, timeout_seconds: float = 2.0
     ) -> Dict[str, Any]:
         """
         Queries external elevation API for a given coordinate (lat, lon).
@@ -297,7 +297,7 @@ class ElevationAPIService:
         center_lon: float,
         radius_km: float = 1.0,
         grid_steps: int = 20,
-        timeout_seconds: float = 8.0,
+        timeout_seconds: float = 2.5,
     ) -> Dict[str, Any]:
         """
         Retrieves real-world elevations across a village watershed grid using Open-Elevation API.
