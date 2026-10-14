@@ -794,15 +794,6 @@ def get_base_model(village_id: str = "default") -> Dict[str, Any]:
     return get_village_model(village_id)
 
 
-@app.on_event("startup")
-async def startup_event():
-    """Pre-warm baseline village terrain model so initial web GIS load is instantaneous."""
-    try:
-        get_village_model("sirsa_khurd")
-    except Exception:
-        pass
-
-
 def _process_land_area(
     geometry: dict,
     rainfall_annual_mm: Optional[float] = None,
@@ -1349,7 +1340,7 @@ def _process_land_area(
     summary="Analyze User-Selected Land Area on Map",
     description="Accepts a GeoJSON polygon or geometry representing a user-selected land area on the map. Returns the optimal suggested pond location, delineated catchment area, and expected water volume that can be collected, with complete overlaid GeoJSON layers.",
 )
-async def analyze_area(
+def analyze_area(
     payload: Dict[str, Any] = Body(
         ...,
         example={
@@ -1459,7 +1450,7 @@ def _format_village_data_response(village_id: str, model: dict) -> dict:
     "/api/villages",
     summary="List Available Villages in Catalog",
 )
-async def list_villages():
+def list_villages():
     """Returns catalog of pre-configured Indian benchmark villages plus dynamically created custom villages."""
     catalog_list = []
     for vid, v in VILLAGE_CATALOG.items():
@@ -1502,7 +1493,7 @@ async def list_villages():
     "/api/village-data",
     summary="Retrieve Hydrological & Terrain Data for Specified Village",
 )
-async def get_village_data(
+def get_village_data(
     village_id: str = Query("sirsa_khurd", description="Village identifier")
 ):
     """
@@ -1517,7 +1508,7 @@ async def get_village_data(
     "/api/custom-village",
     summary="Analyze Custom Village via Open-Elevation API",
 )
-async def create_custom_village(payload: dict = Body(...)):
+def create_custom_village(payload: dict = Body(...)):
     """
     Dynamically analyzes any village in India or the world using Open-Elevation API.
     Expects { name: str, latitude: float, longitude: float, radius_km: float (default 1.2) }
@@ -1569,7 +1560,7 @@ async def create_custom_village(payload: dict = Body(...)):
     "/api/default-data",
     summary="Retrieve Default Village Terrain and Baseline Data",
 )
-async def get_default_data():
+def get_default_data():
     """Returns baseline metadata, pre-computed candidates, streams, and preset sectors for fast map load."""
     model = get_base_model("sirsa_khurd")
     return _format_village_data_response("sirsa_khurd", model)
