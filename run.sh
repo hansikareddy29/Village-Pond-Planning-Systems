@@ -11,21 +11,24 @@ if [ ! -d "venv" ]; then
     echo "Creating Python virtual environment in ./venv..."
     python3 -m venv --system-site-packages venv
     ./venv/bin/pip install --upgrade pip
-    ./venv/bin/pip install -r requirements.txt
 fi
+
+echo "Ensuring required packages are installed..."
+./venv/bin/pip install -r requirements.txt
 
 PORT="${PORT:-5000}"
 
 echo "================================================================="
 echo " Starting Village Pond Planning & Catchment Analysis API Server"
 echo "================================================================="
-echo " Container Port:     $PORT"
-echo " External Host Port: 5250 (Mapped from Container Port 5000)"
-echo " Interactive Docs:   http://localhost:${PORT}/docs"
-echo " Evaluator Docs:     http://10.1.75.79:5250/docs"
-echo " Health Check:       http://10.1.75.79:5250/health"
-echo " Primary Endpoint:   POST http://10.1.75.79:5250/analyzeContour"
+echo " Server Host & Port: 0.0.0.0:${PORT}"
+echo " Web GIS Dashboard:  http://localhost:${PORT}/"
+echo " Observability GUI:  http://localhost:${PORT}/observability"
+echo " Prometheus Metrics: http://localhost:${PORT}/metrics"
+echo " API Documentation:  http://localhost:${PORT}/docs"
+echo " Health Check:       http://localhost:${PORT}/health"
 echo "================================================================="
 
 # Start FastAPI server using Python module invocation
-./venv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port "$PORT" --reload
+./venv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port "$PORT"
+
