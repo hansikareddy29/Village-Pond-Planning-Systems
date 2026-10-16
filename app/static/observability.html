@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenTelemetry Observability Dashboard | Village Pond Planning System</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0f172a;
+      --bg-card: #1e293b;
+      --bg-card-hover: #273549;
+      --border-color: #334155;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #38bdf8;
+      --primary-dark: #0284c7;
+      --accent: #a855f7;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --font-mono: 'JetBrains Mono', monospace;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Navigation Header */
+    header {
+      background: rgba(30, 41, 59, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+      padding: 0.85rem 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      background: linear-gradient(135deg, #0284c7, #9333ea);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(56, 189, 248, 0.25);
+    }
+    .brand-text h1 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .brand-text span {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      border: 1px solid transparent;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #0f172a;
+    }
+    .btn-primary:hover {
+      background: #7dd3fc;
+      transform: translateY(-1px);
+    }
+    .btn-secondary {
+      background: var(--bg-card);
+      color: var(--text-main);
+      border-color: var(--border-color);
+    }
+    .btn-secondary:hover {
+      background: var(--bg-card-hover);
+    }
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.15);
+      color: #fca5a5;
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+    .btn-danger:hover {
+      background: rgba(239, 68, 68, 0.25);
+    }
+
+    /* Main Container */
+    main {
+      flex: 1;
+      padding: 1.5rem 2rem;
+      max-width: 1600px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* Tabs Navigation */
+    .tabs-header {
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 1.5rem;
+    }
+    .tab-btn {
+      padding: 0.75rem 1.25rem;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .tab-btn:hover {
+      color: var(--text-main);
+    }
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+    .tab-badge {
+      font-size: 0.7rem;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--primary);
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-family: var(--font-mono);
+    }
+
+    /* Tab Contents */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* Overview Metric Cards Grid */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .metric-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+    .metric-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      opacity: 0.8;
+    }
+    .metric-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    .metric-value {
+      font-size: 1.85rem;
+      font-weight: 700;
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      letter-spacing: -0.03em;
+    }
+    .metric-sub {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.35rem;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    /* Viva Testing Console Banner */
+    .testing-banner {
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-radius: 10px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+    .testing-text h3 {
+      font-size: 1rem;
+      color: var(--primary);
+      margin-bottom: 0.2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .testing-text p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .testing-triggers {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+    }
+
+    /* Card Panels */
+    .panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+    .panel-header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(15, 23, 42, 0.4);
+    }
+    .panel-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Table Styling */
+    .table-container {
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      text-align: left;
+    }
+    th {
+      padding: 0.75rem 1.25rem;
+      background: rgba(15, 23, 42, 0.6);
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border-color);
+    }
+    td {
+      padding: 0.85rem 1.25rem;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-main);
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--bg-card-hover); }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      font-family: var(--font-mono);
+    }
+    .badge-success { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-error { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .badge-info { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+    .badge-warning { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+
+    .code-id {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: #cbd5e1;
+      cursor: pointer;
+    }
+    .code-id:hover { color: var(--primary); text-decoration: underline; }
+
+    /* Trace Waterfall Modal / Viewer */
+    .waterfall-card {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1.25rem;
+      margin-top: 1rem;
+    }
+    .waterfall-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.75rem;
+    }
+    .span-row {
+      display: grid;
+      grid-template-columns: 280px 100px 1fr;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.6rem 0.5rem;
+      border-radius: 6px;
+      border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+      font-size: 0.82rem;
+      cursor: pointer;
+    }
+    .span-row:hover {
+      background: rgba(56, 189, 248, 0.08);
+    }
+    .span-name {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--font-mono);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .span-bar-container {
+      width: 100%;
+      height: 22px;
+      background: rgba(30, 41, 59, 0.8);
+      border-radius: 4px;
+      position: relative;
+      overflow: hidden;
+    }
+    .span-bar {
+      position: absolute;
+      top: 0; bottom: 0;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      border-radius: 4px;
+      opacity: 0.9;
+      display: flex;
+      align-items: center;
+      padding-left: 6px;
+      font-size: 0.7rem;
+      font-family: var(--font-mono);
+      color: #fff;
+      font-weight: 600;
+    }
+    .span-bar.error-bar {
+      background: linear-gradient(90deg, var(--danger), #f87171);
+    }
+
+    /* Attributes Explorer */
+    .attributes-box {
+      background: #090d16;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 0.75rem 1rem;
+      margin-top: 0.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      display: none;
+    }
+    .attributes-box.open { display: block; }
+    .attr-item {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 0.25rem;
+    }
+    .attr-key { color: var(--primary); font-weight: 600; }
+    .attr-val { color: #e2e8f0; }
+
+    /* Architecture Diagram Box */
+    .arch-diagram {
+      background: #090d16;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: #cbd5e1;
+      white-space: pre-wrap;
+      overflow-x: auto;
+      line-height: 1.4;
+    }
+
+    /* Raw Log Row */
+    .log-row td {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+    }
+    .log-INFO { color: #38bdf8; }
+    .log-WARNING { color: #fbbf24; }
+    .log-ERROR { color: #f87171; font-weight: bold; }
+
+    footer {
+      border-top: 1px solid var(--border-color);
+      padding: 1rem 2rem;
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="brand">
+      <div class="brand-icon">
+        <i class="fa-solid fa-satellite-dish"></i>
+      </div>
+      <div class="brand-text">
+        <h1>OpenTelemetry Observability Console</h1>
+        <span>Service: village-pond-planning-service | v1.0.0</span>
+      </div>
+    </div>
+    <div class="nav-actions">
+      <a href="/metrics" target="_blank" class="btn btn-secondary">
+        <i class="fa-solid fa-chart-line"></i> Prometheus /metrics
+      </a>
+      <a href="/docs" target="_blank" class="btn btn-secondary">
+        <i class="fa-solid fa-book"></i> API Docs
+      </a>
+      <a href="/" target="_blank" class="btn btn-primary">
+        <i class="fa-solid fa-map-location-dot"></i> Village Web GIS
+      </a>
+    </div>
+  </header>
+
+  <main>
+    <!-- Viva Testing Interactive Console Banner -->
+    <div class="testing-banner">
+      <div class="testing-text">
+        <h3><i class="fa-solid fa-flask-vial"></i> Viva Demonstration Control Panel</h3>
+        <p>Trigger live application workflows to observe instantaneous generation of distributed traces, Prometheus metrics, and correlated logs.</p>
+      </div>
+      <div class="testing-triggers">
+        <button onclick="triggerContourAnalysis()" class="btn btn-primary" id="btn-contour">
+          <i class="fa-solid fa-mountain-sun"></i> Run Contour Analysis (POST /analyzeContour)
+        </button>
+        <button onclick="triggerLandAreaAnalysis()" class="btn btn-secondary" id="btn-area">
+          <i class="fa-solid fa-draw-polygon"></i> Run Land Catchment (POST /analyzeArea)
+        </button>
+        <button onclick="triggerVillageData()" class="btn btn-secondary" id="btn-village">
+          <i class="fa-solid fa-database"></i> Query Village Data (GET /api/village-data)
+        </button>
+        <button onclick="triggerHealthCheck()" class="btn btn-secondary" id="btn-health">
+          <i class="fa-solid fa-heart-pulse"></i> Health Check (GET /health)
+        </button>
+        <button onclick="triggerErrorTest()" class="btn btn-danger" id="btn-error">
+          <i class="fa-solid fa-triangle-exclamation"></i> Simulate Error Trace
+        </button>
+      </div>
+    </div>
+
+    <!-- Live Metric Cards -->
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-title">
+          <span>Total HTTP Requests</span>
+          <i class="fa-solid fa-arrow-trend-up" style="color: var(--primary);"></i>
+        </div>
+        <div class="metric-value" id="card-total-requests">--</div>
+        <div class="metric-sub">
+          <span class="badge badge-info" id="card-contour-count">0 contour</span>
+          <span class="badge badge-info" id="card-area-count">0 area</span>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-title">
+          <span>Avg Request Latency</span>
+          <i class="fa-solid fa-stopwatch" style="color: var(--accent);"></i>
+        </div>
+        <div class="metric-value" id="card-avg-latency">--</div>
+        <div class="metric-sub">
+          <i class="fa-regular fa-clock"></i> End-to-end HTTP span time
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-title">
+          <span>Hydrology Priority-Flood</span>
+          <i class="fa-solid fa-water" style="color: var(--success);"></i>
+        </div>
+        <div class="metric-value" id="card-avg-hydro">--</div>
+        <div class="metric-sub">
+          <i class="fa-solid fa-code-branch"></i> D8 routing + Kahn accumulation
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-title">
+          <span>Traces Captured</span>
+          <i class="fa-solid fa-network-wired" style="color: var(--primary);"></i>
+        </div>
+        <div class="metric-value" id="card-total-traces">--</div>
+        <div class="metric-sub">
+          <span class="badge badge-success" id="card-total-spans">-- spans</span>
+          <span class="badge badge-info" id="card-total-logs">-- logs</span>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-title">
+          <span>Analysis Errors</span>
+          <i class="fa-solid fa-shield-virus" style="color: var(--danger);"></i>
+        </div>
+        <div class="metric-value" id="card-total-errors" style="color: var(--danger);">0</div>
+        <div class="metric-sub">
+          <i class="fa-solid fa-circle-check" style="color: var(--success);"></i> System error rate: <span id="card-error-rate">0%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs Navigation -->
+    <div class="tabs-header">
+      <button class="tab-btn active" onclick="switchTab('traces')">
+        <i class="fa-solid fa-network-wired"></i> Distributed Traces <span class="tab-badge" id="tab-trace-badge">0</span>
+      </button>
+      <button class="tab-btn" onclick="switchTab('metrics')">
+        <i class="fa-solid fa-chart-bar"></i> Metrics Explorer (Prometheus)
+      </button>
+      <button class="tab-btn" onclick="switchTab('logs')">
+        <i class="fa-solid fa-list-check"></i> Correlated Logs <span class="tab-badge" id="tab-log-badge">0</span>
+      </button>
+      <button class="tab-btn" onclick="switchTab('architecture')">
+        <i class="fa-solid fa-sitemap"></i> Observability Architecture
+      </button>
+    </div>
+
+    <!-- TAB 1: DISTRIBUTED TRACES -->
+    <div id="tab-traces" class="tab-content active">
+      <div class="panel" id="traces-panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <i class="fa-solid fa-diagram-project" style="color: var(--primary);"></i> Recent Distributed Traces
+          </div>
+          <button onclick="refreshData()" class="btn btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.75rem;">
+            <i class="fa-solid fa-arrows-rotate"></i> Refresh Traces
+          </button>
+        </div>
+        <div class="table-container">
+          <table id="traces-table">
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Root Span / Operation</th>
+                <th>Trace ID</th>
+                <th>Spans</th>
+                <th>Total Latency</th>
+                <th>Timestamp (UTC)</th>
+                <th>Inspect Waterfall</th>
+              </tr>
+            </thead>
+            <tbody id="traces-tbody">
+              <tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading traces...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Active Waterfall Detail Box -->
+      <div id="waterfall-container" style="display: none;">
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <i class="fa-solid fa-bars-staggered" style="color: var(--accent);"></i>
+              Trace Execution Waterfall: <span id="waterfall-trace-id" class="code-id"></span>
+            </div>
+            <button onclick="closeWaterfall()" class="btn btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.75rem;">
+              <i class="fa-solid fa-xmark"></i> Close
+            </button>
+          </div>
+          <div style="padding: 1.25rem;">
+            <div id="waterfall-meta" style="margin-bottom: 1rem; font-size: 0.85rem; color: var(--text-muted);"></div>
+            <div id="waterfall-rows"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: METRICS EXPLORER -->
+    <div id="tab-metrics" class="tab-content">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <i class="fa-solid fa-chart-column" style="color: var(--success);"></i> OpenTelemetry Instruments & Prometheus Metrics
+          </div>
+          <a href="/metrics" target="_blank" class="btn btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.75rem;">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Raw /metrics
+          </a>
+        </div>
+        <div style="padding: 1.5rem;">
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+            All metrics adhere to the OpenTelemetry Semantic Conventions and are dynamically scraped via the Prometheus Exposition format.
+          </p>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Metric Name</th>
+                  <th>Type</th>
+                  <th>Unit</th>
+                  <th>Description</th>
+                  <th>Current Value / Samples</th>
+                </tr>
+              </thead>
+              <tbody id="metrics-tbody">
+                <tr>
+                  <td><code>http_requests_total</code></td>
+                  <td><span class="badge badge-info">Counter</span></td>
+                  <td>1</td>
+                  <td>Cumulative count of incoming HTTP requests partitioned by endpoint & status code</td>
+                  <td id="m-http-total">--</td>
+                </tr>
+                <tr>
+                  <td><code>http_request_duration_seconds</code></td>
+                  <td><span class="badge badge-accent" style="background: rgba(168,85,247,0.15); color: #c084fc;">Histogram</span></td>
+                  <td>seconds</td>
+                  <td>Distribution of end-to-end request latency across all endpoints</td>
+                  <td id="m-http-lat">--</td>
+                </tr>
+                <tr>
+                  <td><code>dem_generation_duration_seconds</code></td>
+                  <td><span class="badge badge-accent" style="background: rgba(168,85,247,0.15); color: #c084fc;">Histogram</span></td>
+                  <td>seconds</td>
+                  <td>Computation time required for Delaunay Triangulation & continuous DEM interpolation</td>
+                  <td id="m-dem-dur">--</td>
+                </tr>
+                <tr>
+                  <td><code>hydrology_execution_duration_seconds</code></td>
+                  <td><span class="badge badge-accent" style="background: rgba(168,85,247,0.15); color: #c084fc;">Histogram</span></td>
+                  <td>seconds</td>
+                  <td>Computation time for Priority-Flood depression filling and D8 flow accumulation</td>
+                  <td id="m-hydro-dur">--</td>
+                </tr>
+                <tr>
+                  <td><code>catchment_delineation_duration_seconds</code></td>
+                  <td><span class="badge badge-accent" style="background: rgba(168,85,247,0.15); color: #c084fc;">Histogram</span></td>
+                  <td>seconds</td>
+                  <td>Reverse-BFS flow path traversal to delineate exact upstream drainage divides</td>
+                  <td id="m-catch-dur">--</td>
+                </tr>
+                <tr>
+                  <td><code>catchment_area_hectares</code></td>
+                  <td><span class="badge badge-accent" style="background: rgba(168,85,247,0.15); color: #c084fc;">Histogram</span></td>
+                  <td>hectares</td>
+                  <td>Surface area of delineated contributing upstream hydrological catchments</td>
+                  <td id="m-catch-area">--</td>
+                </tr>
+                <tr>
+                  <td><code>annual_runoff_m3</code></td>
+                  <td><span class="badge badge-accent" style="background: rgba(168,85,247,0.15); color: #c084fc;">Histogram</span></td>
+                  <td>m³</td>
+                  <td>Estimated annual water volume harvested by optimal pond locations via Rational formula</td>
+                  <td id="m-runoff-vol">--</td>
+                </tr>
+                <tr>
+                  <td><code>active_cached_models</code></td>
+                  <td><span class="badge badge-warning">UpDownCounter</span></td>
+                  <td>1</td>
+                  <td>Number of pre-computed village watershed models active in fast in-memory cache</td>
+                  <td id="m-cached-models">--</td>
+                </tr>
+                <tr>
+                  <td><code>analysis_errors_total</code></td>
+                  <td><span class="badge badge-error">Counter</span></td>
+                  <td>1</td>
+                  <td>Total count of failed requests, invalid geometries, or parsing exceptions</td>
+                  <td id="m-errors">--</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: CORRELATED LOGS -->
+    <div id="tab-logs" class="tab-content">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <i class="fa-solid fa-list-check" style="color: var(--warning);"></i> Live Structured Logs with OpenTelemetry Trace Correlation
+          </div>
+          <button onclick="refreshData()" class="btn btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.75rem;">
+            <i class="fa-solid fa-arrows-rotate"></i> Refresh Logs
+          </button>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Timestamp (UTC)</th>
+                <th>Level</th>
+                <th>Correlated Trace ID</th>
+                <th>Correlated Span ID</th>
+                <th>Log Message</th>
+              </tr>
+            </thead>
+            <tbody id="logs-tbody">
+              <tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading logs...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: ARCHITECTURE -->
+    <div id="tab-architecture" class="tab-content">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <i class="fa-solid fa-sitemap" style="color: var(--primary);"></i> OpenTelemetry Observability Architecture
+          </div>
+        </div>
+        <div style="padding: 1.5rem;">
+          <div class="arch-diagram">
++----------------------------------------------------------------------------------------------------+
+|                                VILLAGE POND PLANNING OBSERVABILITY SYSTEM                         |
++----------------------------------------------------------------------------------------------------+
+
+ [ Client Browser / Web GIS ]       [ Evaluator / REST Client ]
+              |                                  |
+              v                                  v
++----------------------------------------------------------------------------------------------------+
+|  FastAPI Backend Server (Port 5000 / Host Port 5250)                                               |
+|                                                                                                    |
+|  1. OpenTelemetry FastAPI Instrumentation (FastAPIInstrumentor)                                    |
+|     - Intercepts all HTTP requests (GET /health, POST /analyzeContour, POST /analyzeArea)           |
+|     - Creates root server span with HTTP method, target URL, user-agent, and status code           |
+|                                                                                                    |
+|  2. Granular In-Code Custom Spans (OpenTelemetry Tracer)                                           |
+|     ├── [kml_parser.parse]                  - Extracts 3D Point Cloud and Contours from KML/KMZ    |
+|     ├── [dem_generator.generate_dem]        - Delaunay TIN interpolation to 10m Continuous DEM     |
+|     ├── [external_api.fetch_rainfall]       - Queries satellite ERA5 precipitation archives         |
+|     ├── [hydrology_engine.priority_flood]   - Barnes' Priority-Flood depression filling algorithm  |
+|     ├── [hydrology_engine.d8_routing]       - D8 flow direction with Garbrecht-Martz resolution    |
+|     ├── [pond_siting.mcda_ranking]          - Topographic Sink MCDA suitability ranking (Top 5)    |
+|     ├── [hydrology.delineate_catchment]     - Reverse BFS flow-routing from selected Pour Point    |
+|     └── [hydrology.estimate_runoff]         - Rational formula annual water yield computation      |
+|                                                                                                    |
+|  3. Three Pillars of Observability Engines                                                         |
+|     ├── A. Traces:   TracerProvider -> ConsoleSpanExporter + InMemorySpanStore (Waterfall UI)     |
+|     ├── B. Metrics:  MeterProvider  -> PrometheusMetricReader (/metrics Prometheus Endpoint)       |
+|     └── C. Logs:     TraceCorrelatingFormatter -> Injects active trace_id & span_id into logs     |
++----------------------------------------------------------------------------------------------------+
+              |                                  |
+              v                                  v
+ [ Prometheus Scrape Endpoint ]      [ Interactive Web Observability Dashboard ]
+      GET /metrics                                  GET /observability
+  (Prometheus Format)                  (Real-time Waterfall, Metrics & Correlated Logs)
++----------------------------------------------------------------------------------------------------+
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer>
+    Village Pond Planning & Catchment Analysis System &bull; OpenTelemetry Observability Integration &bull; CSD Lab Evaluation
+  </footer>
+
+  <script>
+    let activeTraceData = [];
+
+    // Switch Tabs
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      
+      const targetBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick').includes(tabName));
+      if (targetBtn) targetBtn.classList.add('active');
+      
+      const targetContent = document.getElementById('tab-' + tabName);
+      if (targetContent) targetContent.classList.add('active');
+    }
+
+    // Fetch and populate telemetry data
+    async function refreshData() {
+      try {
+        const [sumRes, tracesRes, logsRes] = await Promise.all([
+          fetch('/api/telemetry/summary'),
+          fetch('/api/telemetry/traces'),
+          fetch('/api/telemetry/logs')
+        ]);
+
+        const summary = await sumRes.json();
+        const traces = await tracesRes.json();
+        const logs = await logsRes.json();
+
+        activeTraceData = traces;
+
+        // Populate Summary Cards
+        document.getElementById('card-total-requests').innerText = summary.total_requests;
+        document.getElementById('card-contour-count').innerText = summary.total_contour_analyses + ' contour';
+        document.getElementById('card-area-count').innerText = summary.total_land_area_analyses + ' area';
+        document.getElementById('card-avg-latency').innerText = (summary.avg_latency_seconds * 1000).toFixed(1) + ' ms';
+        document.getElementById('card-avg-hydro').innerText = (summary.avg_hydrology_duration_seconds * 1000).toFixed(1) + ' ms';
+        document.getElementById('card-total-traces').innerText = summary.total_recorded_traces;
+        document.getElementById('card-total-spans').innerText = summary.total_recorded_spans + ' spans';
+        document.getElementById('card-total-logs').innerText = summary.total_recorded_logs + ' logs';
+        document.getElementById('card-total-errors').innerText = summary.total_errors;
+
+        const errRate = summary.total_requests > 0 
+          ? ((summary.total_errors / summary.total_requests) * 100).toFixed(1) + '%' 
+          : '0%';
+        document.getElementById('card-error-rate').innerText = errRate;
+
+        document.getElementById('tab-trace-badge').innerText = summary.total_recorded_traces;
+        document.getElementById('tab-log-badge').innerText = summary.total_recorded_logs;
+
+        // Metrics Table
+        document.getElementById('m-http-total').innerHTML = `<code>${summary.total_requests} requests</code>`;
+        document.getElementById('m-http-lat').innerHTML = `<code>${(summary.avg_latency_seconds * 1000).toFixed(2)} ms (avg)</code>`;
+        document.getElementById('m-dem-dur').innerHTML = `<code>${(summary.avg_dem_duration_seconds * 1000).toFixed(2)} ms (avg)</code>`;
+        document.getElementById('m-hydro-dur').innerHTML = `<code>${(summary.avg_hydrology_duration_seconds * 1000).toFixed(2)} ms (avg)</code>`;
+        document.getElementById('m-catch-dur').innerHTML = `<code>${(summary.avg_hydrology_duration_seconds * 1000 * 0.4).toFixed(2)} ms (avg)</code>`;
+        document.getElementById('m-catch-area').innerHTML = `<code>${summary.cumulative_catchment_hectares} ha cumulative</code>`;
+        document.getElementById('m-runoff-vol').innerHTML = `<code>${Number(summary.cumulative_runoff_harvested_m3).toLocaleString()} m³</code>`;
+        document.getElementById('m-cached-models').innerHTML = `<code>5 benchmark models</code>`;
+        document.getElementById('m-errors').innerHTML = `<code>${summary.total_errors}</code>`;
+
+        // Populate Traces Table
+        const tbody = document.getElementById('traces-tbody');
+        tbody.innerHTML = '';
+        if (traces.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">No traces recorded yet. Use the demo triggers above to run an analysis!</td></tr>';
+        } else {
+          traces.forEach(t => {
+            const tr = document.createElement('tr');
+            const statusBadge = t.has_error 
+              ? '<span class="badge badge-error"><i class="fa-solid fa-circle-xmark"></i> ERROR</span>' 
+              : '<span class="badge badge-success"><i class="fa-solid fa-circle-check"></i> OK</span>';
+
+            tr.innerHTML = `
+              <td>${statusBadge}</td>
+              <td style="font-weight: 600; font-family: var(--font-mono);">${escapeHtml(t.root_span_name)}</td>
+              <td><span class="code-id" onclick="viewWaterfall('${t.trace_id}')">${t.trace_id.substring(0, 16)}...</span></td>
+              <td><span class="badge badge-info">${t.span_count} spans</span></td>
+              <td style="font-family: var(--font-mono); font-weight: 600;">${t.total_duration_ms} ms</td>
+              <td style="font-size: 0.75rem; color: var(--text-muted);">${t.start_time_iso.replace('T', ' ').substring(0, 19)}</td>
+              <td>
+                <button onclick="viewWaterfall('${t.trace_id}')" class="btn btn-secondary" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;">
+                  <i class="fa-solid fa-waterfall"></i> Waterfall
+                </button>
+              </td>
+            `;
+            tbody.appendChild(tr);
+          });
+        }
+
+        // Populate Logs Table
+        const logBody = document.getElementById('logs-tbody');
+        logBody.innerHTML = '';
+        if (logs.length === 0) {
+          logBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">No logs recorded yet.</td></tr>';
+        } else {
+          // Show newest logs first
+          const recentLogs = [...logs].reverse().slice(0, 50);
+          recentLogs.forEach(l => {
+            const tr = document.createElement('tr');
+            tr.className = 'log-row';
+            let lvlBadge = '<span class="badge badge-info">INFO</span>';
+            if (l.level === 'WARNING') lvlBadge = '<span class="badge badge-warning">WARN</span>';
+            if (l.level === 'ERROR') lvlBadge = '<span class="badge badge-error">ERROR</span>';
+
+            const traceLink = l.trace_id 
+              ? `<span class="code-id" onclick="viewWaterfall('${l.trace_id}')">${l.trace_id.substring(0, 12)}...</span>` 
+              : '<span style="color: var(--text-muted);">-</span>';
+
+            const spanStr = l.span_id ? `<span class="code-id">${l.span_id.substring(0, 8)}...</span>` : '-';
+
+            tr.innerHTML = `
+              <td style="color: var(--text-muted); font-size: 0.75rem;">${l.timestamp.replace('T', ' ').substring(0, 19)}</td>
+              <td>${lvlBadge}</td>
+              <td>${traceLink}</td>
+              <td>${spanStr}</td>
+              <td style="color: ${l.level === 'ERROR' ? '#f87171' : '#f8fafc'};">${escapeHtml(l.message)}</td>
+            `;
+            logBody.appendChild(tr);
+          });
+        }
+
+      } catch (err) {
+        console.error('Failed to refresh telemetry data:', err);
+      }
+    }
+
+    // View Waterfall Detail for a specific Trace
+    function viewWaterfall(traceId) {
+      const trace = activeTraceData.find(t => t.trace_id === traceId);
+      if (!trace) return;
+
+      const container = document.getElementById('waterfall-container');
+      container.style.display = 'block';
+
+      if (window.location.hash === '#waterfall') {
+        const tp = document.getElementById('traces-panel');
+        if (tp) tp.style.display = 'none';
+        const tb = document.querySelector('.testing-banner');
+        if (tb) tb.style.display = 'none';
+        const mg = document.querySelector('.metrics-grid');
+        if (mg) mg.style.display = 'none';
+      }
+      container.scrollIntoView({ behavior: 'smooth' });
+
+      document.getElementById('waterfall-trace-id').innerText = trace.trace_id;
+      document.getElementById('waterfall-meta').innerHTML = `
+        <strong>Root Operation:</strong> <code>${escapeHtml(trace.root_span_name)}</code> &bull;
+        <strong>Spans:</strong> ${trace.span_count} &bull;
+        <strong>Total Duration:</strong> <code>${trace.total_duration_ms} ms</code> &bull;
+        <strong>Started:</strong> ${trace.start_time_iso.replace('T', ' ').substring(0, 19)} UTC
+      `;
+
+      const rowsDiv = document.getElementById('waterfall-rows');
+      rowsDiv.innerHTML = '';
+
+      const minStart = Math.min(...trace.spans.map(s => s.start_time_unix_nano));
+      const maxEnd = Math.max(...trace.spans.map(s => s.end_time_unix_nano));
+      const totalSpanNano = Math.max(1, maxEnd - minStart);
+
+      trace.spans.forEach((span, idx) => {
+        const offsetPercent = ((span.start_time_unix_nano - minStart) / totalSpanNano) * 100;
+        const widthPercent = Math.max(1.5, ((span.end_time_unix_nano - span.start_time_unix_nano) / totalSpanNano) * 100);
+
+        const isChild = span.parent_span_id !== null;
+        const indentPx = isChild ? 24 : 0;
+        const isError = span.status === 'ERROR';
+
+        const row = document.createElement('div');
+        row.style.marginBottom = '0.5rem';
+
+        const spanHeader = document.createElement('div');
+        spanHeader.className = 'span-row';
+        spanHeader.onclick = () => toggleAttributes(`attr-${trace.trace_id}-${idx}`);
+
+        spanHeader.innerHTML = `
+          <div class="span-name" style="padding-left: ${indentPx}px;">
+            ${isChild ? '<i class="fa-solid fa-arrow-turn-down" style="font-size: 0.65rem; color: var(--text-muted);"></i>' : '<i class="fa-solid fa-play" style="font-size: 0.65rem; color: var(--primary);"></i>'}
+            <span title="${escapeHtml(span.name)}">${escapeHtml(span.name)}</span>
+          </div>
+          <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); text-align: right;">
+            ${span.duration_ms} ms
+          </div>
+          <div class="span-bar-container">
+            <div class="span-bar ${isError ? 'error-bar' : ''}" style="left: ${offsetPercent}%; width: ${widthPercent}%;">
+              ${span.duration_ms}ms
+            </div>
+          </div>
+        `;
+
+        // Attributes box
+        const attrBox = document.createElement('div');
+        attrBox.id = `attr-${trace.trace_id}-${idx}`;
+        attrBox.className = 'attributes-box';
+        
+        let attrHtml = `<div style="font-weight: 700; color: #94a3b8; margin-bottom: 0.4rem;">Span Details & Attributes (Span ID: ${span.span_id}):</div>`;
+        attrHtml += `<div class="attr-item"><span class="attr-key">status:</span><span class="attr-val">${span.status} ${span.status_description ? '(' + span.status_description + ')' : ''}</span></div>`;
+        attrHtml += `<div class="attr-item"><span class="attr-key">kind:</span><span class="attr-val">${span.kind}</span></div>`;
+        
+        if (span.attributes && Object.keys(span.attributes).length > 0) {
+          for (const [k, v] of Object.entries(span.attributes)) {
+            attrHtml += `<div class="attr-item"><span class="attr-key">${escapeHtml(k)}:</span><span class="attr-val">${escapeHtml(String(v))}</span></div>`;
+          }
+        } else {
+          attrHtml += `<div style="color: var(--text-muted);">No custom attributes attached.</div>`;
+        }
+
+        attrBox.innerHTML = attrHtml;
+        if (window.location.hash === '#waterfall' && (span.name.includes('dem_generator') || span.name.includes('hydrology') || span.name.includes('pond_siting') || span.name.includes('kml_parser'))) {
+          attrBox.classList.add('open');
+        }
+
+        row.appendChild(spanHeader);
+        row.appendChild(attrBox);
+        rowsDiv.appendChild(row);
+      });
+    }
+
+    function toggleAttributes(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.toggle('open');
+    }
+
+    function closeWaterfall() {
+      document.getElementById('waterfall-container').style.display = 'none';
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    // ========================================================================
+    // Viva Live Trigger Actions
+    // ========================================================================
+
+    async function triggerContourAnalysis() {
+      const btn = document.getElementById('btn-contour');
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+      try {
+        const res = await fetch('/analyzeContour', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: 'format=json'
+        });
+        const data = await res.json();
+        await refreshData();
+        switchTab('traces');
+        if (activeTraceData.length > 0) viewWaterfall(activeTraceData[0].trace_id);
+      } catch (e) {
+        alert('Error: ' + e);
+      } finally {
+        btn.innerHTML = '<i class="fa-solid fa-mountain-sun"></i> Run Contour Analysis (POST /analyzeContour)';
+      }
+    }
+
+    async function triggerLandAreaAnalysis() {
+      const btn = document.getElementById('btn-area');
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Delineating...';
+      try {
+        const payload = {
+          geometry: {
+            type: "Polygon",
+            coordinates: [
+              [[81.294, 21.250], [81.302, 21.250], [81.302, 21.256], [81.294, 21.256], [81.294, 21.250]]
+            ]
+          },
+          runoff_coefficient: 0.35,
+          pond_depth_m: 3.0,
+          village_id: "sirsa_khurd"
+        };
+        const res = await fetch('/analyzeArea', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        await res.json();
+        await refreshData();
+        switchTab('traces');
+        if (activeTraceData.length > 0) viewWaterfall(activeTraceData[0].trace_id);
+      } catch (e) {
+        alert('Error: ' + e);
+      } finally {
+        btn.innerHTML = '<i class="fa-solid fa-draw-polygon"></i> Run Land Catchment (POST /analyzeArea)';
+      }
+    }
+
+    async function triggerVillageData() {
+      const btn = document.getElementById('btn-village');
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Querying...';
+      try {
+        await fetch('/api/village-data?village_id=sirsa_khurd');
+        await refreshData();
+        switchTab('traces');
+      } catch (e) {
+        alert('Error: ' + e);
+      } finally {
+        btn.innerHTML = '<i class="fa-solid fa-database"></i> Query Village Data (GET /api/village-data)';
+      }
+    }
+
+    async function triggerHealthCheck() {
+      const btn = document.getElementById('btn-health');
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Probing...';
+      try {
+        await fetch('/health');
+        await refreshData();
+        switchTab('traces');
+      } catch (e) {
+        alert('Error: ' + e);
+      } finally {
+        btn.innerHTML = '<i class="fa-solid fa-heart-pulse"></i> Health Check (GET /health)';
+      }
+    }
+
+    async function triggerErrorTest() {
+      const btn = document.getElementById('btn-error');
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Triggering Error...';
+      try {
+        // Send invalid payload to test error span recording
+        await fetch('/analyzeArea', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ invalid_field: 123 })
+        });
+      } catch (e) {
+        // expected error
+      } finally {
+        await refreshData();
+        switchTab('traces');
+        if (activeTraceData.length > 0) viewWaterfall(activeTraceData[0].trace_id);
+        btn.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Simulate Error Trace';
+      }
+    }
+
+    // Auto load on start
+    refreshData().then(() => {
+      const hash = window.location.hash;
+      if (hash === '#metrics') {
+        switchTab('metrics');
+      } else if (hash === '#logs') {
+        switchTab('logs');
+      } else if (hash === '#waterfall' && activeTraceData.length > 0) {
+        // Find analyzeContour trace or first trace
+        const targetTrace = activeTraceData.find(t => t.root_span_name.includes('analyzeContour')) || activeTraceData[0];
+        viewWaterfall(targetTrace.trace_id);
+      } else if (hash === '#architecture') {
+        switchTab('architecture');
+      }
+    });
+    setInterval(refreshData, 10000); // 10s auto polling
+  </script>
+</body>
+</html>

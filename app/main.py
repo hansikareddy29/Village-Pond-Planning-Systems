@@ -36,15 +36,54 @@ from app.pond_siting import PondSitingEngine
 from app.external_apis import RainfallAPIService, ElevationAPIService
 from app.models import AnalysisResponse
 from app.models import AnalysisResponse, LandAreaAnalysisRequest
+from app.telemetry import (
+    tracer, meter, app_logger,
+    record_request_metric, record_dem_metric, record_hydro_metric,
+    record_analysis_results, record_error_metric, get_telemetry_summary,
+    span_store, memory_log_handler, tracer_provider, meter_provider,
+    CONTENT_TYPE_LATEST, generate_latest
+)
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from opentelemetry.instrumentation.requests import RequestsInstrumentor
+from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
+from opentelemetry.trace import Status, StatusCode
 
 # Initialize FastAPI Backend Application
 app = FastAPI(
     title="Village Pond Planning & Catchment Analysis Backend API",
-    description="Automated backend API for continuous terrain elevation modeling, optimal village pond location ranking, and exact hydrological catchment delineation from KML/KMZ contour maps with Open-Meteo & Open-Elevation API integration.",
+    description="Automated backend API for continuous terrain elevation modeling, optimal village pond location ranking, and exact hydrological catchment delineation from KML/KMZ contour maps with Open-Meteo & Open-Elevation API integration and OpenTelemetry Observability.",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
 )
+
+# OpenTelemetry Auto-Instrumentation
+FastAPIInstrumentor.instrument_app(
+    app,
+    tracer_provider=tracer_provider,
+    meter_provider=meter_provider,
+    excluded_urls="static/*,favicon.ico"
+)
+RequestsInstrumentor().instrument()
+HTTPXClientInstrumentor().instrument()
+
+# Observability HTTP Metric Middleware
+@app.middleware("http")
+async def telemetry_http_middleware(request, call_next):
+    t_req_start = time.time()
+    status_code = 500
+    try:
+        response = await call_next(request)
+        status_code = response.status_code
+        return response
+    except Exception as exc:
+        record_error_metric(exc.__class__.__name__)
+        raise exc
+    finally:
+        req_dur = time.time() - t_req_start
+        path = request.url.path
+        if not path.startswith("/static"):
+            record_request_metric(endpoint=path, status_code=status_code, duration_sec=req_dur)
 
 # Enable CORS for backend API access
 app.add_middleware(
@@ -238,96 +277,163 @@ def _process_contour_map(
 ) -> dict:
     """Core backend analysis workflow executing DEM generation, hydrological routing, and pond siting."""
     t_start = time.time()
+    app_logger.info(f"Initiating contour map analysis for file '{filename or 'uploaded.kml'}' ({len(file_bytes)} bytes)")
 
     # 1. Parse KML/KMZ
-    try:
-        parsed_data = kml_parser.parse(file_bytes, filename=filename)
-    except KMLParseError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"KML/KMZ Parsing Error: {str(e)}",
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Failed to read file: {str(e)}",
-        )
+    with tracer.start_as_current_span("kml_parser.parse") as span_kml:
+        span_kml.set_attribute("kml.filename", filename or "uploaded.kml")
+        span_kml.set_attribute("kml.filesize_bytes", len(file_bytes))
+        try:
+            parsed_data = kml_parser.parse(file_bytes, filename=filename)
+            span_kml.set_attribute("kml.num_contours", parsed_data["num_contours"])
+            span_kml.set_attribute("kml.sampled_points", len(parsed_data["point_cloud"]))
+            app_logger.info(f"Parsed KML: {parsed_data['num_contours']} contours, {len(parsed_data['point_cloud'])} 3D sample points extracted.")
+        except KMLParseError as e:
+            span_kml.set_status(Status(StatusCode.ERROR, str(e)))
+            record_error_metric("KMLParseError")
+            app_logger.error(f"KMLParseError encountered: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"KML/KMZ Parsing Error: {str(e)}",
+            )
+        except Exception as e:
+            span_kml.set_status(Status(StatusCode.ERROR, str(e)))
+            record_error_metric("KMLProcessingError")
+            app_logger.error(f"Failed to read file: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Failed to read file: {str(e)}",
+            )
 
     # 2. Generate Continuous DEM Grid from 3D Contours (Delaunay TIN)
-    try:
-        dem = dem_generator.generate_dem(parsed_data, resolution_m=grid_resolution_m)
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"DEM Surface Generation Error: {str(e)}",
-        )
+    with tracer.start_as_current_span("dem_generator.generate_dem") as span_dem:
+        span_dem.set_attribute("dem.target_resolution_m", grid_resolution_m)
+        t_dem_start = time.time()
+        try:
+            dem = dem_generator.generate_dem(parsed_data, resolution_m=grid_resolution_m)
+            dem_duration = time.time() - t_dem_start
+            span_dem.set_attribute("dem.grid_rows", dem.stats["grid_rows"])
+            span_dem.set_attribute("dem.grid_cols", dem.stats["grid_cols"])
+            span_dem.set_attribute("dem.total_grid_cells", dem.stats["total_grid_cells"])
+            span_dem.set_attribute("dem.relief_m", round(dem.stats["relief"], 2))
+            span_dem.set_attribute("dem.utm_epsg", dem.utm_epsg)
+            record_dem_metric(dem_duration, dem.stats["total_grid_cells"])
+            app_logger.info(f"DEM generated in {dem_duration:.3f}s: {dem.stats['grid_rows']}x{dem.stats['grid_cols']} ({dem.stats['total_grid_cells']} cells), relief={dem.stats['relief']:.1f}m")
+        except Exception as e:
+            span_dem.set_status(Status(StatusCode.ERROR, str(e)))
+            record_error_metric("DEMGenerationError")
+            app_logger.error(f"DEM Generation failed: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"DEM Surface Generation Error: {str(e)}",
+            )
 
     # 3. Dynamic Meteorological Rainfall & Elevation API Fetch
     center_lat = parsed_data["bounds"].get("center_lat", 21.25)
     center_lon = parsed_data["bounds"].get("center_lon", 81.30)
-    rainfall_api_data = RainfallAPIService.fetch_annual_rainfall(
-        latitude=center_lat, longitude=center_lon, user_override_mm=rainfall_annual_mm
-    )
-    effective_rainfall_mm = rainfall_api_data["annual_rainfall_mm"]
-    elevation_api_data = ElevationAPIService.fetch_point_elevation(
-        latitude=center_lat, longitude=center_lon
-    )
+    with tracer.start_as_current_span("external_apis.fetch_climate_and_elevation") as span_apis:
+        span_apis.set_attribute("geo.latitude", center_lat)
+        span_apis.set_attribute("geo.longitude", center_lon)
+        rainfall_api_data = RainfallAPIService.fetch_annual_rainfall(
+            latitude=center_lat, longitude=center_lon, user_override_mm=rainfall_annual_mm
+        )
+        effective_rainfall_mm = rainfall_api_data["annual_rainfall_mm"]
+        span_apis.set_attribute("rainfall.annual_mm", effective_rainfall_mm)
+        span_apis.set_attribute("rainfall.source", rainfall_api_data.get("source", "unknown"))
+
+        elevation_api_data = ElevationAPIService.fetch_point_elevation(
+            latitude=center_lat, longitude=center_lon
+        )
+        span_apis.set_attribute("elevation.api_status", elevation_api_data.get("api_status", "unknown"))
+        app_logger.info(f"External APIs: Annual rainfall={effective_rainfall_mm}mm ({rainfall_api_data.get('source')}), Elevation={elevation_api_data.get('elevation_m')}m")
 
     # 4. Hydrological Analysis (Priority-Flood, D8 Routing, Kahn's Topological Flow Accumulation)
-    try:
-        hydro_results = hydrology_engine.analyze(dem)
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Hydrological Analysis Error: {str(e)}",
-        )
+    with tracer.start_as_current_span("hydrology_engine.priority_flood_and_d8") as span_hydro:
+        span_hydro.set_attribute("algorithm.fill_sinks", "Barnes Priority-Flood min-heap")
+        span_hydro.set_attribute("algorithm.flow_routing", "Deterministic D8 with Garbrecht-Martz")
+        span_hydro.set_attribute("algorithm.flow_accumulation", "Kahn's in-degree topological sort O(N)")
+        t_hydro_start = time.time()
+        try:
+            hydro_results = hydrology_engine.analyze(dem)
+            hydro_duration = time.time() - t_hydro_start
+            record_hydro_metric(hydro_duration)
+            span_hydro.set_attribute("hydrology.execution_seconds", round(hydro_duration, 4))
+            app_logger.info(f"Hydrological analysis completed in {hydro_duration:.3f}s: Priority-Flood sink filling and D8 topological routing converged.")
+        except Exception as e:
+            span_hydro.set_status(Status(StatusCode.ERROR, str(e)))
+            record_error_metric("HydrologyAnalysisError")
+            app_logger.error(f"Hydrological Analysis Error: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Hydrological Analysis Error: {str(e)}",
+            )
 
     # 5. Dynamic Pond Candidate Siting & MCDA Ranking
-    try:
-        candidate_sites = pond_siting_engine.find_optimal_sites(
-            dem=dem,
-            hydro_results=hydro_results,
-            rainfall_annual_mm=effective_rainfall_mm,
-            runoff_coefficient=runoff_coefficient,
-            num_candidates=num_candidate_sites,
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Pond Siting Optimization Error: {str(e)}",
-        )
+    with tracer.start_as_current_span("pond_siting.mcda_ranking") as span_mcda:
+        span_mcda.set_attribute("mcda.num_candidates_requested", num_candidate_sites)
+        try:
+            candidate_sites = pond_siting_engine.find_optimal_sites(
+                dem=dem,
+                hydro_results=hydro_results,
+                rainfall_annual_mm=effective_rainfall_mm,
+                runoff_coefficient=runoff_coefficient,
+                num_candidates=num_candidate_sites,
+            )
+            span_mcda.set_attribute("mcda.candidates_found", len(candidate_sites))
+            if candidate_sites:
+                span_mcda.set_attribute("mcda.top_site_id", candidate_sites[0]["site_id"])
+                span_mcda.set_attribute("mcda.top_suitability_score", candidate_sites[0]["suitability_score"])
+                app_logger.info(f"MCDA Siting: Identified {len(candidate_sites)} candidate pond locations. Top site '{candidate_sites[0]['site_id']}' score={candidate_sites[0]['suitability_score']}/100")
+        except Exception as e:
+            span_mcda.set_status(Status(StatusCode.ERROR, str(e)))
+            record_error_metric("PondSitingError")
+            app_logger.error(f"Pond Siting Optimization Error: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Pond Siting Optimization Error: {str(e)}",
+            )
 
-    if not candidate_sites:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="No viable pond candidate locations could be identified for this terrain.",
-        )
+        if not candidate_sites:
+            span_mcda.set_status(Status(StatusCode.ERROR, "No viable candidate locations"))
+            record_error_metric("NoViableSitesError")
+            app_logger.warning("No viable pond candidate locations identified.")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="No viable pond candidate locations could be identified for this terrain.",
+            )
 
     top_site = candidate_sites[0]
 
     # 6. Delineate Catchment Boundary from the Associated Hydrological Pour Point
-    pour_grid = (
-        top_site["associated_pour_point"]["grid_index"]["row"],
-        top_site["associated_pour_point"]["grid_index"]["col"],
-    )
-    catchment_info = hydrology_engine.delineate_catchment(
-        pour_point_grid=pour_grid, flow_dir=hydro_results["flow_direction"], dem=dem
-    )
-
-    # 7. Estimate Runoff & Water Yield
-    runoff_info = hydrology_engine.estimate_runoff(
-        catchment_area_sq_m=catchment_info["area_sq_meters"],
-        annual_rainfall_mm=effective_rainfall_mm,
-        runoff_coefficient=runoff_coefficient,
-    )
-
-    # 8. Sizing Recommendations
-    pond_design = pond_siting_engine.compute_design_recommendations(
-        catchment_area_sq_m=catchment_info["area_sq_meters"],
-        annual_runoff_m3=runoff_info["estimated_annual_runoff_m3"],
-        depression_depth_m=top_site["local_terrain"]["depression_depth_m"],
-        target_pond_depth_m=pond_depth_m,
-    )
+    with tracer.start_as_current_span("hydrology.delineate_catchment_and_runoff") as span_catch:
+        pour_grid = (
+            top_site["associated_pour_point"]["grid_index"]["row"],
+            top_site["associated_pour_point"]["grid_index"]["col"],
+        )
+        catchment_info = hydrology_engine.delineate_catchment(
+            pour_point_grid=pour_grid, flow_dir=hydro_results["flow_direction"], dem=dem
+        )
+        runoff_info = hydrology_engine.estimate_runoff(
+            catchment_area_sq_m=catchment_info["area_sq_meters"],
+            annual_rainfall_mm=effective_rainfall_mm,
+            runoff_coefficient=runoff_coefficient,
+        )
+        pond_design = pond_siting_engine.compute_design_recommendations(
+            catchment_area_sq_m=catchment_info["area_sq_meters"],
+            annual_runoff_m3=runoff_info["estimated_annual_runoff_m3"],
+            depression_depth_m=top_site["local_terrain"]["depression_depth_m"],
+            target_pond_depth_m=pond_depth_m,
+        )
+        span_catch.set_attribute("catchment.area_hectares", catchment_info["area_hectares"])
+        span_catch.set_attribute("catchment.annual_runoff_m3", runoff_info["estimated_annual_runoff_m3"])
+        span_catch.set_attribute("catchment.design_storage_m3", pond_design["recommended_storage_capacity_m3"])
+        record_analysis_results(
+            catchment_ha=catchment_info["area_hectares"],
+            runoff_m3=runoff_info["estimated_annual_runoff_m3"],
+            num_candidates=len(candidate_sites),
+            is_contour=True
+        )
+        app_logger.info(f"Catchment delineated: {catchment_info['area_hectares']} ha, estimated runoff={runoff_info['estimated_annual_runoff_m3']:,.0f} m³ ({runoff_info['estimated_annual_runoff_million_liters']} ML)")
 
     # 9. Assemble GeoJSON Feature Collection distinguishing Pond Region vs Pour Point
     geojson_features = []
@@ -1050,27 +1156,34 @@ def _process_land_area(
             "selection_rationale": "Optimal topographic storage sink identified within the user-selected land boundary.",
         }
 
-    # Catchment delineation
-    catchment_info = hydrology_engine.delineate_catchment(
-        pour_point_grid=pour_grid,
-        flow_dir=hydro_results["flow_direction"],
-        dem=dem,
-    )
-
-    # Runoff estimation
-    runoff_info = hydrology_engine.estimate_runoff(
-        catchment_area_sq_m=catchment_info["area_sq_meters"],
-        annual_rainfall_mm=effective_rainfall_mm,
-        runoff_coefficient=runoff_coefficient,
-    )
-
-    # Pond design recommendations
-    pond_design = pond_siting_engine.compute_design_recommendations(
-        catchment_area_sq_m=catchment_info["area_sq_meters"],
-        annual_runoff_m3=runoff_info["estimated_annual_runoff_m3"],
-        depression_depth_m=chosen_site["local_terrain"]["depression_depth_m"],
-        target_pond_depth_m=pond_depth_m,
-    )
+    # Catchment delineation & runoff estimation
+    with tracer.start_as_current_span("land_area.delineate_catchment_and_runoff") as span_land_catch:
+        catchment_info = hydrology_engine.delineate_catchment(
+            pour_point_grid=pour_grid,
+            flow_dir=hydro_results["flow_direction"],
+            dem=dem,
+        )
+        runoff_info = hydrology_engine.estimate_runoff(
+            catchment_area_sq_m=catchment_info["area_sq_meters"],
+            annual_rainfall_mm=effective_rainfall_mm,
+            runoff_coefficient=runoff_coefficient,
+        )
+        pond_design = pond_siting_engine.compute_design_recommendations(
+            catchment_area_sq_m=catchment_info["area_sq_meters"],
+            annual_runoff_m3=runoff_info["estimated_annual_runoff_m3"],
+            depression_depth_m=chosen_site["local_terrain"]["depression_depth_m"],
+            target_pond_depth_m=pond_depth_m,
+        )
+        span_land_catch.set_attribute("land.selected_area_ha", selected_land_area_ha)
+        span_land_catch.set_attribute("catchment.area_hectares", catchment_info["area_hectares"])
+        span_land_catch.set_attribute("catchment.annual_runoff_m3", runoff_info["estimated_annual_runoff_m3"])
+        record_analysis_results(
+            catchment_ha=catchment_info["area_hectares"],
+            runoff_m3=runoff_info["estimated_annual_runoff_m3"],
+            num_candidates=1,
+            is_contour=False
+        )
+        app_logger.info(f"Land Area Catchment: Selected parcel={selected_land_area_ha} ha, Upstream catchment={catchment_info['area_hectares']} ha, Runoff={runoff_info['estimated_annual_runoff_m3']:,.0f} m³")
 
     # Build GeoJSON features
     geojson_features = []
@@ -1665,3 +1778,45 @@ async def map_view():
     if os.path.exists(index_file):
         return FileResponse(index_file)
     return RedirectResponse(url="/docs")
+
+
+@app.get("/observability", summary="OpenTelemetry Observability Dashboard")
+async def observability_dashboard():
+    """Serves the interactive OpenTelemetry Observability Dashboard."""
+    obs_file = os.path.join(STATIC_DIR, "observability.html")
+    if os.path.exists(obs_file):
+        return FileResponse(obs_file)
+    raise HTTPException(status_code=404, detail="Observability dashboard not found.")
+
+
+@app.get("/metrics", summary="OpenTelemetry Prometheus Metrics Exposition")
+def prometheus_metrics():
+    """Exports Prometheus-compatible metrics captured by OpenTelemetry SDK."""
+    return Response(
+        content=generate_latest(),
+        media_type=CONTENT_TYPE_LATEST,
+    )
+
+
+@app.get("/api/telemetry/traces", summary="Retrieve OpenTelemetry Traces & Spans")
+def get_recorded_traces():
+    """Returns all recorded distributed traces and nested spans for waterfall visualization."""
+    return span_store.get_traces()
+
+
+@app.get("/api/telemetry/spans", summary="Retrieve Raw OpenTelemetry Spans")
+def get_recorded_spans():
+    """Returns raw OpenTelemetry spans in chronological order."""
+    return span_store.get_recent_spans()
+
+
+@app.get("/api/telemetry/logs", summary="Retrieve OpenTelemetry Correlated Logs")
+def get_correlated_logs():
+    """Returns recent structured logs with trace_id and span_id correlations."""
+    return memory_log_handler.get_recent_logs()
+
+
+@app.get("/api/telemetry/summary", summary="Retrieve Telemetry Aggregate Summary")
+def get_telemetry_aggregate():
+    """Returns aggregate observability metrics, latencies, and service status."""
+    return get_telemetry_summary()
